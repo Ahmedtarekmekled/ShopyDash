@@ -35,10 +35,10 @@ export function ShopProductCard({ product, shopId, canOrder, onAddToCart }: Shop
 
     setIsAdding(true);
     try {
-      await addToCart(shopId, product.id, 1);
+      await addToCart(shopId, product.id, 1, product);
       notify.success("تمت الإضافة للسلة");
-    } catch (error) {
-      notify.error("فشل إضافة المنتج: يرجى تسجيل الدخول أولاً");
+    } catch (error: any) {
+      notify.error(error.message || "فشل إضافة المنتج: يرجى تسجيل الدخول أولاً");
     } finally {
       setIsAdding(false);
     }

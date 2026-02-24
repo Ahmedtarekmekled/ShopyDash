@@ -78,10 +78,10 @@ export default function ProductPage() {
 
     setIsAdding(true);
     try {
-      await addToCart(product.shop_id, product.id, quantity);
+      await addToCart(product.shop_id, product.id, quantity, product);
       notify.success(AR.cart.itemAdded);
-    } catch (error) {
-      notify.error("حدث خطأ أثناء الإضافة");
+    } catch (error: any) {
+      notify.error(error.message || "حدث خطأ أثناء الإضافة");
     } finally {
       setIsAdding(false);
     }

@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCart } from "@/store";
 import { formatPrice, cn } from "@/lib/utils";
 import { AR } from "@/lib/i18n";
+import { notify } from "@/lib/notify";
 import { useEffect, useRef } from "react";
 
 interface CartDropdownProps {
@@ -131,8 +132,13 @@ export function CartDropdown({ isOpen, onClose }: CartDropdownProps) {
                         </button>
                         <span className="w-6 text-center text-xs font-medium">{item.quantity}</span>
                         <button
-                          className="w-7 h-full flex items-center justify-center hover:bg-background rounded-l-md transition-colors"
-                          onClick={() => updateCartItem(item.id, item.quantity + 1)}
+                          className="w-7 h-full flex items-center justify-center hover:bg-background rounded-l-md transition-colors disabled:opacity-50"
+                          onClick={() => {
+                            updateCartItem(item.id, item.quantity + 1).catch((err: any) => {
+                               notify.error(err.message || "حدث خطأ أثناء تعديل الكمية");
+                            });
+                          }}
+                          disabled={item.product?.stock_quantity ? item.quantity >= item.product.stock_quantity : false}
                         >
                           <Plus className="w-3 h-3" />
                         </button>

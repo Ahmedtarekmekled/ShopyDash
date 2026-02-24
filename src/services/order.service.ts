@@ -104,6 +104,20 @@ export const cartService = {
       .eq("product_id", productId)
       .maybeSingle();
 
+    // Validate Stock Limit
+    const { data: productCheck } = await supabase
+      .from("products")
+      .select("stock_quantity")
+      .eq("id", productId)
+      .single();
+
+    const availableStock = productCheck?.stock_quantity || 0;
+    const currentQuantity = existingItem ? existingItem.quantity : 0;
+    
+    if (currentQuantity + quantity > availableStock) {
+      throw new Error(`عذراً، الكمية المطلوبة غير متوفرة. المتاح: ${availableStock}`);
+    }
+
     if (existingItem) {
       // Update quantity
       const { data, error } = await supabase
@@ -141,12 +155,33 @@ export const cartService = {
       throw new Error("Item removed");
     }
 
+    // Validate Stock Limit
+    const { data: cartItem } = await supabase
+      .from("cart_items")
+      .select("product_id")
+      .eq("id", itemId)
+      .single();
+
+    if (cartItem) {
+      const { data: productCheck } = await supabase
+        .from("products")
+        .select("stock_quantity")
+        .eq("id", cartItem.product_id)
+        .single();
+        
+      const availableStock = productCheck?.stock_quantity || 0;
+      if (quantity > availableStock) {
+        throw new Error(`عذراً، الكمية المطلوبة غير متوفرة. المتاح: ${availableStock}`);
+      }
+    }
+
     const { data, error } = await supabase
       .from("cart_items")
       .update({ quantity })
       .eq("id", itemId)
       .select()
       .single();
+
 
     if (error) throw error;
     return data;

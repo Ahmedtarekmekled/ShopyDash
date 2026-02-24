@@ -950,16 +950,18 @@ function DashboardProducts() {
       };
 
       if (editingProduct) {
-        await productsService.update(editingProduct.id, productData);
+        const updated = await productsService.update(editingProduct.id, productData);
+        setProducts(prev => prev.map(p => p.id === updated.id ? { ...p, ...updated } as any : p));
         notify.success("تم تحديث المنتج بنجاح");
       } else {
-        await productsService.create(productData as any);
+        const created = await productsService.create(productData as any);
+        setProducts(prev => [created as any, ...prev]);
         notify.success("تم إضافة المنتج بنجاح");
       }
 
       setShowAddDialog(false);
       resetForm();
-      loadData();
+      // Removed loadData() to avoid full refetch delay
     } catch (error: any) {
       console.error("Failed to save product:", error);
       notify.error(error.message || "فشل حفظ المنتج");

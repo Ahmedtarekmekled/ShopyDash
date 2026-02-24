@@ -108,7 +108,8 @@ interface AppContextType extends AppState {
   addToCart: (
     shopId: string,
     productId: string,
-    quantity: number
+    quantity: number,
+    productPayload?: any
   ) => Promise<void>;
   updateCartItem: (itemId: string, quantity: number) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
@@ -217,23 +218,143 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addToCart = async (
     shopId: string,
     productId: string,
-    quantity: number
+    quantity: number,
+    productPayload?: any
   ) => {
     const { user } = await getCurrentUser();
     if (!user) throw new Error("يجب تسجيل الدخول أولاً");
 
-    await cartService.addItem(user.id, shopId, productId, quantity);
-    await refreshCart();
+    const previousCart = state.cart;
+    let isNewItem = true;
+
+    if (state.cart && state.cart.items) {
+      const existingItem = state.cart.items.find(
+        (item: any) => item.product_id === productId
+      );
+      if (existingItem) {
+        // Enforce Stock Frontend Validations
+        const availableStock = existingItem.product?.stock_quantity || 0;
+        if (existingItem.quantity + quantity > availableStock) {
+          throw new Error(`عذراً، الكمية المطلوبة غير متوفرة. المتاح: ${availableStock}`);
+        }
+
+        isNewItem = false;
+        const updatedItems = state.cart.items.map((item: any) =>
+          item.product_id === productId
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+        dispatch({
+          type: "SET_CART",
+          payload: { ...state.cart, items: updatedItems as any },
+        });
+      }
+    }
+
+    if (isNewItem) {
+       if (productPayload && productPayload.stock_quantity !== undefined) {
+         if (quantity > productPayload.stock_quantity) {
+           throw new Error(`عذراً، الكمية المطلوبة غير متوفرة. المتاح: ${productPayload.stock_quantity}`);
+         }
+       }
+
+       if (productPayload) {
+          // Construct optimistic new item
+          const tempItem = {
+            id: `temp-${Date.now()}`,
+            cart_id: state.cart?.id || `temp-cart-${Date.now()}`,
+            product_id: productId,
+            quantity: quantity,
+            product: productPayload
+          };
+          
+          const newItems = state.cart?.items ? [tempItem, ...state.cart.items] : [tempItem];
+          
+          dispatch({
+            type: "SET_CART",
+            payload: {
+              ...(state.cart || { 
+                id: tempItem.cart_id, 
+                user_id: user.id, 
+                shop_id: shopId, 
+                created_at: new Date().toISOString(), 
+                updated_at: new Date().toISOString() 
+              }),
+              items: newItems
+            } as any
+          });
+       }
+    }
+
+    try {
+      const addedItem = await cartService.addItem(user.id, shopId, productId, quantity);
+      
+      // If it was a new item but we didn't have the payload, we MUST refresh to get data.
+      // If we DID have the payload, we can silently refresh in the background to swap the temp ID for the real ID.
+      // Or we can just refresh Cart silently. Let's refreshCart silently to ensure DB sync.
+      if (isNewItem && !productPayload) {
+        await refreshCart();
+      } else {
+        refreshCart(); // Background sync, no await! This ensures 0ms UI blocking.
+      }
+    } catch (error) {
+      // Rollback on any failure
+      dispatch({ type: "SET_CART", payload: previousCart });
+      throw error;
+    }
   };
 
   const updateCartItem = async (itemId: string, quantity: number) => {
-    await cartService.updateItemQuantity(itemId, quantity);
-    await refreshCart();
+    const previousCart = state.cart;
+    
+    // Optimistic Update Let's enforce stock boundaries too
+    if (state.cart && state.cart.items) {
+      const targetItem = state.cart.items.find((item) => item.id === itemId);
+      if (targetItem) {
+        const availableStock = targetItem.product?.stock_quantity || 0;
+        if (quantity > availableStock) {
+           throw new Error(`عذراً، الكمية المطلوبة غير متوفرة. المتاح: ${availableStock}`);
+        }
+      }
+
+      const updatedItems = state.cart.items.map((item) =>
+        item.id === itemId ? { ...item, quantity } : item
+      );
+      dispatch({
+        type: "SET_CART",
+        payload: { ...state.cart, items: updatedItems as any },
+      });
+    }
+
+    try {
+      await cartService.updateItemQuantity(itemId, quantity);
+    } catch (error) {
+      console.warn("Optimistic update failed, rolling back", error);
+      dispatch({ type: "SET_CART", payload: previousCart });
+      throw error;
+    }
   };
 
   const removeFromCart = async (itemId: string) => {
-    await cartService.removeItem(itemId);
-    await refreshCart();
+    const previousCart = state.cart;
+    
+    // Optimistic Update
+    if (state.cart && state.cart.items) {
+      const updatedItems = state.cart.items.filter(
+        (item) => item.id !== itemId
+      );
+      dispatch({
+        type: "SET_CART",
+        payload: { ...state.cart, items: updatedItems as any },
+      });
+    }
+
+    try {
+      await cartService.removeItem(itemId);
+    } catch (error) {
+      console.warn("Optimistic update failed, rolling back", error);
+      dispatch({ type: "SET_CART", payload: previousCart });
+    }
   };
 
   const clearCart = async () => {

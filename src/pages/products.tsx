@@ -36,7 +36,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export default function ProductsPage() {
   const { cart, addToCart, clearCart } = useCart();
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
-  const [pendingProduct, setPendingProduct] = useState<{ id: string, name: string } | null>(null);
+  const [pendingProduct, setPendingProduct] = useState<any | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   // 1. Fetch Ranked Shops
@@ -90,7 +90,7 @@ export default function ProductsPage() {
   });
 
   // Handle Add to Cart with Multi-Store Check
-  const handleAddToCartRequest = async (product: { id: string, name: string }) => {
+  const handleAddToCartRequest = async (product: any) => {
     if (!selectedShopId) return;
 
     // Check conflict
@@ -103,16 +103,16 @@ export default function ProductsPage() {
     }
 
     // No conflict, add directly
-    await performAddToCart(selectedShopId, product.id);
+    await performAddToCart(selectedShopId, product);
   };
 
-  const performAddToCart = async (shopId: string, productId: string) => {
+  const performAddToCart = async (shopId: string, product: any) => {
     setIsProcessing(true);
     try {
-      await addToCart(shopId, productId, 1);
+      await addToCart(shopId, product.id, 1, product);
       notify.success("تمت الإضافة للسلة");
-    } catch (error) {
-      notify.error("فشل إضافة المنتج: يرجى المحاولة مرة أخرى");
+    } catch (error: any) {
+      notify.error(error.message || "فشل إضافة المنتج: يرجى المحاولة مرة أخرى");
     } finally {
       setIsProcessing(false);
       setPendingProduct(null);
@@ -124,10 +124,10 @@ export default function ProductsPage() {
     setIsProcessing(true);
     try {
       // Don't clear cart, just add new item. User accepted the fee warning.
-      await addToCart(selectedShopId, pendingProduct.id, 1);
+      await addToCart(selectedShopId, pendingProduct.id, 1, pendingProduct);
       notify.success("تمت إضافة المنتج للسلة");
-    } catch (error) {
-       notify.error("حدث خطأ في الإضافة");
+    } catch (error: any) {
+       notify.error(error.message || "حدث خطأ في الإضافة");
     } finally {
       setIsProcessing(false);
       setPendingProduct(null);
