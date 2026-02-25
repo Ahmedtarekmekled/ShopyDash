@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/store";
 import { profileService } from "@/services/auth.service";
-import { deliveryAdminService, CourierSummary, CourierAnalytics } from "@/services/delivery-admin.service";
+import { deliveryAdminService, CourierAnalytics } from "@/services/delivery-admin.service";
+import { analyticsService, DriverPerformance } from "@/services/analytics.service";
 import { supabase } from "@/lib/supabase";
 import { ParentOrder, Profile } from "@/types/database";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -32,7 +33,8 @@ import {
   TrendingUp,
   Search,
   Eye,
-  RefreshCw
+  RefreshCw,
+  ShieldAlert
 } from "lucide-react";
 import { formatPrice, cn } from "@/lib/utils";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
@@ -52,17 +54,17 @@ import {
 } from 'recharts';
 
 // --- COURIERS TAB ---
-function CouriersTab({ couriers, period, setPeriod }: { couriers: CourierSummary[], period: number, setPeriod: (p: number) => void }) {
-  const [selectedCourier, setSelectedCourier] = useState<CourierSummary | null>(null);
+function CouriersTab({ drivers, period, setPeriod }: { drivers: DriverPerformance[], period: number, setPeriod: (p: number) => void }) {
+  const [selectedDriver, setSelectedDriver] = useState<DriverPerformance | null>(null);
   const [analytics, setAnalytics] = useState<CourierAnalytics[]>([]);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
-  const loadAnalytics = async (courierId: string) => {
+  const loadAnalytics = async (driverId: string) => {
     setLoadingAnalytics(true);
     try {
       const endDate = endOfDay(new Date());
       const startDate = startOfDay(subDays(new Date(), 30)); // Always fetch 30d for chart
-      const data = await deliveryAdminService.getCourierAnalytics(courierId, startDate, endDate);
+      const data = await deliveryAdminService.getCourierAnalytics(driverId, startDate, endDate);
       
       // Fill gaps
       const days = [];
@@ -83,10 +85,10 @@ function CouriersTab({ couriers, period, setPeriod }: { couriers: CourierSummary
   };
 
   useEffect(() => {
-    if (selectedCourier) {
-      loadAnalytics(selectedCourier.courier_id);
+    if (selectedDriver) {
+      loadAnalytics(selectedDriver.driver_id);
     }
-  }, [selectedCourier]);
+  }, [selectedDriver]);
 
   return (
     <div className="space-y-6">
@@ -99,52 +101,52 @@ function CouriersTab({ couriers, period, setPeriod }: { couriers: CourierSummary
       </div>
 
       <div className="rounded-md border">
-        <div className="grid grid-cols-6 gap-4 p-4 font-medium bg-muted text-sm">
+        <div className="grid grid-cols-6 gap-4 p-4 font-medium bg-muted text-sm border-b">
            <div className="col-span-2">المندوب</div>
            <div>الطلبات (فترة)</div>
-           <div>الأرباح (فترة)</div>
-           <div>إجمالي الأرباح</div>
+           <div>معدل القبول</div>
+           <div>أرباح (فترة)</div>
            <div>إجراءات</div>
         </div>
-        <div className="divide-y">
-           {couriers.map((courier) => (
-             <div key={courier.courier_id} className="grid grid-cols-6 gap-4 p-4 text-sm items-center hover:bg-muted/50">
+        <div className="divide-y max-h-[500px] overflow-y-auto">
+           {drivers.map((driver) => (
+             <div key={driver.driver_id} className="grid grid-cols-6 gap-4 p-4 text-sm items-center hover:bg-muted/50">
                <div className="col-span-2 flex items-center gap-3">
-                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    {courier.profile?.avatar_url ? (
-                      <img src={courier.profile.avatar_url} className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      <User className="w-4 h-4 text-primary" />
-                    )}
+                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <User className="w-4 h-4 text-primary" />
                  </div>
-                 <div>
-                   <p className="font-medium">{courier.profile?.full_name || 'غير معروف'}</p>
-                   <p className="text-xs text-muted-foreground">{courier.profile?.phone}</p>
+                 <div className="min-w-0">
+                   <p className="font-medium truncate">{driver.driver_name || 'غير معروف'}</p>
+                   <p className="text-xs text-muted-foreground truncate">{driver.driver_phone}</p>
                  </div>
                </div>
-               <div>{courier.delivered_count_period}</div>
-               <div className="font-medium text-green-600">{formatPrice(courier.earnings_period)}</div>
-               <div className="text-muted-foreground">{formatPrice(courier.total_earnings)}</div>
+               <div>{driver.completed_deliveries} / {driver.total_deliveries}</div>
                <div>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedCourier(courier)}>
+                  <Badge variant={driver.acceptance_rate > 80 ? 'success' : driver.acceptance_rate > 50 ? 'outline' : 'destructive'}>
+                     {driver.acceptance_rate}%
+                  </Badge>
+               </div>
+               <div className="font-medium text-green-600">{formatPrice(driver.earnings)}</div>
+               <div>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedDriver(driver)}>
                      <BarChart2 className="w-4 h-4 ml-1" />
                      تفاصيل
                   </Button>
                </div>
              </div>
            ))}
-           {couriers.length === 0 && (
-             <div className="p-8 text-center text-muted-foreground">لا يوجد مناديب نشطين في هذه الفترة</div>
+           {drivers.length === 0 && (
+             <div className="p-8 text-center text-muted-foreground">لا يوجد مناديب مسجلين أو نشطين في هذه الفترة</div>
            )}
         </div>
       </div>
 
-      <Dialog open={!!selectedCourier} onOpenChange={(open) => !open && setSelectedCourier(null)}>
+      <Dialog open={!!selectedDriver} onOpenChange={(open) => !open && setSelectedDriver(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
                <Truck className="w-5 h-5" />
-               تقرير أداء: {selectedCourier?.profile?.full_name}
+               تقرير أداء: {selectedDriver?.driver_name}
             </DialogTitle>
           </DialogHeader>
           
@@ -191,7 +193,7 @@ function CouriersTab({ couriers, period, setPeriod }: { couriers: CourierSummary
 }
 
 // --- ORDERS TAB ---
-function OrdersTab({ couriers }: { couriers: CourierSummary[] }) {
+function OrdersTab({ drivers }: { drivers: DriverPerformance[] }) {
   const [orders, setOrders] = useState<ParentOrder[]>([]);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedOrder, setSelectedOrder] = useState<ParentOrder | null>(null);
@@ -286,9 +288,9 @@ function OrdersTab({ couriers }: { couriers: CourierSummary[] }) {
                              </SelectTrigger>
                              <SelectContent>
                                 <SelectItem value="unassigned">-- غير معين --</SelectItem>
-                                {couriers.map(c => (
-                                   <SelectItem key={c.courier_id} value={c.courier_id}>
-                                      {c.profile?.full_name} ({c.profile?.phone})
+                                {drivers.map(d => (
+                                   <SelectItem key={d.driver_id} value={d.driver_id}>
+                                      {d.driver_name} ({d.driver_phone})
                                    </SelectItem>
                                 ))}
                              </SelectContent>
@@ -485,13 +487,37 @@ function SettingsTab() {
                       <Label>الحد الأقصى</Label>
                       <Input type="number" value={settings.max_fee || 0} onChange={e => setSettings({...settings, max_fee: +e.target.value})} />
                    </div>
-                </div>
-             </CardContent>
-          </Card>
+                 </div>
+              </CardContent>
+           </Card>
 
-
-          
-          {/* Limits & Constraints */}
+           {/* Emergency Controls */}
+           <Card className="border-red-500/50 bg-red-50/50">
+              <CardHeader>
+                <CardTitle className="text-red-700 flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5" />
+                  طوارئ المنصة
+                </CardTitle>
+                <CardDescription>إيقاف استقبال الطلبات مؤقتاً في حالات الطوارئ</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                 <div className="flex items-center justify-between">
+                    <Label className="font-bold text-red-900">إيقاف استقبال الطلبات (Pause Platform)</Label>
+                    <Switch 
+                      className="data-[state=checked]:bg-red-600"
+                      checked={settings.is_platform_paused} 
+                      onCheckedChange={(checked: boolean) => setSettings({...settings, is_platform_paused: checked})} 
+                    />
+                 </div>
+                 {settings.is_platform_paused && (
+                   <p className="text-xs font-semibold text-red-600 bg-red-100 p-2 rounded">
+                     المنصة الآن متوقفة عن التسجيل واستقبال الطلبات. سيظهر للعملاء رسالة باعتذار مؤقت.
+                   </p>
+                 )}
+              </CardContent>
+           </Card>
+           
+           {/* Limits & Constraints */}
           <Card>
              <CardHeader><CardTitle>القيود والحدود</CardTitle></CardHeader>
              <CardContent className="space-y-4">
@@ -581,46 +607,21 @@ function SettingsTab() {
 // --- MAIN PAGE ---
 export function AdminDelivery() {
   const [activeTab, setActiveTab] = useState("overview");
-  const [couriers, setCouriers] = useState<CourierSummary[]>([]);
+  const [drivers, setDrivers] = useState<DriverPerformance[]>([]);
   const [period, setPeriod] = useState(30);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadCouriers();
+    loadDrivers();
   }, [period]);
 
-  const loadCouriers = async () => {
+  const loadDrivers = async () => {
     setLoading(true);
     try {
-      const endDate = endOfDay(new Date());
-      const startDate = startOfDay(subDays(new Date(), period));
-      
-      const summaries = await deliveryAdminService.getCouriersSummary(startDate, endDate);
-      
-      // Enrich with profile data
-      const profiles = await profileService.getAll({ role: "DELIVERY" });
-      
-      const combined = summaries.map(s => ({
-        ...s,
-        profile: profiles.find(p => p.id === s.courier_id)
-      }));
-      
-      // Also add couriers who have 0 stats
-      profiles.forEach(p => {
-         if (!combined.find(c => c.courier_id === p.id)) {
-            combined.push({
-               courier_id: p.id,
-               total_earnings: 0,
-               earnings_period: 0,
-               delivered_count_lifetime: 0,
-               delivered_count_period: 0,
-               last_delivery_date: null,
-               profile: p
-            });
-         }
-      });
-
-      setCouriers(combined);
+      const endDate = endOfDay(new Date()).toISOString();
+      const startDate = startOfDay(subDays(new Date(), period)).toISOString();
+      const data = await analyticsService.getDriverPerformance(startDate, endDate, 1000, 0);
+      setDrivers(data);
     } catch (e) {
       console.error(e);
       notify.error("فشل تحميل البيانات");
@@ -629,7 +630,7 @@ export function AdminDelivery() {
     }
   };
 
-  if (loading && couriers.length === 0) return <div>جاري التحميل...</div>;
+  if (loading && drivers.length === 0) return <div>جاري التحميل...</div>;
 
   return (
     <div className="space-y-6">
@@ -645,11 +646,11 @@ export function AdminDelivery() {
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
-           <CouriersTab couriers={couriers} period={period} setPeriod={setPeriod} />
+           <CouriersTab drivers={drivers} period={period} setPeriod={setPeriod} />
         </TabsContent>
 
         <TabsContent value="orders" className="mt-6">
-           <OrdersTab couriers={couriers} />
+           <OrdersTab drivers={drivers} />
         </TabsContent>
 
         <TabsContent value="settings" className="mt-6">

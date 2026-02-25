@@ -1,5 +1,5 @@
 import { Link, Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { useState, useEffect, ReactNode } from "react";
+import { useState, useEffect, useMemo, ReactNode } from "react";
 import {
   LayoutDashboard,
   Package,
@@ -86,6 +86,8 @@ import {
 } from "@/components/ui/tabs";
 import { AR } from "@/lib/i18n";
 import { formatPrice } from "@/lib/utils";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 import { useAuth } from "@/store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notify } from "@/lib/notify";
@@ -98,6 +100,23 @@ import {
 } from "@/services/catalog.service";
 import { orderService } from "@/services/order.service";
 import { profileService } from "@/services/auth.service";
+import { analyticsService } from "@/services/analytics.service";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts";
+import { AdminFinancials } from "@/components/dashboard/AdminFinancials";
+import { LiveOperations } from "@/components/dashboard/LiveOperations";
 import type {
   Product,
   Category,
@@ -206,68 +225,44 @@ function useShopRealtime(shopId: string | undefined, onNewOrder: () => void, onO
 
 
 // Admin Overview Dashboard - Platform-wide statistics
-function AdminOverview() {
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalShops: 0,
-    totalOrders: 0,
-    totalRevenue: 0,
-    pendingShops: 0,
-    activeShops: 0,
-    totalProducts: 0,
-    totalCategories: 0,
+function OverviewTab() {
+  const [period, setPeriod] = useState<"7D" | "30D" | "ALL">("30D");
+
+  const startDate = useMemo(() => {
+    if (period === "7D") return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    if (period === "30D") return new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    return undefined;
+  }, [period]);
+
+  // Global Metrics
+  const { data: metrics, isLoading: isMetricsLoading } = useQuery({
+    queryKey: ['admin_global_metrics', startDate],
+    queryFn: () => analyticsService.getGlobalMetrics(startDate),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
   });
-  const [recentShops, setRecentShops] = useState<Shop[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadAdminData();
-  }, []);
+  // Growth Chart
+  const { data: growthChart, isLoading: isChartLoading } = useQuery({
+    queryKey: ['admin_growth_chart', startDate],
+    queryFn: () => analyticsService.getPlatformGrowth(startDate),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
 
-  const loadAdminData = async () => {
-    setIsLoading(true);
-    try {
-      // Load all data in parallel
-      const [users, shops, categories, products] = await Promise.all([
-        profileService.getAll(),
-        shopsService.getAll({}),
-        categoriesService.getAll(),
-        productsService.getAll({}),
-      ]);
-
-      // Calculate stats
-      const pendingShops = shops.filter((s) => s.status === "PENDING").length;
-      const activeShops = shops.filter(
-        (s) => s.status === "APPROVED" && s.is_open
-      ).length;
-
-      // Get recent shops (pending first, then by date)
-      const sortedShops = [...shops].sort((a, b) => {
+  // Recent Shops
+  const { data: recentShops } = useQuery({
+    queryKey: ['recent_pending_shops'],
+    queryFn: async () => {
+      const allShops = await shopsService.getAll({});
+      return allShops.sort((a, b) => {
         if (a.status === "PENDING" && b.status !== "PENDING") return -1;
         if (a.status !== "PENDING" && b.status === "PENDING") return 1;
-        return (
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-      });
-
-      setStats({
-        totalUsers: users.length,
-        totalShops: shops.length,
-        totalOrders: 0, // Would need to fetch all orders
-        totalRevenue: 0, // Would need to calculate from all orders
-        pendingShops,
-        activeShops,
-        totalProducts: products.length,
-        totalCategories: categories.length,
-      });
-
-      setRecentShops(sortedShops.slice(0, 5));
-    } catch (error) {
-      console.error("Failed to load admin data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }).slice(0, 5);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: any; label: string }> = {
@@ -279,7 +274,7 @@ function AdminOverview() {
     return variants[status] || { variant: "secondary", label: status };
   };
 
-  if (isLoading) {
+  if (isMetricsLoading || !metrics) {
     return (
       <div className="space-y-6">
         <div>
@@ -305,43 +300,52 @@ function AdminOverview() {
 
   const statsConfig = [
     {
-      label: "إجمالي المستخدمين",
-      value: stats.totalUsers.toString(),
-      icon: Users,
+      label: "إجمالي الإيرادات",
+      value: formatPrice(metrics.total_revenue),
+      icon: DollarSign,
+      color: "text-green-500",
+      bg: "bg-green-500/10",
+      subtext: `العمولة: ${formatPrice(metrics.total_commission)}`
+    },
+    {
+      label: "متوسط قيمة الطلب",
+      value: formatPrice(metrics.avg_order_value),
+      icon: TrendingUp,
       color: "text-blue-500",
       bg: "bg-blue-500/10",
     },
     {
-      label: "إجمالي المتاجر",
-      value: stats.totalShops.toString(),
+      label: "المتاجر (نشط / مراجعة)",
+      value: metrics.active_shops.toString(),
       icon: Store,
-      color: "text-green-500",
-      bg: "bg-green-500/10",
-      subtext: `${stats.activeShops} نشط`,
-    },
-    {
-      label: "متاجر بانتظار المراجعة",
-      value: stats.pendingShops.toString(),
-      icon: Clock,
-      color: "text-amber-500",
-      bg: "bg-amber-500/10",
-    },
-    {
-      label: "إجمالي المنتجات",
-      value: stats.totalProducts.toString(),
-      icon: Package,
       color: "text-purple-500",
       bg: "bg-purple-500/10",
+      subtext: `${metrics.pending_shops} بانتظار المراجعة`,
+    },
+    {
+      label: "المناديب المسجلين",
+      value: metrics.active_drivers.toString(),
+      icon: Truck,
+      color: "text-amber-500",
+      bg: "bg-amber-500/10",
+      subtext: `${metrics.online_drivers} متصل الآن`,
     },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">لوحة تحكم المسؤول</h1>
-        <p className="text-muted-foreground">
-          نظرة عامة على المنصة وإحصائيات النظام
-        </p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">نظرة عامة على المنصة</h1>
+          <p className="text-muted-foreground">
+            مؤشرات الأداء الرئيسية والنمو
+          </p>
+        </div>
+        <div className="flex gap-2">
+           <Button variant={period === "7D" ? "default" : "outline"} onClick={() => setPeriod("7D")}>7 أيام</Button>
+           <Button variant={period === "30D" ? "default" : "outline"} onClick={() => setPeriod("30D")}>30 يوم</Button>
+           <Button variant={period === "ALL" ? "default" : "outline"} onClick={() => setPeriod("ALL")}>الكل</Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -350,9 +354,7 @@ function AdminOverview() {
           <Card key={i}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div
-                  className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center`}
-                >
+                <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center`}>
                   <stat.icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
                 {stat.subtext && (
@@ -370,9 +372,49 @@ function AdminOverview() {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Recent/Pending Shops */}
+      {/* Charts & Reports */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>نمو المنصة (الطلبات)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isChartLoading ? (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">جاري تحميل الرسم البياني...</div>
+            ) : growthChart && growthChart.length > 0 ? (
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={growthChart}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis 
+                      dataKey="day_date" 
+                      tickFormatter={(d) => format(new Date(d), 'd MMM', { locale: ar })} 
+                      fontSize={12} 
+                    />
+                    <YAxis yAxisId="left" fontSize={12} />
+                    <Tooltip 
+                      labelFormatter={(d) => format(new Date(d), 'd MMMM yyyy', { locale: ar })}
+                    />
+                    <Line 
+                      yAxisId="left"
+                      type="monotone" 
+                      dataKey="total_orders" 
+                      name="إجمالي الطلبات"
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={3} 
+                      dot={false} 
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">لا توجد بيانات كافية للرسم البياني</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Pending Shops */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -380,13 +422,11 @@ function AdminOverview() {
               المتاجر الأخيرة
             </CardTitle>
             <Link to="/dashboard/shops">
-              <Button variant="ghost" size="sm">
-                عرض الكل
-              </Button>
+              <Button variant="ghost" size="sm">عرض الكل</Button>
             </Link>
           </CardHeader>
           <CardContent>
-            {recentShops.length === 0 ? (
+            {!recentShops || recentShops.length === 0 ? (
               <div className="text-center py-8">
                 <Store className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
                 <p className="text-muted-foreground">لا توجد متاجر حتى الآن</p>
@@ -410,15 +450,13 @@ function AdminOverview() {
                           <Store className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                          <p className="font-medium">{shop.name}</p>
+                          <p className="font-medium text-sm">{shop.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(shop.created_at).toLocaleDateString(
-                              "ar-EG"
-                            )}
+                            {new Date(shop.created_at).toLocaleDateString("ar-EG")}
                           </p>
                         </div>
                       </div>
-                      <Badge variant={statusInfo.variant}>
+                      <Badge variant={statusInfo.variant} className="text-[10px]">
                         {statusInfo.label}
                       </Badge>
                     </div>
@@ -428,84 +466,30 @@ function AdminOverview() {
             )}
           </CardContent>
         </Card>
-
-        {/* Quick Links */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              إجراءات سريعة
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Link to="/dashboard/shops" className="block">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                    <Store className="w-5 h-5 text-amber-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">مراجعة المتاجر</p>
-                    <p className="text-xs text-muted-foreground">
-                      {stats.pendingShops} متجر بانتظار المراجعة
-                    </p>
-                  </div>
-                </div>
-                <Badge
-                  variant={stats.pendingShops > 0 ? "destructive" : "secondary"}
-                >
-                  {stats.pendingShops}
-                </Badge>
-              </div>
-            </Link>
-            <Link to="/dashboard/categories" className="block">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                    <Folders className="w-5 h-5 text-purple-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">إدارة التصنيفات</p>
-                    <p className="text-xs text-muted-foreground">
-                      {stats.totalCategories} تصنيف
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-            <Link to="/dashboard/regions" className="block">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">إدارة المناطق</p>
-                    <p className="text-xs text-muted-foreground">
-                      مناطق وأحياء التوصيل
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-            <Link to="/dashboard/users" className="block">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">إدارة المستخدمين</p>
-                    <p className="text-xs text-muted-foreground">
-                      {stats.totalUsers} مستخدم مسجل
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </CardContent>
-        </Card>
       </div>
+    </div>
+  );
+}
+
+export function AdminOverview() {
+  return (
+    <div className="space-y-6">
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
+          <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
+          <TabsTrigger value="financials">المالية والتقارير</TabsTrigger>
+          <TabsTrigger value="live">العمليات المباشرة</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview" className="mt-6">
+          <OverviewTab />
+        </TabsContent>
+        <TabsContent value="financials" className="mt-6">
+          <AdminFinancials />
+        </TabsContent>
+        <TabsContent value="live" className="mt-6">
+          <LiveOperations />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

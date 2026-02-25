@@ -929,6 +929,22 @@ export interface Database {
         Args: { p_parent_id: string; p_status: string; p_driver_id: string };
         Returns: { success: boolean; message: string };
       };
+      get_admin_global_metrics: {
+        Args: { p_start_date?: string | null; p_end_date?: string | null };
+        Returns: any;
+      };
+      get_shop_performance_metrics: {
+        Args: { p_start_date?: string | null; p_end_date?: string | null; p_limit?: number; p_offset?: number };
+        Returns: any[];
+      };
+      get_driver_performance_metrics: {
+        Args: { p_start_date?: string | null; p_end_date?: string | null; p_limit?: number; p_offset?: number };
+        Returns: any[];
+      };
+      get_platform_growth_chart: {
+        Args: { p_start_date?: string | null; p_end_date?: string | null };
+        Returns: any[];
+      };
     };
     Enums: {
       user_role: UserRole;

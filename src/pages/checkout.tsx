@@ -81,6 +81,14 @@ export default function CheckoutPage() {
        try {
          const { deliverySettingsService } = await import('@/services/delivery-settings.service');
          const s = await deliverySettingsService.getSettings();
+
+         // 🚨 PLATFORM PAUSE CHECK — Block checkout if platform is paused
+         if (s.is_platform_paused) {
+           notify.error("المنصة متوقفة مؤقتاً عن استقبال الطلبات. نأسف للإزعاج.");
+           navigate('/');
+           return;
+         }
+
          const raw = s.platform_fee_fixed + (cartTotal * s.platform_fee_percent / 100);
          setPlatformFee(Math.round(raw * 100) / 100);
        } catch (e) {
@@ -88,7 +96,7 @@ export default function CheckoutPage() {
        }
     };
     loadSettings();
-  }, [cartTotal]);
+  }, [cartTotal, navigate]);
   
   const {
     register,

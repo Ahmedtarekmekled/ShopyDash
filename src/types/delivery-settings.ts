@@ -28,6 +28,8 @@ export interface DeliverySettings {
   
   updated_at: string;
   updated_by: string | null;
+  is_platform_paused: boolean;
+  max_active_orders: number;
 }
 
 export interface DeliveryFeeBreakdown {
