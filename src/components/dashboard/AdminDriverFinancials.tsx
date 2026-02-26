@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { notify } from "@/lib/notify";
-import { analyticsService } from "@/services/analytics.service";
-import { DollarSign, Settings } from "lucide-react";
+import { analyticsService, FinancialDriverPerformance } from "@/services/analytics.service";
+import { formatPrice } from "@/lib/utils";
+import { DollarSign, Settings, AlertCircle } from "lucide-react";
 
 interface AdminDriverFinancialsProps {
   driverId: string;
@@ -21,6 +22,7 @@ export function AdminDriverFinancials({ driverId, driverName, isOpen, onClose }:
   const [activeTab, setActiveTab] = useState("payment");
   const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState<any>(null);
+  const [balance, setBalance] = useState<FinancialDriverPerformance | null>(null);
 
   // Payment Form
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -34,6 +36,7 @@ export function AdminDriverFinancials({ driverId, driverName, isOpen, onClose }:
   useEffect(() => {
     if (isOpen && driverId) {
       loadSettings();
+      loadBalance();
     }
   }, [isOpen, driverId]);
 
@@ -49,11 +52,21 @@ export function AdminDriverFinancials({ driverId, driverName, isOpen, onClose }:
         }
       } else {
          setFeeType("PERCENTAGE");
-         setFeeRate("10"); // Default 10%
+         setFeeRate("10");
          setStartDate(new Date().toISOString().split('T')[0]);
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const loadBalance = async () => {
+    try {
+      const drivers = await analyticsService.getFinancialDashboardDrivers();
+      const found = drivers.find(d => d.driver_id === driverId);
+      setBalance(found || null);
+    } catch (e) {
+      console.error("loadBalance error", e);
     }
   };
 
@@ -74,20 +87,26 @@ export function AdminDriverFinancials({ driverId, driverName, isOpen, onClose }:
   };
 
   const handleCollectPayment = async () => {
-    if (!paymentAmount || isNaN(Number(paymentAmount)) || Number(paymentAmount) <= 0) {
+    const amount = Number(paymentAmount);
+    if (!paymentAmount || isNaN(amount) || amount <= 0) {
       notify.error("الرجاء إدخال مبلغ صحيح");
+      return;
+    }
+    if (balance && amount > balance.total_outstanding) {
+      notify.error(`المبلغ المدخل (${amount} ج.م) يتجاوز إجمالي المستحقات (${balance.total_outstanding} ج.م)`);
       return;
     }
     setIsLoading(true);
     try {
       await analyticsService.insertDriverPayment(
         driverId, 
-        parseFloat(paymentAmount), 
+        amount, 
         paymentNotes || "تم التحصيل يدوياً من قبل الإدارة"
       );
       notify.success("تم تسجيل الدفعة بنجاح وخصمها من المستحقات");
       setPaymentAmount("");
       setPaymentNotes("");
+      loadBalance();
     } catch (error) {
        notify.error("حدث خطأ أثناء تسجيل الدفعة");
     } finally {
@@ -112,30 +131,87 @@ export function AdminDriverFinancials({ driverId, driverName, isOpen, onClose }:
           </TabsList>
 
           <TabsContent value="payment" className="space-y-4 py-4">
-             <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 mb-4">
-                <p className="text-sm text-blue-800">
-                  سجل المبالغ النقدية أو التحويلات التي استلمتها من المندوب كرسوم للمنصة. سيتم خصم هذا المبلغ فوراً من إجمالي المستحقات.
-                </p>
-             </div>
+             {/* Outstanding chips */}
+             {balance ? (
+               <div className="bg-muted/40 rounded-lg border p-3 space-y-3">
+                 <p className="text-xs font-semibold text-muted-foreground">مستحقات المندوب</p>
+                 <div className="flex flex-wrap gap-2">
+                   {balance.platform_fee_owed > 0 && (
+                     <button
+                       type="button"
+                       onClick={() => setPaymentAmount(String(balance.platform_fee_owed.toFixed(2)))}
+                       className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-border bg-background text-xs hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
+                     >
+                       عمولة توصيل <span className="font-bold">{formatPrice(balance.platform_fee_owed)}</span>
+                     </button>
+                   )}
+                   {balance.customer_fee_owed > 0 && (
+                     <button
+                       type="button"
+                       onClick={() => setPaymentAmount(String(balance.customer_fee_owed.toFixed(2)))}
+                       className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-border bg-background text-xs hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all"
+                     >
+                       نقدي عملاء <span className="font-bold">{formatPrice(balance.customer_fee_owed)}</span>
+                     </button>
+                   )}
+                   {balance.total_outstanding > 0 && (
+                     <button
+                       type="button"
+                       onClick={() => setPaymentAmount(String(balance.total_outstanding.toFixed(2)))}
+                       className="flex items-center gap-1 px-3 py-1.5 rounded-full border bg-primary/10 border-primary/30 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all"
+                     >
+                       تحصيل الكل <span>{formatPrice(balance.total_outstanding)}</span>
+                     </button>
+                   )}
+                   {balance.total_outstanding === 0 && (
+                     <span className="text-xs text-green-700 font-medium">✓ لا توجد مستحقات معلقة</span>
+                   )}
+                 </div>
+               </div>
+             ) : (
+               <div className="bg-muted/40 rounded-lg border p-3 text-xs text-muted-foreground">جاري تحميل المستحقات...</div>
+             )}
              <div className="space-y-2">
-               <Label>المبلغ المستلم (ر.س)</Label>
-               <Input 
-                 type="number" 
-                 placeholder="0.00" 
-                 value={paymentAmount} 
-                 onChange={(e) => setPaymentAmount(e.target.value)} 
+               <div className="flex items-center justify-between">
+                 <Label>المبلغ المستلم (ج.م)</Label>
+                 {balance && balance.total_outstanding > 0 && (
+                   <span className="text-xs text-muted-foreground">الحد الأقصى: <span className="font-semibold text-foreground">{formatPrice(balance.total_outstanding)}</span></span>
+                 )}
+               </div>
+               <Input
+                 type="number"
+                 placeholder="0.00"
+                 value={paymentAmount}
+                 min={0}
+                 max={balance?.total_outstanding ?? undefined}
+                 onChange={(e) => {
+                   const val = e.target.value;
+                   if (balance && Number(val) > balance.total_outstanding) {
+                     setPaymentAmount(String(balance.total_outstanding.toFixed(2)));
+                   } else {
+                     setPaymentAmount(val);
+                   }
+                 }}
+                 className={balance && Number(paymentAmount) > balance.total_outstanding ? 'border-red-500 focus-visible:ring-red-500' : ''}
                />
+               {balance && Number(paymentAmount) > balance.total_outstanding && (
+                 <p className="text-xs text-red-600 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> المبلغ يتجاوز إجمالي المستحقات</p>
+               )}
              </div>
              <div className="space-y-2">
                <Label>ملاحظات (اختياري)</Label>
-               <Textarea 
-                 placeholder="رقم الحوالة، اسم المستلم، إلخ..." 
-                 value={paymentNotes} 
+               <Textarea
+                 placeholder="رقم الحوالة، اسم المستلم، إلخ..."
+                 value={paymentNotes}
                  onChange={(e) => setPaymentNotes(e.target.value)}
                  rows={3}
                />
              </div>
-             <Button className="w-full" onClick={handleCollectPayment} disabled={isLoading}>
+             <Button
+               className="w-full"
+               onClick={handleCollectPayment}
+               disabled={isLoading || !paymentAmount || Number(paymentAmount) <= 0 || (!!balance && Number(paymentAmount) > balance.total_outstanding)}
+             >
                 {isLoading ? "جاري الحفظ..." : "تسجيل الدفعة وتخفيض المديونية"}
              </Button>
           </TabsContent>

@@ -492,7 +492,7 @@ const OrderCard = ({ order, onUpdateStatus, onViewDetails, isUpdating, getNextSt
     const IconComponent = ICON_MAP[statusConfig.icon] || ClipboardList;
 
     return (
-        <Card className="overflow-hidden border-l-4 hover:shadow-md transition-shadow" style={{ borderLeftColor: `var(--${statusConfig.color})` }}>
+        <Card className="overflow-hidden border-r-4 hover:shadow-md transition-shadow" style={{ borderRightColor: `var(--${statusConfig.color})` }}>
             <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
                 <div className="flex items-center gap-2">
                     <span className="font-mono font-bold text-lg">#{order.order_number.split('-')[1]}</span>

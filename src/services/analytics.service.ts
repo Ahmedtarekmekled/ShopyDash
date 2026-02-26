@@ -275,6 +275,20 @@ export const analyticsService = {
     if (error) throw error;
   },
 
+  async insertSubscriptionCharge(shopId: string, amount: number, billingMonth: string, notes?: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+    const { error } = await supabase.from('subscription_payments' as any).insert([{
+      shop_id: shopId,
+      amount,
+      billing_month: billingMonth, // e.g. "2026-02"
+      status: 'UNPAID',
+      notes: notes || `رسوم اشتراك شهري - ${billingMonth}`,
+      created_by_admin: user.id,
+    }]);
+    if (error) throw error;
+  },
+
   async insertPremiumSubscription(shopId: string, amount: number, startDate: string, endDate: string, paymentDate?: string, notes?: string): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");

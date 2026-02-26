@@ -36,6 +36,7 @@ import {
   Phone,
   MoreVertical,
   Star,
+  Menu,
 } from "lucide-react";
 import { SoundService } from "@/services/sound.service";
 import { useRef } from "react";
@@ -86,6 +87,14 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription,
+  SheetHeader,
+} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -3344,8 +3353,43 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-muted/30">
       <div className="container-app py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
-          <aside className="lg:w-64 flex-shrink-0">
+          {/* Mobile Header overlay */}
+          <div className="lg:hidden flex items-center justify-between mb-4 bg-background p-4 rounded-lg shadow-sm">
+            <h2 className="text-xl font-bold">لوحة التحكم</h2>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>لوحة التحكم</SheetTitle>
+                  <SheetDescription>قائمة تنقل لوحة التحكم</SheetDescription>
+                </SheetHeader>
+                <nav className="space-y-2 mt-8">
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      to={item.href}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                        location.pathname === item.href
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* Desktop Sidebar */}
+          <aside className="hidden lg:block lg:w-64 flex-shrink-0">
             <Card className="sticky top-24">
               <CardContent className="p-4">
                 <nav className="space-y-1">

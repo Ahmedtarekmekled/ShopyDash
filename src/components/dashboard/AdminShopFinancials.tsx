@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { notify } from "@/lib/notify";
-import { analyticsService, DetailedFinancialReport } from "@/services/analytics.service";
-import { DollarSign, Settings, Star, History, Printer } from "lucide-react";
+import { analyticsService, DetailedFinancialReport, FinancialShopPerformance } from "@/services/analytics.service";
+import { formatPrice } from "@/lib/utils";
+import { DollarSign, Settings, Star, History, Printer, AlertCircle } from "lucide-react";
 import { PrintableShopInvoice } from "./PrintableShopInvoice";
 
 interface AdminShopFinancialsProps {
@@ -24,6 +26,7 @@ export function AdminShopFinancials({ shopId, shopName, isOpen, onClose, isPremi
   const [activeTab, setActiveTab] = useState("payment");
   const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState<any>(null);
+  const [balance, setBalance] = useState<FinancialShopPerformance | null>(null);
 
   // Payment Form
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -39,6 +42,11 @@ export function AdminShopFinancials({ shopId, shopName, isOpen, onClose, isPremi
   const [subFee, setSubFee] = useState("");
   const [startDate, setStartDate] = useState("");
 
+  // Subscription Billing
+  const [subBillingAmount, setSubBillingAmount] = useState("");
+  const [subBillingMonth, setSubBillingMonth] = useState(() => new Date().toISOString().substring(0, 7));
+  const [subBillingNotes, setSubBillingNotes] = useState("");
+
   // Report Form
   const [reportMonth, setReportMonth] = useState(() => new Date().toISOString().substring(0, 7)); // YYYY-MM
   const [reportData, setReportData] = useState<DetailedFinancialReport | null>(null);
@@ -47,6 +55,7 @@ export function AdminShopFinancials({ shopId, shopName, isOpen, onClose, isPremi
   useEffect(() => {
     if (isOpen && shopId) {
       loadSettings();
+      loadBalance();
     }
   }, [isOpen, shopId]);
 
@@ -57,18 +66,27 @@ export function AdminShopFinancials({ shopId, shopName, isOpen, onClose, isPremi
         setSettings(data);
         setCommissionRate(data.commission_percentage?.toString() || "0");
         setSubFee(data.subscription_fee?.toString() || "0");
-        // Format for input type="date"
+        setSubBillingAmount(data.subscription_fee?.toString() || ""); // pre-fill billing amount
         if (data.financial_start_date) {
             setStartDate(new Date(data.financial_start_date).toISOString().split('T')[0]);
         }
       } else {
-         // Defaults if none exist
-         setCommissionRate("10"); // Example default 10%
+         setCommissionRate("10");
          setSubFee("0");
          setStartDate(new Date().toISOString().split('T')[0]);
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const loadBalance = async () => {
+    try {
+      const shops = await analyticsService.getFinancialDashboardShops();
+      const found = shops.find(s => s.shop_id === shopId);
+      setBalance(found || null);
+    } catch (e) {
+      console.error("loadBalance error", e);
     }
   };
 
@@ -80,6 +98,8 @@ export function AdminShopFinancials({ shopId, shopName, isOpen, onClose, isPremi
         subscription_fee: parseFloat(subFee) || 0,
         financial_start_date: startDate ? new Date(startDate).toISOString() : new Date().toISOString()
       });
+      // Pre-fill billing amount from new sub fee
+      setSubBillingAmount(subFee);
       notify.success("تم تحديث الإعدادات المالية للمتجر");
     } catch (error) {
        notify.error("حدث خطأ أثناء حفظ الإعدادات");
@@ -88,21 +108,54 @@ export function AdminShopFinancials({ shopId, shopName, isOpen, onClose, isPremi
     }
   };
 
-  const handleCollectPayment = async () => {
-    if (!paymentAmount || isNaN(Number(paymentAmount)) || Number(paymentAmount) <= 0) {
+  const handleBillSubscription = async () => {
+    const amount = parseFloat(subBillingAmount);
+    if (!subBillingAmount || isNaN(amount) || amount <= 0) {
       notify.error("الرجاء إدخال مبلغ صحيح");
+      return;
+    }
+    if (!subBillingMonth) {
+      notify.error("الرجاء تحديد الشهر المراد الفوترة عنه");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await analyticsService.insertSubscriptionCharge(shopId, amount, subBillingMonth, subBillingNotes || undefined);
+      notify.success(`تم إضافة رسوم اشتراك ${amount} ج.م لشهر ${subBillingMonth} بنجاح`);
+      setSubBillingNotes("");
+      // Advance billing month by 1 for next time
+      const [y, m] = subBillingMonth.split('-').map(Number);
+      const next = new Date(y, m, 1);
+      setSubBillingMonth(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`);
+      loadBalance(); // refresh outstanding chips
+    } catch (error: any) {
+      notify.error(error.message || "حدث خطأ أثناء إضافة رسوم الاشتراك");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCollectPayment = async () => {
+    const amount = Number(paymentAmount);
+    if (!paymentAmount || isNaN(amount) || amount <= 0) {
+      notify.error("الرجاء إدخال مبلغ صحيح");
+      return;
+    }
+    if (balance && amount > balance.total_outstanding) {
+      notify.error(`المبلغ المدخل (${amount} ج.م) يتجاوز إجمالي المستحقات (${balance.total_outstanding} ج.م)`);
       return;
     }
     setIsLoading(true);
     try {
       await analyticsService.insertCommissionPayment(
         shopId, 
-        parseFloat(paymentAmount), 
+        amount, 
         paymentNotes || "تم التحصيل يدوياً من قبل الإدارة"
       );
       notify.success("تم تسجيل الدفعة بنجاح وخصمها من المستحقات");
       setPaymentAmount("");
       setPaymentNotes("");
+      loadBalance(); // refresh the outstanding balance
     } catch (error) {
        notify.error("حدث خطأ أثناء تسجيل الدفعة");
     } finally {
@@ -198,30 +251,96 @@ export function AdminShopFinancials({ shopId, shopName, isOpen, onClose, isPremi
           </TabsContent>
 
           <TabsContent value="payment" className="space-y-4 py-4">
-             <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 mb-4">
-                <p className="text-sm text-blue-800">
-                  سجل الدفعات النقدية أو التحويلات التي استلمتها من المتجر. سيتم خصم هذا المبلغ فوراً من إجمالي المستحقات.
-                </p>
-             </div>
+             {/* Outstanding Summary + Quick-fill chips */}
+             {balance ? (
+               <div className="bg-muted/40 rounded-lg border p-3 space-y-3">
+                 <p className="text-xs font-semibold text-muted-foreground">مستحقات المتجر</p>
+                 <div className="flex flex-wrap gap-2">
+                   {balance.commission_owed - balance.commission_paid > 0 && (
+                     <button
+                       type="button"
+                       onClick={() => setPaymentAmount(String((balance.commission_owed - balance.commission_paid).toFixed(2)))}
+                       className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-border bg-background text-xs hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
+                     >
+                       عمولة <span className="font-bold">{formatPrice(balance.commission_owed - balance.commission_paid)}</span>
+                     </button>
+                   )}
+                   {balance.subscription_owed - balance.subscription_paid > 0 && (
+                     <button
+                       type="button"
+                       onClick={() => setPaymentAmount(String((balance.subscription_owed - balance.subscription_paid).toFixed(2)))}
+                       className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-border bg-background text-xs hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
+                     >
+                       اشتراك <span className="font-bold">{formatPrice(balance.subscription_owed - balance.subscription_paid)}</span>
+                     </button>
+                   )}
+                   {balance.premium_owed - balance.premium_paid > 0 && (
+                     <button
+                       type="button"
+                       onClick={() => setPaymentAmount(String((balance.premium_owed - balance.premium_paid).toFixed(2)))}
+                       className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-border bg-background text-xs hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all"
+                     >
+                       تمييز <span className="font-bold">{formatPrice(balance.premium_owed - balance.premium_paid)}</span>
+                     </button>
+                   )}
+                   {balance.total_outstanding > 0 && (
+                     <button
+                       type="button"
+                       onClick={() => setPaymentAmount(String(balance.total_outstanding.toFixed(2)))}
+                       className="flex items-center gap-1 px-3 py-1.5 rounded-full border bg-primary/10 border-primary/30 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all"
+                     >
+                       تحصيل الكل <span>{formatPrice(balance.total_outstanding)}</span>
+                     </button>
+                   )}
+                   {balance.total_outstanding === 0 && (
+                     <span className="text-xs text-green-700 font-medium">✓ لا توجد مستحقات معلقة</span>
+                   )}
+                 </div>
+               </div>
+             ) : (
+               <div className="bg-muted/40 rounded-lg border p-3 text-xs text-muted-foreground">جاري تحميل المستحقات...</div>
+             )}
              <div className="space-y-2">
-               <Label>المبلغ المستلم (ر.س)</Label>
-               <Input 
-                 type="number" 
-                 placeholder="0.00" 
-                 value={paymentAmount} 
-                 onChange={(e) => setPaymentAmount(e.target.value)} 
+               <div className="flex items-center justify-between">
+                 <Label>المبلغ المستلم (ج.م)</Label>
+                 {balance && balance.total_outstanding > 0 && (
+                   <span className="text-xs text-muted-foreground">الحد الأقصى: <span className="font-semibold text-foreground">{formatPrice(balance.total_outstanding)}</span></span>
+                 )}
+               </div>
+               <Input
+                 type="number"
+                 placeholder="0.00"
+                 value={paymentAmount}
+                 min={0}
+                 max={balance?.total_outstanding ?? undefined}
+                 onChange={(e) => {
+                   const val = e.target.value;
+                   if (balance && Number(val) > balance.total_outstanding) {
+                     setPaymentAmount(String(balance.total_outstanding.toFixed(2)));
+                   } else {
+                     setPaymentAmount(val);
+                   }
+                 }}
+                 className={balance && Number(paymentAmount) > balance.total_outstanding ? 'border-red-500 focus-visible:ring-red-500' : ''}
                />
+               {balance && Number(paymentAmount) > balance.total_outstanding && (
+                 <p className="text-xs text-red-600 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> المبلغ يتجاوز إجمالي المستحقات</p>
+               )}
              </div>
              <div className="space-y-2">
                <Label>ملاحظات (اختياري)</Label>
-               <Textarea 
-                 placeholder="رقم الحوالة، اسم المستلم، إلخ..." 
-                 value={paymentNotes} 
+               <Textarea
+                 placeholder="رقم الحوالة، اسم المستلم، إلخ..."
+                 value={paymentNotes}
                  onChange={(e) => setPaymentNotes(e.target.value)}
                  rows={3}
                />
              </div>
-             <Button className="w-full" onClick={handleCollectPayment} disabled={isLoading}>
+             <Button
+               className="w-full"
+               onClick={handleCollectPayment}
+               disabled={isLoading || !paymentAmount || Number(paymentAmount) <= 0 || (!!balance && Number(paymentAmount) > balance.total_outstanding)}
+             >
                 {isLoading ? "جاري الحفظ..." : "تسجيل الدفعة وتخفيض المديونية"}
              </Button>
           </TabsContent>
@@ -279,33 +398,89 @@ export function AdminShopFinancials({ shopId, shopName, isOpen, onClose, isPremi
              </Button>
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-4 py-4">
-             <div className="bg-muted p-4 rounded-lg mb-4 text-sm text-muted-foreground leading-relaxed">
-               <strong>تاريخ بدء الحسابات:</strong> لن يتم احتساب أي عمولات للطلبات التي تمت قبل هذا التاريخ، مما يمنع تراكم المديونيات القديمة الخاطئة.<br/>
-               <strong>نسبة العمولة:</strong> يتم أخذ نسخة ثابتة (Snapshot) من هذه النسبة على كل طلب فور اكتماله.
+          <TabsContent value="settings" className="space-y-5 py-4">
+             {/* Commission Settings */}
+             <div className="space-y-3">
+               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">إعدادات العمولة</p>
+               <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                   <Label>نسبة عمولة المنصة (%)</Label>
+                   <Input
+                     type="number"
+                     placeholder="10"
+                     value={commissionRate}
+                     onChange={(e) => setCommissionRate(e.target.value)}
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <Label>تاريخ بدء الحسابات</Label>
+                   <Input
+                     type="date"
+                     value={startDate}
+                     onChange={(e) => setStartDate(e.target.value)}
+                   />
+                 </div>
+               </div>
+               <Button className="w-full" variant="secondary" onClick={handleSaveSettings} disabled={isLoading}>
+                 {isLoading ? "جاري الحفظ..." : "حفظ إعدادات العمولة"}
+               </Button>
              </div>
-             <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>نسبة عمولة المنصة (%)</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="10" 
-                    value={commissionRate} 
-                    onChange={(e) => setCommissionRate(e.target.value)} 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>تاريخ بدء الحسابات المالية</Label>
-                  <Input 
-                    type="date" 
-                    value={startDate} 
-                    onChange={(e) => setStartDate(e.target.value)} 
-                  />
-                </div>
+
+             <div className="border-t pt-4 space-y-3">
+               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">رسوم الاشتراك الشهري</p>
+               <div className="bg-muted/40 rounded-lg p-3 text-xs text-muted-foreground leading-relaxed">
+                 أضف رسوماً شهرية ثابتة على المتجر لخدمة المنصة. ستظهر المستحقات فوراً في حساب المتجر وتضاف لكشف الحساب الشهري.
+               </div>
+
+               {/* Default fee badge from settings */}
+               {settings?.subscription_fee > 0 && (
+                 <div className="flex items-center gap-2">
+                   <span className="text-xs text-muted-foreground">الرسوم المحددة بالإعدادات:</span>
+                   <button
+                     type="button"
+                     onClick={() => setSubBillingAmount(String(settings.subscription_fee))}
+                     className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all"
+                   >
+                     {formatPrice(settings.subscription_fee)} / شهر
+                   </button>
+                 </div>
+               )}
+
+               <div className="grid grid-cols-2 gap-3">
+                 <div className="space-y-1.5">
+                   <Label className="text-xs">مبلغ الاشتراك (ج.م)</Label>
+                   <Input
+                     type="number"
+                     placeholder="700"
+                     value={subBillingAmount}
+                     onChange={(e) => setSubBillingAmount(e.target.value)}
+                   />
+                 </div>
+                 <div className="space-y-1.5">
+                   <Label className="text-xs">الشهر</Label>
+                   <Input
+                     type="month"
+                     value={subBillingMonth}
+                     onChange={(e) => setSubBillingMonth(e.target.value)}
+                   />
+                 </div>
+               </div>
+               <div className="space-y-1.5">
+                 <Label className="text-xs">ملاحظات (اختياري)</Label>
+                 <Input
+                   placeholder="هاتف التأكيد، رقم الفاتورة..."
+                   value={subBillingNotes}
+                   onChange={(e) => setSubBillingNotes(e.target.value)}
+                 />
+               </div>
+               <Button
+                 className="w-full"
+                 onClick={handleBillSubscription}
+                 disabled={isLoading || !subBillingAmount || Number(subBillingAmount) <= 0}
+               >
+                 {isLoading ? "جاري الحفظ..." : `إضافة رسوم اشتراك ${subBillingMonth} لحساب المتجر`}
+               </Button>
              </div>
-             <Button className="w-full mt-4" variant="secondary" onClick={handleSaveSettings} disabled={isLoading}>
-                {isLoading ? "جاري الحفظ..." : "حفظ الإعدادات المالية"}
-             </Button>
           </TabsContent>
 
         </Tabs>

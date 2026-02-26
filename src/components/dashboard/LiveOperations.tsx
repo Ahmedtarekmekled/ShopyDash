@@ -1,45 +1,46 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Order } from "@/types/database";
 import { formatDistanceToNow, differenceInMinutes } from "date-fns";
 import { ar } from "date-fns/locale";
-import { 
-  AlertTriangle, 
-  Clock, 
-  Package, 
-  RefreshCw, 
-  Store, 
-  Truck, 
+import {
+  AlertTriangle,
+  Clock,
+  Package,
+  RefreshCw,
+  Store,
+  CheckCircle,
   Zap,
-  CheckCircle
+  Circle,
 } from "lucide-react";
 import { formatPrice, cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
+
+const STATUS_MAP: Record<string, { label: string; color: string; dot: string }> = {
+  PLACED:              { label: "جديد",           color: "text-blue-600",      dot: "bg-blue-500" },
+  PREPARING:           { label: "قيد التحضير",    color: "text-amber-600",     dot: "bg-amber-500" },
+  READY_FOR_DELIVERY:  { label: "جاهز للتسليم",   color: "text-emerald-600",   dot: "bg-emerald-500" },
+  OUT_FOR_DELIVERY:    { label: "جاري التوصيل",   color: "text-purple-600",    dot: "bg-purple-500" },
+  CANCELLED_BY_SHOP:   { label: "ملغي بالمتجر",   color: "text-red-500",       dot: "bg-red-400" },
+};
 
 export function LiveOperations() {
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  const { data: activeOrders, isLoading, refetch } = useQuery({
-    queryKey: ['admin_live_orders', lastRefresh],
+  const { data: activeOrders = [], isLoading, refetch } = useQuery({
+    queryKey: ["admin_live_orders", lastRefresh],
     queryFn: async () => {
-      // Fetch all non-final orders with shop info
       const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          shop:shops(id, name, phone)
-        `)
-        .not('status', 'in', '("DELIVERED","CANCELLED")')
-        .order('created_at', { ascending: true }); // Oldest first (stuck)
-        
+        .from("orders")
+        .select(`*, shop:shops(id, name, phone)`)
+        .not("status", "in", '("DELIVERED","CANCELLED")')
+        .order("created_at", { ascending: true });
       if (error) throw error;
       return data as any[];
     },
-    refetchInterval: 30000, // auto refresh every 30s
+    refetchInterval: 30000,
   });
 
   const handleManualRefresh = () => {
@@ -47,142 +48,142 @@ export function LiveOperations() {
     refetch();
   };
 
-  if (isLoading || !activeOrders) {
-    return <div className="text-center p-12 text-muted-foreground animate-pulse">جاري تحميل العمليات المباشرة...</div>;
-  }
-
-  // Determine insights
   const now = new Date();
-  
-  // Stuck = preparing for > 30 mins, or Placed for > 15 mins
-  const stuckOrders = activeOrders.filter(order => {
+
+  const stuckOrders = activeOrders.filter((order) => {
     const mins = differenceInMinutes(now, new Date(order.created_at));
-    if (order.status === 'PLACED' && mins > 15) return true;
-    if (order.status === 'PREPARING' && mins > 30) return true;
-    if (order.status === 'READY_FOR_DELIVERY' && mins > 45) return true;
-    if (order.status === 'OUT_FOR_DELIVERY' && mins > 120) return true; // 2 hours out?
+    if (order.status === "PLACED" && mins > 15) return true;
+    if (order.status === "PREPARING" && mins > 30) return true;
+    if (order.status === "READY_FOR_DELIVERY" && mins > 45) return true;
+    if (order.status === "OUT_FOR_DELIVERY" && mins > 120) return true;
     return false;
   });
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: any; label: string }> = {
-      PLACED: { variant: "secondary", label: "جديد" },
-      PREPARING: { variant: "outline", label: "قيد التحضير" },
-      READY_FOR_DELIVERY: { variant: "default", label: "جاهز للتسليم" },
-      OUT_FOR_DELIVERY: { variant: "secondary", label: "جاري التوصيل" },
-    };
-    return variants[status] || { variant: "outline", label: status };
-  };
+  if (isLoading) {
+    return (
+      <div className="text-center p-16 text-muted-foreground animate-pulse">
+        جاري تحميل العمليات المباشرة...
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-5">
+      {/* Header Row */}
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold flex items-center gap-2">
+          <h2 className="text-lg font-bold flex items-center gap-2">
             <Zap className="w-5 h-5 text-amber-500" />
-            العمليات الذكية المباشرة
+            العمليات المباشرة
           </h2>
-          <p className="text-sm text-muted-foreground">مراقبة حية للاختناقات وأوامر التوصيل المتأخرة</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            تحديث تلقائي كل 30 ثانية · {activeOrders.length} طلب نشط
+          </p>
         </div>
         <Button variant="outline" size="sm" onClick={handleManualRefresh} className="gap-2">
           <RefreshCw className="w-4 h-4" />
-          تحديث ({activeOrders.length} طلب نشط)
+          تحديث
         </Button>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Smart Insights Panel */}
-        <Card className="md:col-span-1 bg-amber-500/5 border-amber-500/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-amber-700">
-              <AlertTriangle className="w-5 h-5" />
-              رؤى ذكية تحذيرية
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {stuckOrders.length > 0 ? (
-              <div className="space-y-3">
-                <div className="p-3 bg-red-100/50 rounded-lg text-red-800 text-sm font-medium flex items-start gap-2">
-                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                   يوجد {stuckOrders.length} طلبات متأخرة عن المعدل الطبيعي وتحتاج لتدخل أو متابعة مع المتجر/المندوب.
+      {/* Alert bar if stuck orders */}
+      {stuckOrders.length > 0 && (
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+          <div>
+            <span className="font-semibold">{stuckOrders.length} طلب متأخر</span>
+            {" — "}يحتاج لتدخل أو متابعة مع المتجر/المندوب.
+            <div className="mt-1.5 space-y-1">
+              {stuckOrders.slice(0, 3).map((o) => (
+                <div key={o.id} className="text-xs text-red-700 flex gap-2">
+                  <span className="font-medium">{o.shop?.name}</span>
+                  <span className="text-red-500">
+                    #{o.order_number} · منذ {differenceInMinutes(now, new Date(o.created_at))} دقيقة
+                  </span>
                 </div>
-                {stuckOrders.slice(0, 3).map(order => (
-                  <div key={order.id} className="text-sm border-l-2 border-red-500 pl-3 py-1 ml-2">
-                     <p className="font-semibold">{order.shop?.name || 'متجر غير معروف'}</p>
-                     <p className="text-muted-foreground">طلب #{order.order_number} - متأخر منذ {differenceInMinutes(now, new Date(order.created_at))} دقيقة</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center p-6 text-center">
-                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
-                    <CheckCircle className="w-6 h-6 text-green-600" />
-                 </div>
-                 <p className="font-medium text-green-800">العمليات تسير بشكل ممتاز</p>
-                 <p className="text-xs text-muted-foreground mt-1">لا توجد أي طلبات متأخرة حالياً أو اختناقات في المنصة.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
-        {/* Active Orders List */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base flex justify-between items-center">
-               <span>سجل الطلبات النشطة (الأقدم أولاً)</span>
-               <Badge variant="secondary">{activeOrders.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-              {activeOrders.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">لا توجد أي طلبات نشطة في النظام حالياً.</div>
-              ) : (
-                activeOrders.map(order => {
-                  const isStuck = stuckOrders.some(s => s.id === order.id);
-                  const statusInfo = getStatusBadge(order.status);
-                  
-                  return (
-                    <div 
-                      key={order.id} 
-                      className={cn(
-                        "flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border",
-                        isStuck ? "bg-red-50 border-red-200" : "bg-card"
-                      )}
-                    >
-                      <div className="flex gap-4 items-start sm:items-center">
-                        <div className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                          isStuck ? "bg-red-100 text-red-600" : "bg-primary/10 text-primary"
-                        )}>
-                           <Package className="w-5 h-5" />
-                        </div>
-                        <div>
-                           <div className="flex items-center gap-2">
-                              <span className="font-bold">#{order.order_number}</span>
-                              {isStuck && <Badge variant="destructive" className="text-[10px] h-5">تأخير</Badge>}
-                           </div>
-                           <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                              <span className="flex items-center gap-1"><Store className="w-3 h-3" /> {order.shop?.name}</span>
-                              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> منذ {formatDistanceToNow(new Date(order.created_at), { locale: ar, addSuffix: false })}</span>
-                           </div>
-                        </div>
+      {/* Order List */}
+      <Card>
+        <CardHeader className="pb-2 pt-4 px-4">
+          <CardTitle className="text-sm font-semibold text-muted-foreground">
+            سجل الطلبات النشطة (الأقدم أولاً)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {activeOrders.length === 0 ? (
+            <div className="flex flex-col items-center py-16 text-center text-muted-foreground">
+              <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+              </div>
+              <p className="font-medium text-green-700">لا توجد طلبات نشطة حالياً</p>
+              <p className="text-xs mt-1">العمليات تسير بشكل ممتاز.</p>
+            </div>
+          ) : (
+            <div className="divide-y max-h-[560px] overflow-y-auto">
+              {activeOrders.map((order) => {
+                const isStuck = stuckOrders.some((s) => s.id === order.id);
+                const status = STATUS_MAP[order.status] ?? { label: order.status, color: "text-muted-foreground", dot: "bg-muted" };
+
+                return (
+                  <div
+                    key={order.id}
+                    className={cn(
+                      "flex items-center gap-4 px-4 py-3 transition-colors hover:bg-muted/30",
+                      isStuck && "bg-red-50/60"
+                    )}
+                  >
+                    {/* Icon */}
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+                      isStuck ? "bg-red-100" : "bg-muted"
+                    )}>
+                      <Package className={cn("w-4 h-4", isStuck ? "text-red-600" : "text-muted-foreground")} />
+                    </div>
+
+                    {/* Order Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-semibold truncate">
+                          #{order.order_number}
+                        </span>
+                        {isStuck && (
+                          <Badge variant="destructive" className="text-[9px] h-4 px-1">تأخير</Badge>
+                        )}
                       </div>
-                      
-                      <div className="mt-3 sm:mt-0 flex items-center justify-between sm:justify-end gap-4 sm:w-1/3">
-                         <div className="text-left font-medium">
-                            {formatPrice(order.total)}
-                         </div>
-                         <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                        <span className="flex items-center gap-1">
+                          <Store className="w-3 h-3" />
+                          {order.shop?.name ?? "—"}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          منذ {formatDistanceToNow(new Date(order.created_at), { locale: ar })}
+                        </span>
                       </div>
                     </div>
-                  );
-                })
-              )}
+
+                    {/* Amount */}
+                    <div className="text-sm font-semibold shrink-0">
+                      {formatPrice(order.total)}
+                    </div>
+
+                    {/* Status */}
+                    <div className={cn("flex items-center gap-1.5 text-xs font-medium shrink-0", status.color)}>
+                      <span className={cn("w-1.5 h-1.5 rounded-full", status.dot)} />
+                      {status.label}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
