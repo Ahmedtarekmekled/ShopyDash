@@ -34,6 +34,8 @@ import {
   BarChart2,
   AlertTriangle,
   Phone,
+  MoreVertical,
+  Star,
 } from "lucide-react";
 import { SoundService } from "@/services/sound.service";
 import { useRef } from "react";
@@ -84,6 +86,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from "@/components/ui/dropdown-menu";
 import { AR } from "@/lib/i18n";
 import { formatPrice } from "@/lib/utils";
 import { format } from "date-fns";
@@ -116,6 +129,7 @@ import {
   Cell
 } from "recharts";
 import { AdminFinancials } from "@/components/dashboard/AdminFinancials";
+import { AdminShopFinancials } from "@/components/dashboard/AdminShopFinancials";
 import { LiveOperations } from "@/components/dashboard/LiveOperations";
 import type {
   Product,
@@ -2567,6 +2581,7 @@ function AdminShops() {
   
   // Status Management
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
+  const [selectedFinancialShop, setSelectedFinancialShop] = useState<Shop | null>(null);
   const [actionDialog, setActionDialog] = useState<'REJECT' | 'SUSPEND' | null>(null);
   const [reason, setReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -2785,79 +2800,103 @@ function AdminShops() {
                       {!shop.is_active && shop.disabled_reason && <p className="text-sm text-destructive mt-1">سبب الإيقاف: {shop.disabled_reason}</p>}
                     </div>
 
-                    <div className="flex flex-col justify-end gap-2 w-full md:w-auto md:min-w-[140px]">
+                    <div className="flex flex-col justify-end w-full md:w-auto mt-4 md:mt-0">
                       {/* Actions based on Status */}
-                      {shop.approval_status === 'PENDING' && (
-                        <div className="flex flex-col gap-2 w-full">
-                          <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 h-10" onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
+                      {shop.approval_status === 'PENDING' ? (
+                        <div className="flex gap-2 w-full md:w-auto">
+                          <Button size="sm" className="flex-1 md:w-24 bg-green-600 hover:bg-green-700 h-9" onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
                             قبول
                           </Button>
-                          <Button size="sm" variant="destructive" className="w-full h-10" onClick={() => handleUpdateStatus(shop, 'REJECTED')}>
+                          <Button size="sm" variant="destructive" className="flex-1 md:w-24 h-9" onClick={() => handleUpdateStatus(shop, 'REJECTED')}>
                             رفض
                           </Button>
                         </div>
-                      )}
-                      
-                      {activeTab === 'APPROVED' && (
-                         <div className="flex flex-col gap-1">
-                           {shop.is_premium ? (
-                             <Select 
-                               defaultValue={shop.premium_sort_order?.toString() || "0"}
-                               onValueChange={(val) => {
-                                 if (val === 'REMOVE') handleTogglePremium(shop);
-                                 else {
-                                   shopsService.update(shop.id, { 
-                                     is_premium: true, 
-                                     premium_sort_order: parseInt(val) 
-                                   }).then(() => {
-                                     notify.success("تم تحديث ترتيب التميز");
-                                     loadShops();
-                                   });
-                                 }
-                               }}
-                             >
-                               <SelectTrigger className="w-full md:w-[140px] h-10 border-amber-500 text-amber-600 bg-amber-50/50">
-                                 <SelectValue placeholder="ترتيب التميز" />
-                               </SelectTrigger>
-                               <SelectContent>
-                                 <SelectItem value="1">مساحة مميزة #1</SelectItem>
-                                 <SelectItem value="2">مساحة مميزة #2</SelectItem>
-                                 <SelectItem value="99">مميز (عام)</SelectItem>
-                                 <SelectItem value="REMOVE" className="text-destructive focus:text-destructive">إلغاء التميز</SelectItem>
-                               </SelectContent>
-                             </Select>
-                           ) : (
-                             <Button size="sm" variant="outline" className="w-full h-10" onClick={() => handleTogglePremium(shop)}>
-                                تمييز المتجر
-                             </Button>
+                      ) : (
+                        <div className="flex gap-2 items-center justify-end w-full md:w-auto">
+                           {shop.approval_status === 'APPROVED' && (
+                               <Button size="sm" variant="outline" className="flex-1 md:flex-none h-9 border-blue-200 hover:bg-blue-50 text-blue-700" onClick={() => setSelectedFinancialShop(shop)}>
+                                  <DollarSign className="w-4 h-4 ml-2" /> المالية
+                               </Button>
                            )}
-                         </div>
-                      )}
 
-                      {shop.approval_status === 'APPROVED' && (
-                        shop.is_active ? (
-                          <Button size="sm" variant="destructive" className="w-full h-10" onClick={() => handleUpdateStatus(shop, 'SUSPENDED')}>
-                             <Ban className="w-4 h-4 ml-2" /> إيقاف
-                          </Button>
-                        ) : (
-                          <Button size="sm" variant="outline" className="w-full h-10" onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
-                             <CheckCircle className="w-4 h-4 ml-2" /> تفعيل
-                          </Button>
-                        )
-                      )}
+                           <Link to={`/dashboard/shops/analytics/${shop.id}`} className="flex-1 md:flex-none">
+                             <Button variant="secondary" size="sm" className="w-full h-9">
+                               <BarChart2 className="w-4 h-4 ml-2" /> التحليلات
+                             </Button>
+                           </Link>
 
-                       {/* Open/Close Button */}
-                      {shop.approval_status === 'APPROVED' && shop.is_active && (
-                          <Button size="sm" variant="outline" className="w-full h-10" onClick={() => handleToggleOpen(shop)}>
-                            {shop.is_open ? "إغلاق" : "فتح"}
-                          </Button>
-                      )}
+                           <DropdownMenu>
+                             <DropdownMenuTrigger asChild>
+                               <Button variant="outline" size="sm" className="h-9 w-9 p-0 flex-shrink-0">
+                                 <MoreVertical className="h-4 w-4" />
+                               </Button>
+                             </DropdownMenuTrigger>
+                             <DropdownMenuContent align="end" className="w-48">
+                               {shop.approval_status === 'APPROVED' && (
+                                  <>
+                                    <DropdownMenuLabel>إجراءات المتجر</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    
+                                    {shop.is_premium ? (
+                                      <DropdownMenuSub>
+                                        <DropdownMenuSubTrigger>
+                                          <Star className="w-4 h-4 ml-2 rtl:mr-0 text-amber-500 fill-amber-500"/> ترتيب التميز
+                                        </DropdownMenuSubTrigger>
+                                        <DropdownMenuSubContent>
+                                          <DropdownMenuItem onClick={() => {
+                                             shopsService.update(shop.id, { is_premium: true, premium_sort_order: 1 }).then(() => { notify.success("تم تحديث ترتيب التميز"); loadShops(); });
+                                          }}>مساحة مميزة #1</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => {
+                                             shopsService.update(shop.id, { is_premium: true, premium_sort_order: 2 }).then(() => { notify.success("تم تحديث ترتيب التميز"); loadShops(); });
+                                          }}>مساحة مميزة #2</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => {
+                                             shopsService.update(shop.id, { is_premium: true, premium_sort_order: 99 }).then(() => { notify.success("تم تحديث ترتيب التميز"); loadShops(); });
+                                          }}>مميز (عام)</DropdownMenuItem>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleTogglePremium(shop)}>
+                                            إلغاء التميز
+                                          </DropdownMenuItem>
+                                        </DropdownMenuSubContent>
+                                      </DropdownMenuSub>
+                                    ) : (
+                                      <DropdownMenuItem onClick={() => handleTogglePremium(shop)}>
+                                        <Star className="w-4 h-4 ml-2" /> تمييز المتجر
+                                      </DropdownMenuItem>
+                                    )}
 
-                      <Link to={`/dashboard/shops/analytics/${shop.id}`} className="w-full">
-                        <Button variant="ghost" size="sm" className="w-full h-10">
-                          <BarChart2 className="w-4 h-4 ml-2" /> التحليلات
-                        </Button>
-                      </Link>
+                                    {shop.is_active ? (
+                                      <DropdownMenuItem onClick={() => handleToggleOpen(shop)}>
+                                        {shop.is_open ? <><Store className="w-4 h-4 ml-2"/> إغلاق المتجر</> : <><Store className="w-4 h-4 ml-2"/> فتح المتجر</>}
+                                      </DropdownMenuItem>
+                                    ) : (
+                                      <DropdownMenuItem onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
+                                        <CheckCircle className="w-4 h-4 ml-2 text-green-600" /> تفعيل المتجر الموقوف
+                                      </DropdownMenuItem>
+                                    )}
+
+                                    <DropdownMenuSeparator />
+
+                                    {shop.is_active && (
+                                      <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => handleUpdateStatus(shop, 'SUSPENDED')}>
+                                        <Ban className="w-4 h-4 ml-2" /> إيقاف مؤقت
+                                      </DropdownMenuItem>
+                                    )}
+                                  </>
+                               )}
+                               
+                               {shop.approval_status === 'REJECTED' && (
+                                  <>
+                                    <DropdownMenuLabel>مراجعة الرفض</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
+                                      <CheckCircle className="w-4 h-4 ml-2 text-green-600" /> قبول المتجر (تراجع عن الرفض)
+                                    </DropdownMenuItem>
+                                  </>
+                               )}
+                             </DropdownMenuContent>
+                           </DropdownMenu>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -2875,30 +2914,38 @@ function AdminShops() {
              </DialogTitle>
            </DialogHeader>
            <div className="space-y-4 py-4">
-              <p className="text-sm text-muted-foreground">
-                {actionDialog === 'REJECT' 
-                  ? 'يرجى ذكر سبب رفض هذا المتجر. سيظهر هذا السبب لصاحب المتجر.' 
-                  : 'يرجى ذكر سبب إيقاف هذا المتجر. لن يتمكن المتجر من استقبال طلبات جديدة.'}
-              </p>
-              <Textarea 
-                placeholder="السبب..." 
-                value={reason} 
-                onChange={(e) => setReason(e.target.value)} 
-                rows={4}
-              />
-              <div className="flex gap-2 justify-end">
-                <Button variant="ghost" onClick={() => setActionDialog(null)}>إلغاء</Button>
-                <Button 
-                  variant="destructive" 
-                  onClick={handleProcessAction} 
-                  disabled={isProcessing || !reason.trim()}
-                >
-                  {isProcessing ? 'جاري التنفيذ...' : 'تأكيد'}
-                </Button>
+              <div className="space-y-2">
+                <Label>السبب (مطلوب)</Label>
+                <Textarea 
+                  placeholder={actionDialog === 'REJECT' ? 'سبب رفض المتجر...' : 'سبب الإيقاف المؤقت...'}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={4}
+                />
               </div>
-           </div>
-        </DialogContent>
+              <Button 
+                className="w-full" 
+                variant="destructive"
+                onClick={handleProcessAction}
+                disabled={!reason.trim() || isProcessing}
+              >
+                {isProcessing ? "جاري الحفظ..." : "تأكيد واستمرار"}
+              </Button>
+            </div>
+         </DialogContent>
       </Dialog>
+      
+      {/* Financials Modal */}
+      {selectedFinancialShop && (
+         <AdminShopFinancials
+           shopId={selectedFinancialShop.id}
+           shopName={selectedFinancialShop.name}
+           isOpen={!!selectedFinancialShop}
+           onClose={() => setSelectedFinancialShop(null)}
+           isPremiumActive={(selectedFinancialShop as any).is_premium_active}
+           premiumExpiresAt={(selectedFinancialShop as any).premium_expires_at}
+         />
+      )}
     </div>
   );
 }

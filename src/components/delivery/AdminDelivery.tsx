@@ -41,6 +41,7 @@ import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { ar } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AdminDriverFinancials } from "@/components/dashboard/AdminDriverFinancials";
 import {
   LineChart,
   Line,
@@ -58,6 +59,7 @@ function CouriersTab({ drivers, period, setPeriod }: { drivers: DriverPerformanc
   const [selectedDriver, setSelectedDriver] = useState<DriverPerformance | null>(null);
   const [analytics, setAnalytics] = useState<CourierAnalytics[]>([]);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [financialDriver, setFinancialDriver] = useState<DriverPerformance | null>(null);
 
   const loadAnalytics = async (driverId: string) => {
     setLoadingAnalytics(true);
@@ -101,16 +103,16 @@ function CouriersTab({ drivers, period, setPeriod }: { drivers: DriverPerformanc
       </div>
 
       <div className="rounded-md border">
-        <div className="grid grid-cols-6 gap-4 p-4 font-medium bg-muted text-sm border-b">
+        <div className="grid grid-cols-7 gap-4 p-4 font-medium bg-muted text-sm border-b">
            <div className="col-span-2">المندوب</div>
            <div>الطلبات (فترة)</div>
            <div>معدل القبول</div>
            <div>أرباح (فترة)</div>
-           <div>إجراءات</div>
+           <div className="col-span-2">إجراءات</div>
         </div>
         <div className="divide-y max-h-[500px] overflow-y-auto">
            {drivers.map((driver) => (
-             <div key={driver.driver_id} className="grid grid-cols-6 gap-4 p-4 text-sm items-center hover:bg-muted/50">
+             <div key={driver.driver_id} className="grid grid-cols-7 gap-4 p-4 text-sm items-center hover:bg-muted/50">
                <div className="col-span-2 flex items-center gap-3">
                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <User className="w-4 h-4 text-primary" />
@@ -127,8 +129,11 @@ function CouriersTab({ drivers, period, setPeriod }: { drivers: DriverPerformanc
                   </Badge>
                </div>
                <div className="font-medium text-green-600">{formatPrice(driver.earnings)}</div>
-               <div>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedDriver(driver)}>
+               <div className="col-span-2 flex gap-2">
+                  <Button variant="outline" size="sm" className="border-blue-200 text-blue-700 hover:bg-blue-50" onClick={() => setFinancialDriver(driver)}>
+                     <DollarSign className="w-4 h-4 ml-1" /> المالية
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => setSelectedDriver(driver)}>
                      <BarChart2 className="w-4 h-4 ml-1" />
                      تفاصيل
                   </Button>
@@ -188,6 +193,15 @@ function CouriersTab({ drivers, period, setPeriod }: { drivers: DriverPerformanc
           )}
         </DialogContent>
       </Dialog>
+
+      {financialDriver && (
+        <AdminDriverFinancials 
+          driverId={financialDriver.driver_id}
+          driverName={financialDriver.driver_name || "غير معروف"}
+          isOpen={!!financialDriver}
+          onClose={() => setFinancialDriver(null)}
+        />
+      )}
     </div>
   );
 }
@@ -638,7 +652,7 @@ export function AdminDelivery() {
          <h1 className="text-2xl font-bold">مركز إدارة التوصيل</h1>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs defaultValue="overview" className="w-full" dir="rtl">
         <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
           <TabsTrigger value="overview">الأداء والمناديب</TabsTrigger>
           <TabsTrigger value="orders">تدقيق الطلبات</TabsTrigger>

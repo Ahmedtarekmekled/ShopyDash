@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { shopsService } from './catalog.service';
 
 export interface GlobalMetrics {
   total_revenue: number;
@@ -37,6 +38,53 @@ export interface PlatformGrowth {
   day_date: string;
   total_orders: number;
   total_revenue: number;
+}
+
+export interface FinancialShopPerformance {
+  shop_id: string;
+  shop_name: string;
+  is_premium: boolean;
+  total_orders: number;
+  gross_revenue: number;
+  commission_owed: number;
+  commission_paid: number;
+  subscription_owed: number;
+  subscription_paid: number;
+  premium_owed: number;
+  premium_paid: number;
+  total_outstanding: number;
+  last_payment_date: string | null;
+  financial_status: 'GOOD' | 'LATE' | 'CRITICAL';
+}
+
+export interface FinancialDriverPerformance {
+  driver_id: string;
+  driver_name: string;
+  driver_phone: string | null;
+  total_deliveries: number;
+  gross_earnings: number;
+  platform_fee_owed: number;
+  customer_fee_owed: number;
+  platform_fee_paid: number;
+  total_outstanding: number;
+  last_settlement_date: string | null;
+}
+
+export interface FinancialPlatformRollup {
+  shop_commissions: { owed: number; paid: number; outstanding: number };
+  premium_subscriptions: { owed: number; paid: number; outstanding: number };
+  regular_subscriptions: { owed: number; paid: number; outstanding: number };
+  driver_fees: { owed: number; paid: number; outstanding: number };
+  customer_fees: { owed: number };
+  platform_total: { total_receivable_outstanding: number; total_collected: number; net_profit: number };
+}
+
+export interface DriverPersonalFinancials {
+  deliveries_fee_owed: number;
+  customer_cash_owed: number;
+  total_owed: number;
+  total_paid: number;
+  net_outstanding: number;
 }
 
 export const analyticsService = {
@@ -82,5 +130,131 @@ export const analyticsService = {
 
     if (error) throw error;
     return data as unknown as PlatformGrowth[];
+  },
+
+  async getFinancialDashboardShops(startDate?: string, endDate?: string, limit: number = 50, offset: number = 0): Promise<FinancialShopPerformance[]> {
+    const params: Record<string, any> = { p_limit: limit, p_offset: offset };
+    if (startDate) params.p_start_date = startDate;
+    if (endDate) params.p_end_date = endDate;
+
+    const { data, error } = await (supabase.rpc as any)('get_financial_dashboard_shops', params);
+
+    if (error) throw error;
+    return data as unknown as FinancialShopPerformance[];
+  },
+
+  async getFinancialDashboardDrivers(startDate?: string, endDate?: string, limit: number = 50, offset: number = 0): Promise<FinancialDriverPerformance[]> {
+    const params: Record<string, any> = { p_limit: limit, p_offset: offset };
+    if (startDate) params.p_start_date = startDate;
+    if (endDate) params.p_end_date = endDate;
+
+    const { data, error } = await (supabase.rpc as any)('get_financial_dashboard_drivers', params);
+
+    if (error) throw error;
+    return data as unknown as FinancialDriverPerformance[];
+  },
+
+  async getFinancialDashboardPlatform(startDate?: string, endDate?: string): Promise<FinancialPlatformRollup> {
+    const params: Record<string, any> = {};
+    if (startDate) params.p_start_date = startDate;
+    if (endDate) params.p_end_date = endDate;
+
+    const { data, error } = await (supabase.rpc as any)('get_financial_dashboard_platform', params);
+
+    if (error) throw error;
+    return data as unknown as FinancialPlatformRollup;
+  },
+
+  async getMyDriverFinancials(): Promise<DriverPersonalFinancials> {
+    const { data, error } = await (supabase.rpc as any)('get_my_driver_financials');
+    if (error) throw error;
+    return data as unknown as DriverPersonalFinancials;
+  },
+
+  // --- LEDGER & SETTINGS ENTRY METHODS ---
+
+  async updateShopFinancialSettings(shopId: string, settings: { commission_percentage?: number, subscription_fee?: number, financial_start_date?: string, billing_cycle_start_date?: string }): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Check if exists
+    const { data: existing } = await supabase.from('shop_financial_settings' as any).select('shop_id').eq('shop_id', shopId).maybeSingle();
+    
+    if (existing) {
+       const { error } = await supabase.from('shop_financial_settings' as any)
+         .update({ ...settings, updated_at: new Date().toISOString(), updated_by: user?.id })
+         .eq('shop_id', shopId);
+       if (error) throw error;
+    } else {
+       const { error } = await supabase.from('shop_financial_settings' as any)
+         .insert([{ shop_id: shopId, ...settings, updated_by: user?.id }]);
+       if (error) throw error;
+    }
+  },
+
+  async getShopFinancialSettings(shopId: string): Promise<any> {
+    const { data, error } = await supabase.from('shop_financial_settings' as any).select('*').eq('shop_id', shopId).maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  async updateDriverFinancialSettings(driverId: string, settings: any): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Check if exists
+    const { data: existing } = await supabase.from('driver_financial_settings' as any).select('driver_id').eq('driver_id', driverId).maybeSingle();
+    
+    if (existing) {
+       const { error } = await supabase.from('driver_financial_settings' as any)
+         .update({ ...settings, updated_at: new Date().toISOString() })
+         .eq('driver_id', driverId);
+       if (error) throw error;
+    } else {
+       const { error } = await supabase.from('driver_financial_settings' as any)
+         .insert({ driver_id: driverId, ...settings });
+       if (error) throw error;
+    }
+  },
+
+  async getDriverFinancialSettings(driverId: string): Promise<any> {
+    const { data, error } = await supabase.from('driver_financial_settings' as any).select('*').eq('driver_id', driverId).maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  async insertCommissionPayment(shopId: string, amount: number, notes?: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+    const { error } = await supabase.from('commission_payments' as any).insert([{
+      shop_id: shopId, amount, notes, created_by_admin: user.id
+    }]);
+    if (error) throw error;
+  },
+
+  async insertPremiumSubscription(shopId: string, amount: number, startDate: string, endDate: string, paymentDate?: string, notes?: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+    
+    // 1. Insert into ledger
+    const { error: insertError } = await supabase.from('premium_subscription_payments' as any).insert([{
+      shop_id: shopId, amount, start_date: startDate, end_date: endDate, payment_date: paymentDate || null, notes, created_by_admin: user.id
+    }]);
+    if (insertError) throw insertError;
+    
+    // 2. Flip shop premium flag safely
+    await shopsService.update(shopId, { 
+        is_premium: true,
+        is_premium_active: true,
+        premium_expires_at: endDate,
+        premium_sort_order: 99
+      } as any);
+  },
+
+  async insertDriverPayment(driverId: string, amount: number, notes?: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+    const { error } = await supabase.from('driver_payments' as any).insert([{
+      driver_id: driverId, amount, notes, created_by_admin: user.id
+    }]);
+    if (error) throw error;
   }
 };
