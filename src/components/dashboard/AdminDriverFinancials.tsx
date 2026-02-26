@@ -105,7 +105,7 @@ export function AdminDriverFinancials({ driverId, driverName, isOpen, onClose }:
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4" dir="rtl">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="payment" className="gap-2"><DollarSign className="w-4 h-4"/> تحصيل رسوم</TabsTrigger>
             <TabsTrigger value="settings" className="gap-2"><Settings className="w-4 h-4"/> الإعدادات</TabsTrigger>

@@ -213,6 +213,8 @@ DECLARE
     
     v_driver_fee_owed DECIMAL := 0;
     v_driver_fee_paid DECIMAL := 0;
+
+    v_customer_fee_paid DECIMAL := 0;
 BEGIN
     -- Security Check
     IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'ADMIN') THEN
@@ -250,20 +252,22 @@ BEGIN
       AND (p_start_date IS NULL OR created_at >= p_start_date)
       AND (p_end_date IS NULL OR created_at <= p_end_date);
       
-    SELECT COALESCE(SUM(amount), 0) INTO v_driver_fee_paid
-    FROM driver_payments 
-    WHERE (p_start_date IS NULL OR paid_at >= p_start_date)
-      AND (p_end_date IS NULL OR paid_at <= p_end_date);
+    -- Aggregate Customer Platform Fees
+    SELECT COALESCE(SUM(platform_fee), 0) INTO v_customer_fee_paid
+    FROM parent_orders WHERE status = 'DELIVERED'
+      AND (p_start_date IS NULL OR created_at >= p_start_date)
+      AND (p_end_date IS NULL OR created_at <= p_end_date);
 
     RETURN jsonb_build_object(
         'shop_commissions', jsonb_build_object('owed', v_shop_comm_owed, 'paid', v_shop_comm_paid, 'outstanding', v_shop_comm_owed - v_shop_comm_paid),
         'premium_subscriptions', jsonb_build_object('owed', v_prem_owed, 'paid', v_prem_paid, 'outstanding', v_prem_owed - v_prem_paid),
         'regular_subscriptions', jsonb_build_object('owed', v_sub_owed, 'paid', v_sub_paid, 'outstanding', v_sub_owed - v_sub_paid),
         'driver_fees', jsonb_build_object('owed', v_driver_fee_owed, 'paid', v_driver_fee_paid, 'outstanding', v_driver_fee_owed - v_driver_fee_paid),
+        'customer_fees', jsonb_build_object('paid', v_customer_fee_paid),
         'platform_total', jsonb_build_object(
             'total_receivable_outstanding', (v_shop_comm_owed - v_shop_comm_paid) + (v_prem_owed - v_prem_paid) + (v_sub_owed - v_sub_paid) + (v_driver_fee_owed - v_driver_fee_paid),
-            'total_collected', v_shop_comm_paid + v_prem_paid + v_sub_paid + v_driver_fee_paid,
-            'net_profit', v_shop_comm_paid + v_prem_paid + v_sub_paid + v_driver_fee_paid
+            'total_collected', v_shop_comm_paid + v_prem_paid + v_sub_paid + v_driver_fee_paid + v_customer_fee_paid,
+            'net_profit', v_shop_comm_paid + v_prem_paid + v_sub_paid + v_driver_fee_paid + v_customer_fee_paid
         )
     );
 END;

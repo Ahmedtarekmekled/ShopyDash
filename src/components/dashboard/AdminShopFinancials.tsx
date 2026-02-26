@@ -15,9 +15,11 @@ interface AdminShopFinancialsProps {
   shopName: string;
   isOpen: boolean;
   onClose: () => void;
+  isPremiumActive?: boolean;
+  premiumExpiresAt?: string;
 }
 
-export function AdminShopFinancials({ shopId, shopName, isOpen, onClose }: AdminShopFinancialsProps) {
+export function AdminShopFinancials({ shopId, shopName, isOpen, onClose, isPremiumActive, premiumExpiresAt }: AdminShopFinancialsProps) {
   const [activeTab, setActiveTab] = useState("payment");
   const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState<any>(null);
@@ -141,7 +143,7 @@ export function AdminShopFinancials({ shopId, shopName, isOpen, onClose }: Admin
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4" dir="rtl">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="payment" className="gap-2"><DollarSign className="w-4 h-4"/> تحصيل دفعة</TabsTrigger>
             <TabsTrigger value="premium" className="gap-2"><Star className="w-4 h-4"/> ترقية المتجر</TabsTrigger>
@@ -178,11 +180,21 @@ export function AdminShopFinancials({ shopId, shopName, isOpen, onClose }: Admin
           </TabsContent>
 
           <TabsContent value="premium" className="space-y-4 py-4">
-             <div className="bg-amber-50/50 p-4 rounded-lg border border-amber-100 mb-4">
-                <p className="text-sm text-amber-800">
-                  قم بترقية المتجر ليظهر في أعلى القائمة. إذا وضعت مبلغ رسوم هنا، سيتم إضافته إلى إيرادات المنصة كدفعة مدفوعة.
-                </p>
-             </div>
+             {isPremiumActive && premiumExpiresAt ? (
+                <div className="bg-green-50/50 p-4 rounded-lg border border-green-100 mb-4 flex items-center justify-between">
+                   <div>
+                     <p className="font-bold text-green-800">حالة المتجر: مميز (نشط)</p>
+                     <p className="text-sm text-green-700">ينتهي في: {new Date(premiumExpiresAt).toLocaleDateString('ar-SA')}</p>
+                   </div>
+                   <Star className="w-8 h-8 text-green-600 opacity-50 fill-green-600" />
+                </div>
+             ) : (
+                <div className="bg-amber-50/50 p-4 rounded-lg border border-amber-100 mb-4">
+                   <p className="text-sm text-amber-800">
+                     قم بترقية المتجر ليظهر في أعلى القائمة. إذا وضعت مبلغ رسوم هنا، سيتم إضافته إلى إيرادات المنصة كدفعة مدفوعة.
+                   </p>
+                </div>
+             )}
              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>مدة التميز باليوم</Label>

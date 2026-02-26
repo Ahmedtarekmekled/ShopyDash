@@ -74,6 +74,7 @@ export interface FinancialPlatformRollup {
   premium_subscriptions: { owed: number; paid: number; outstanding: number };
   regular_subscriptions: { owed: number; paid: number; outstanding: number };
   driver_fees: { owed: number; paid: number; outstanding: number };
+  customer_fees: { paid: number };
   platform_total: { total_receivable_outstanding: number; total_collected: number; net_profit: number };
 }
 

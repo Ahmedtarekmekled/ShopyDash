@@ -182,17 +182,20 @@ export function AdminFinancials() {
                   <CardHeader className="pb-4">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Truck className="w-5 h-5 text-blue-500" />
-                      تفصيل إيرادات المناديب
+                      تفصيل إيرادات التوصيل والمنصة
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center pb-2 border-b">
-                      <span className="text-sm font-medium text-muted-foreground">المناديب يدفعون نسبة للمنصة عن كل توصيل</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">رسوم المنصة (Driver Fees)</span>
+                      <span className="text-sm font-medium">رسوم المنصة من المناديب (Driver Fees)</span>
                       <span className="font-bold text-blue-600">
                         {formatPrice(platformMetrics.driver_fees.paid)} / المستحق: {formatPrice(platformMetrics.driver_fees.outstanding)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-emerald-700">رسوم الخدمة من العملاء (Customer Fees)</span>
+                      <span className="font-bold text-emerald-600">
+                        {formatPrice(platformMetrics.customer_fees?.paid || 0)}
                       </span>
                     </div>
                   </CardContent>

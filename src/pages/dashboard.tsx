@@ -2832,7 +2832,7 @@ function AdminShops() {
                                </Button>
                              </DropdownMenuTrigger>
                              <DropdownMenuContent align="end" className="w-48">
-                               {activeTab === 'APPROVED' ? (
+                               {shop.approval_status === 'APPROVED' && (
                                   <>
                                     <DropdownMenuLabel>إجراءات المتجر</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
@@ -2864,30 +2864,33 @@ function AdminShops() {
                                       </DropdownMenuItem>
                                     )}
 
-                                    {shop.is_active && (
+                                    {shop.is_active ? (
                                       <DropdownMenuItem onClick={() => handleToggleOpen(shop)}>
                                         {shop.is_open ? <><Store className="w-4 h-4 ml-2"/> إغلاق المتجر</> : <><Store className="w-4 h-4 ml-2"/> فتح المتجر</>}
+                                      </DropdownMenuItem>
+                                    ) : (
+                                      <DropdownMenuItem onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
+                                        <CheckCircle className="w-4 h-4 ml-2 text-green-600" /> تفعيل المتجر الموقوف
                                       </DropdownMenuItem>
                                     )}
 
                                     <DropdownMenuSeparator />
 
-                                    <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => handleUpdateStatus(shop, 'SUSPENDED')}>
-                                      <Ban className="w-4 h-4 ml-2" /> إيقاف مؤقت
-                                    </DropdownMenuItem>
+                                    {shop.is_active && (
+                                      <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => handleUpdateStatus(shop, 'SUSPENDED')}>
+                                        <Ban className="w-4 h-4 ml-2" /> إيقاف مؤقت
+                                      </DropdownMenuItem>
+                                    )}
                                   </>
-                               ) : (
+                               )}
+                               
+                               {shop.approval_status === 'REJECTED' && (
                                   <>
-                                    {shop.approval_status === 'APPROVED' && !shop.is_active && (
-                                      <DropdownMenuItem onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
-                                        <CheckCircle className="w-4 h-4 ml-2 text-green-600" /> إعادة التفعيل الأولي
-                                      </DropdownMenuItem>
-                                    )}
-                                    {shop.approval_status === 'REJECTED' && (
-                                      <DropdownMenuItem onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
-                                        <CheckCircle className="w-4 h-4 ml-2 text-green-600" /> قبول المتجر
-                                      </DropdownMenuItem>
-                                    )}
+                                    <DropdownMenuLabel>مراجعة الرفض</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
+                                      <CheckCircle className="w-4 h-4 ml-2 text-green-600" /> قبول المتجر (تراجع عن الرفض)
+                                    </DropdownMenuItem>
                                   </>
                                )}
                              </DropdownMenuContent>
@@ -2939,6 +2942,8 @@ function AdminShops() {
            shopName={selectedFinancialShop.name}
            isOpen={!!selectedFinancialShop}
            onClose={() => setSelectedFinancialShop(null)}
+           isPremiumActive={(selectedFinancialShop as any).is_premium_active}
+           premiumExpiresAt={(selectedFinancialShop as any).premium_expires_at}
          />
       )}
     </div>
