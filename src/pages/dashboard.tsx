@@ -210,6 +210,20 @@ function AdminGuard({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+// Delivery Guard Component - Wraps delivery-only routes
+function DeliveryGuard({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const isDelivery = user?.role === "DELIVERY";
+  const isAdmin = user?.role === "ADMIN";
+
+  // Admins can also access delivery routes for management purposes
+  if (!isDelivery && !isAdmin) {
+    return <AccessDenied />;
+  }
+
+  return <>{children}</>;
+}
+
 // Real-time hook for Shop Orders
 function useShopRealtime(shopId: string | undefined, onNewOrder: () => void, onOrderUpdate: () => void) {
   useEffect(() => {
@@ -3431,8 +3445,30 @@ export default function DashboardPage() {
               <Route path="products" element={<DashboardProducts />} />
               <Route path="orders" element={isDelivery ? <Navigate to="/dashboard" replace /> : <ShopOrders />} />
               <Route path="settings" element={<DashboardSettings />} />
-              <Route path="account" element={isDelivery ? <CourierAccount /> : <DashboardSettings />} />
-              <Route path="delivery" element={isAdmin ? <AdminDelivery /> : <DeliveryDashboard />} />
+              <Route
+                path="account"
+                element={
+                  isDelivery ? (
+                    <DeliveryGuard>
+                      <CourierAccount />
+                    </DeliveryGuard>
+                  ) : (
+                    <DashboardSettings />
+                  )
+                }
+              />
+              <Route
+                path="delivery"
+                element={
+                  isAdmin ? (
+                    <AdminDelivery />
+                  ) : (
+                    <DeliveryGuard>
+                      <DeliveryDashboard />
+                    </DeliveryGuard>
+                  )
+                }
+              />
               {/* Admin-only routes - Protected by AdminGuard */}
 // ... existing imports
 
