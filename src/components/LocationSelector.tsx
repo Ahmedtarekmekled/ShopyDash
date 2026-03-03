@@ -366,58 +366,7 @@ export function LocationSelector({
         </div>
       )}
 
-      {/* Manual Entry Fields (Region, District, Address) - Only show if NO saved address is selected */ }
-      {!selectedAddressId && (
-        <>
-           {/* Region */}
-          <div className="space-y-2 pt-2 border-t">
-            <Label>المنطقة</Label>
-            <Select
-              value={selectedRegionId || "placeholder"}
-              onValueChange={(val) => {
-                if (val !== "placeholder") {
-                  setSelectedRegionId(val);
-                  setSelectedDistrictId("");
-                  setSelectedAddressId(null);
-                }
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="اختر المنطقة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="placeholder" disabled>
-                  اختر المنطقة
-                </SelectItem>
-                {regions.map((region) => (
-                  <SelectItem key={region.id} value={region.id}>
-                    {region.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        
-            {/* Address */}
-           <div className="space-y-2">
-             <Label htmlFor="address" className="text-sm">
-               <MapPin className="w-4 h-4 inline ml-1" />
-               العنوان التفصيلي
-             </Label>
-             <Textarea
-               id="address"
-               placeholder="مثال: شارع النيل، بجوار مسجد السلام، عمارة 5، شقة 12"
-               value={manualAddress}
-               onChange={(e) => {
-                 setManualAddress(e.target.value);
-                 setSelectedAddressId(null);
-               }}
-               disabled={disabled}
-               className="min-h-[80px]"
-             />
-           </div>
-        </>
-      )}
+
 
       {/* Add/Edit Address Dialog */}
       <AddressFormDialog
