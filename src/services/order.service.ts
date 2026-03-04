@@ -533,6 +533,8 @@ export const orderService = {
             id, 
             status, 
             delivery_user_id, 
+            delivery_latitude,
+            delivery_longitude,
             delivery_user:profiles!delivery_user_id(id, full_name, phone, avatar_url)
         )
       `

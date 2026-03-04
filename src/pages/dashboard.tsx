@@ -48,6 +48,7 @@ import { ShopAnalytics } from "./dashboard/shop-analytics";
 import { AdminCategories } from "@/components/dashboard/AdminCategories";
 import { cn } from "@/lib/utils";
 import { ShopOrders } from "@/components/dashboard/ShopOrders";
+import { ShopOrderHistory } from "@/components/dashboard/ShopOrderHistory";
 import { DashboardProductCard } from "@/components/dashboard/DashboardProductCard";
 import { ProductFilterBar } from "@/components/dashboard/ProductFilterBar";
 import { useProductFilters } from "@/hooks/useProductFilters";
@@ -154,6 +155,7 @@ const shopOwnerNav = [
   { href: "/dashboard", label: AR.dashboard.overview, icon: LayoutDashboard },
   { href: "/dashboard/products", label: AR.dashboard.products, icon: Package },
   { href: "/dashboard/orders", label: AR.dashboard.orders, icon: ShoppingCart },
+  { href: "/dashboard/orders/history", label: "سجل الطلبات", icon: Clock },
   { href: "/dashboard/settings", label: AR.dashboard.settings, icon: Settings },
 ];
 
@@ -3444,6 +3446,7 @@ export default function DashboardPage() {
               />
               <Route path="products" element={<DashboardProducts />} />
               <Route path="orders" element={isDelivery ? <Navigate to="/dashboard" replace /> : <ShopOrders />} />
+              <Route path="orders/history" element={isDelivery ? <Navigate to="/dashboard" replace /> : <ShopOrderHistory />} />
               <Route path="settings" element={<DashboardSettings />} />
               <Route
                 path="account"
