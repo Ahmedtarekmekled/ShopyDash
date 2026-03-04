@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { MainLayout } from "@/components/layout";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Suspense, lazy } from "react";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Lazy Loaded Pages
 const HomePage = lazy(() => import("@/pages/home"));
@@ -15,6 +16,8 @@ const OrdersPage = lazy(() => import("@/pages/orders"));
 const OrderPage = lazy(() => import("@/pages/order"));
 const LoginPage = lazy(() => import("@/pages/login"));
 const RegisterPage = lazy(() => import("@/pages/register"));
+const ForgotPasswordPage = lazy(() => import("@/pages/forgot-password"));
+const ResetPasswordPage = lazy(() => import("@/pages/reset-password"));
 const AccountPage = lazy(() => import("@/pages/account"));
 const DashboardPage = lazy(() => import("@/pages/dashboard"));
 const AuthCallback = lazy(() => import("@/pages/auth/callback"));
@@ -46,15 +49,17 @@ function App() {
             {/* Auth */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-            {/* Customer */}
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/orders" element={<OrdersPage />} />
-            <Route path="/orders/:id" element={<OrderPage />} />
-            <Route path="/account" element={<AccountPage />} />
+            {/* Customer (Protected) */}
+            <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+            <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+            <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+            <Route path="/orders/:id" element={<ProtectedRoute><OrderPage /></ProtectedRoute>} />
+            <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
 
-            {/* Dashboard */}
+            {/* Dashboard (has its own internal auth check) */}
             <Route path="/dashboard/*" element={<DashboardPage />} />
             
             {/* 404 - Must be last */}

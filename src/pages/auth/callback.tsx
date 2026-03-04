@@ -9,6 +9,12 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        // Parse hash fragment for token type
+        const hashParams = new URLSearchParams(
+          window.location.hash.substring(1)
+        );
+        const type = hashParams.get("type");
+
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -17,8 +23,23 @@ export default function AuthCallback() {
           return;
         }
 
+        // Handle different auth event types
+        if (type === "recovery") {
+          // Password reset — redirect to reset page
+          navigate("/reset-password");
+          return;
+        }
+
+        if (type === "signup" || type === "email") {
+          // Email verification — redirect to login with success message
+          // Sign out first so they log in fresh
+          await supabase.auth.signOut();
+          navigate("/login?verified=true");
+          return;
+        }
+
         if (data.session) {
-          // Successfully authenticated
+          // Successfully authenticated (Google OAuth or other)
           navigate("/");
         } else {
           navigate("/login");
@@ -39,7 +60,7 @@ export default function AuthCallback() {
     >
       <div className="text-center space-y-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-        <p className="text-lg text-muted-foreground">جاري تسجيل الدخول...</p>
+        <p className="text-lg text-muted-foreground">جاري المعالجة...</p>
       </div>
     </div>
   );

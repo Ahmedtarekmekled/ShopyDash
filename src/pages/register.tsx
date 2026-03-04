@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { notify } from "@/lib/notify";
-import { Eye, EyeOff, Store } from "lucide-react";
+import { Eye, EyeOff, Store, MailCheck, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,16 +15,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AR } from "@/lib/i18n";
 import { useAuth } from "@/store";
+import { authService } from "@/services/auth.service";
+
+// Strong password: 8+ chars, 1 uppercase, 1 lowercase, 1 number
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 const registerSchema = z
   .object({
     fullName: z.string().min(2, AR.validation.minLength.replace("{min}", "2")),
     email: z.string().email(AR.validation.email),
     phone: z.string().optional(),
-    password: z.string().min(6, AR.validation.minLength.replace("{min}", "6")),
+    password: z
+      .string()
+      .min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل")
+      .regex(
+        passwordRegex,
+        "يجب أن تحتوي على حرف كبير، حرف صغير، ورقم واحد على الأقل"
+      ),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -33,6 +43,9 @@ const registerSchema = z
   });
 
 type RegisterForm = z.infer<typeof registerSchema>;
+
+const MAX_RESEND_ATTEMPTS = 3;
+const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -44,6 +57,13 @@ export default function RegisterPage() {
     searchParams.get("role") === "shop_owner" ? "shop_owner" : "customer"
   );
 
+  // Verification screen state
+  const [showVerification, setShowVerification] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendCount, setResendCount] = useState(0);
+  const [isResending, setIsResending] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -52,29 +72,72 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
+  // Cooldown timer
+  const startCooldown = () => {
+    setResendCooldown(RESEND_COOLDOWN_SECONDS);
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0 || resendCount >= MAX_RESEND_ATTEMPTS || isResending)
+      return;
+
+    setIsResending(true);
+    try {
+      const { error } = await authService.resendVerification(registeredEmail);
+      if (error) {
+        notify.error("فشل إعادة إرسال رسالة التأكيد");
+      } else {
+        notify.success("تم إعادة إرسال رسالة التأكيد");
+        setResendCount((prev) => prev + 1);
+        startCooldown();
+      }
+    } catch {
+      notify.error("حدث خطأ غير متوقع");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);
     try {
-      const { error } = await registerUser({
-        email: data.email,
+      const { error, needsVerification } = await registerUser({
+        email: data.email.trim().toLowerCase(),
         password: data.password,
         fullName: data.fullName,
         phone: data.phone,
         role: accountType === "shop_owner" ? "SHOP_OWNER" : "CUSTOMER",
       });
       if (error) {
-        // Map Supabase error messages to Arabic
         const errorMap: Record<string, string> = {
           "User already registered": "البريد الإلكتروني مسجل بالفعل",
+          "البريد الإلكتروني مسجل بالفعل": "البريد الإلكتروني مسجل بالفعل",
           "Invalid email": "البريد الإلكتروني غير صالح",
           "Password should be at least 6 characters":
-            "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+            "كلمة المرور يجب أن تكون 8 أحرف على الأقل",
         };
         const message =
           errorMap[error.message] || error.message || "فشل إنشاء الحساب";
         notify.error(message);
         return;
       }
+
+      if (needsVerification) {
+        setRegisteredEmail(data.email.trim().toLowerCase());
+        setShowVerification(true);
+        return;
+      }
+
+      // If no verification needed (email confirmation disabled)
       notify.success(AR.auth.registerSuccess);
       navigate(accountType === "shop_owner" ? "/dashboard" : "/");
     } catch {
@@ -84,6 +147,78 @@ export default function RegisterPage() {
     }
   };
 
+  // ─── Verification Success Screen ─────────────────────────────────────────
+  if (showVerification) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
+        <div className="w-full max-w-md">
+          <Card>
+            <CardContent className="pt-8 pb-8 text-center space-y-6">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <MailCheck className="w-8 h-8 text-primary" />
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="text-xl font-bold">تحقق من بريدك الإلكتروني</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  تم إرسال رابط التأكيد إلى
+                  <br />
+                  <span className="font-medium text-foreground" dir="ltr">
+                    {registeredEmail}
+                  </span>
+                </p>
+              </div>
+
+              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
+                <p className="font-medium mb-1">💡 لم تجد الرسالة؟</p>
+                <p className="text-xs">
+                  تحقق من مجلد <strong>البريد غير المرغوب فيه (Spam)</strong> أو{" "}
+                  <strong>Junk</strong>
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={handleResend}
+                  disabled={
+                    resendCooldown > 0 ||
+                    resendCount >= MAX_RESEND_ATTEMPTS ||
+                    isResending
+                  }
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${isResending ? "animate-spin" : ""}`}
+                  />
+                  {resendCooldown > 0
+                    ? `إعادة الإرسال بعد ${resendCooldown} ثانية`
+                    : resendCount >= MAX_RESEND_ATTEMPTS
+                      ? "تم استنفاد المحاولات"
+                      : "إعادة إرسال رسالة التأكيد"}
+                </Button>
+
+                {resendCount > 0 && resendCount < MAX_RESEND_ATTEMPTS && (
+                  <p className="text-xs text-muted-foreground">
+                    المحاولات المتبقية: {MAX_RESEND_ATTEMPTS - resendCount} من{" "}
+                    {MAX_RESEND_ATTEMPTS}
+                  </p>
+                )}
+
+                <Link to="/login">
+                  <Button variant="ghost" className="w-full mt-2">
+                    العودة لتسجيل الدخول
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Registration Form ────────────────────────────────────────────────────
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
@@ -191,6 +326,9 @@ export default function RegisterPage() {
                     {errors.password.message}
                   </p>
                 )}
+                <p className="text-xs text-muted-foreground">
+                  8 أحرف على الأقل • حرف كبير • حرف صغير • رقم
+                </p>
               </div>
 
               <div className="space-y-2">
