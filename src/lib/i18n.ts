@@ -150,6 +150,8 @@ export const AR = {
     PLACED: "تم استلام الطلب",
     CONFIRMED: "تم تأكيد الطلب",
     PREPARING: "جاري التجهيز",
+    READY: "جاهز للاستلام",
+    PICKED_UP: "مع المندوب",
     OUT_FOR_DELIVERY: "في الطريق",
     DELIVERED: "تم التسليم",
     CANCELLED: "تم الإلغاء",

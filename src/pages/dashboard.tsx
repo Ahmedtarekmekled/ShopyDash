@@ -26,6 +26,10 @@ import {
   TrendingUp,
   ShoppingBag,
   Truck,
+  Share2,
+  QrCode,
+  ExternalLink,
+  Copy,
   Volume2,
   VolumeX,
   Bell,
@@ -50,6 +54,7 @@ import { cn } from "@/lib/utils";
 import { ShopOrders } from "@/components/dashboard/ShopOrders";
 import { ShopOrderHistory } from "@/components/dashboard/ShopOrderHistory";
 import { DashboardProductCard } from "@/components/dashboard/DashboardProductCard";
+import { ShopShareCard } from "@/components/dashboard/ShopShareCard";
 import { ProductFilterBar } from "@/components/dashboard/ProductFilterBar";
 import { useProductFilters } from "@/hooks/useProductFilters";
 import { MapLocationPicker, LocationPreviewMap } from "@/components/MapLocationPicker";
@@ -59,6 +64,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -114,7 +120,8 @@ import { ar } from "date-fns/locale";
 import { useAuth } from "@/store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notify } from "@/lib/notify";
-import { uploadImage } from "@/lib/supabase";
+import { uploadImage, deleteImage } from "@/lib/supabase";
+import { ImageCropper } from "@/components/ImageCropper";
 import {
   productsService,
   categoriesService,
@@ -541,8 +548,13 @@ function DashboardOverview() {
     totalRevenue: 0,
     totalProducts: 0,
     pendingOrders: 0,
+    todayOrders: 0,
+    todayRevenue: 0,
   });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [pendingOrdersList, setPendingOrdersList] = useState<any[]>([]);
+  const [dailyRevenue, setDailyRevenue] = useState<{ day: string; amount: number }[]>([]);
+  const [ordersByStatus, setOrdersByStatus] = useState<{ status: string; label: string; count: number; color: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -567,6 +579,14 @@ function DashboardOverview() {
             (o: any) => o.status === "PLACED" || o.status === "CONFIRMED"
           ).length;
 
+          // Today's stats
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const todayOrders = shopOrders.filter((o: any) => new Date(o.created_at) >= today);
+          const todayRevenue = todayOrders
+            .filter((o: any) => o.status !== "CANCELLED")
+            .reduce((sum: number, o: any) => sum + (o.total || 0), 0);
+
           // Load products count
           const shopProducts = await productsService.getAll({
             shopId: userShop.id,
@@ -577,10 +597,58 @@ function DashboardOverview() {
             totalRevenue,
             totalProducts: shopProducts.length,
             pendingOrders,
+            todayOrders: todayOrders.length,
+            todayRevenue,
           });
+
+          // Pending orders list (PLACED or CONFIRMED)
+          const pending = shopOrders.filter(
+            (o: any) => o.status === "PLACED" || o.status === "CONFIRMED"
+          );
+          setPendingOrdersList(pending.slice(0, 5));
 
           // Get recent orders (latest 5)
           setRecentOrders(shopOrders.slice(0, 5));
+
+          // Build 7-day revenue chart data
+          const days: { day: string; amount: number }[] = [];
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            d.setHours(0, 0, 0, 0);
+            const nextD = new Date(d);
+            nextD.setDate(nextD.getDate() + 1);
+            const dayRevenue = shopOrders
+              .filter((o: any) => {
+                const created = new Date(o.created_at);
+                return created >= d && created < nextD && o.status !== "CANCELLED";
+              })
+              .reduce((sum: number, o: any) => sum + (o.total || 0), 0);
+            days.push({
+              day: d.toLocaleDateString("ar-EG", { weekday: "short" }),
+              amount: dayRevenue,
+            });
+          }
+          setDailyRevenue(days);
+
+          // Orders by status breakdown
+          const statusMap: Record<string, { label: string; count: number; color: string }> = {
+            PLACED: { label: "جديد", count: 0, color: "bg-blue-500" },
+            CONFIRMED: { label: "مؤكد", count: 0, color: "bg-amber-500" },
+            PREPARING: { label: "قيد التحضير", count: 0, color: "bg-orange-500" },
+            READY: { label: "جاهز", count: 0, color: "bg-purple-500" },
+            PICKED_UP: { label: "مع المندوب", count: 0, color: "bg-indigo-500" },
+            DELIVERED: { label: "تم التسليم", count: 0, color: "bg-green-500" },
+            CANCELLED: { label: "ملغي", count: 0, color: "bg-red-500" },
+          };
+          shopOrders.forEach((o: any) => {
+            if (statusMap[o.status]) statusMap[o.status].count++;
+          });
+          setOrdersByStatus(
+            Object.entries(statusMap)
+              .filter(([, v]) => v.count > 0)
+              .map(([k, v]) => ({ status: k, ...v }))
+          );
         }
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
@@ -592,44 +660,95 @@ function DashboardOverview() {
     loadDashboardData();
   }, [user]);
 
-  const statsConfig = [
-    {
-      label: AR.dashboard.totalOrders,
-      value: stats.totalOrders.toString(),
-      icon: ShoppingCart,
-    },
-    {
-      label: AR.dashboard.totalRevenue,
-      value: formatPrice(stats.totalRevenue),
-      icon: DollarSign,
-    },
-    {
-      label: AR.dashboard.totalProducts,
-      value: stats.totalProducts.toString(),
-      icon: Package,
-    },
-    {
-      label: AR.dashboard.pendingOrders,
-      value: stats.pendingOrders.toString(),
-      icon: Clock,
-    },
-  ];
+  // Greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "صباح الخير";
+    if (hour < 18) return "مساء الخير";
+    return "مساء النور";
+  };
 
   if (isLoading) {
     return (
       <div className="space-y-6">
+        {/* Header skeleton */}
         <div>
-          <h1 className="text-2xl font-bold">{AR.dashboard.overview}</h1>
-          <p className="text-muted-foreground">جاري تحميل البيانات...</p>
+          <div className="h-9 w-44 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-56 bg-muted rounded animate-pulse mt-2" />
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Stats skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
+            <Card key={i} className="rounded-xl">
+              <CardContent className="p-4 md:p-6">
+                <div className="animate-pulse space-y-3">
+                  <div className="w-10 h-10 rounded-lg bg-muted" />
+                  <div className="h-8 bg-muted rounded w-16" />
+                  <div className="h-4 bg-muted rounded w-24" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        {/* Content columns skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-2">
+            <Card className="rounded-xl">
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-muted" />
+                    <div className="h-5 w-28 bg-muted rounded" />
+                  </div>
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
+                      <div className="space-y-2 flex-1">
+                        <div className="h-4 w-16 bg-muted rounded" />
+                        <div className="h-3 w-32 bg-muted rounded" />
+                      </div>
+                      <div className="h-5 w-16 bg-muted rounded" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="lg:col-span-3">
+            <Card className="rounded-xl">
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-muted" />
+                    <div className="h-5 w-24 bg-muted rounded" />
+                  </div>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="flex items-center justify-between p-3">
+                      <div className="space-y-2 flex-1">
+                        <div className="h-3 w-40 bg-muted rounded" />
+                        <div className="h-4 w-24 bg-muted rounded" />
+                      </div>
+                      <div className="space-y-1 items-end">
+                        <div className="h-4 w-16 bg-muted rounded" />
+                        <div className="h-5 w-16 bg-muted rounded-full" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        {/* Analytics skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[1, 2].map((i) => (
+            <Card key={i} className="rounded-xl">
               <CardContent className="p-6">
                 <div className="animate-pulse space-y-4">
-                  <div className="w-12 h-12 rounded-xl bg-muted"></div>
-                  <div className="h-8 bg-muted rounded w-20"></div>
-                  <div className="h-4 bg-muted rounded w-24"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-muted" />
+                    <div className="h-5 w-40 bg-muted rounded" />
+                  </div>
+                  <div className="h-48 bg-muted rounded-lg" />
                 </div>
               </CardContent>
             </Card>
@@ -645,7 +764,7 @@ function DashboardOverview() {
     
     if (shop.approval_status === 'PENDING' || shop.status === 'PENDING') {
       return (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
           <div>
             <h3 className="font-semibold text-amber-800">الحساب قيد المراجعة</h3>
@@ -657,7 +776,7 @@ function DashboardOverview() {
     
     if (shop.approval_status === 'REJECTED' || shop.status === 'REJECTED') {
       return (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-start gap-3">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex items-start gap-3">
           <XCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
           <div className="flex-1">
             <h3 className="font-semibold text-destructive">تم رفض الطلب</h3>
@@ -673,7 +792,7 @@ function DashboardOverview() {
 
     if (!shop.is_active && shop.approval_status === 'APPROVED') {
       return (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
           <Ban className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
           <div>
             <h3 className="font-semibold text-red-800">الحساب موقوف</h3>
@@ -687,111 +806,315 @@ function DashboardOverview() {
     return null;
   };
 
+  const maxRevenue = Math.max(...dailyRevenue.map(d => d.amount), 1);
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">{AR.dashboard.overview}</h1>
-        <p className="text-muted-foreground">مرحباً بك في لوحة التحكم</p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+          {getGreeting()} 👋
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          {shop ? `لوحة تحكم ${shop.name}` : "مرحباً بك في لوحة التحكم"}
+        </p>
       </div>
 
       {renderStatusBanner()}
 
       {/* Stats Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statsConfig.map((stat, i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <stat.icon className="w-6 h-6 text-primary" />
-                </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        {/* Total Orders */}
+        <Card className="rounded-xl shadow-sm">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <ShoppingCart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="mt-4">
-                <p className="text-2xl font-bold">{stat.value}</p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
+            </div>
+            <p className="text-2xl md:text-3xl font-bold">{stats.totalOrders}</p>
+            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{AR.dashboard.totalOrders}</p>
+            {stats.todayOrders > 0 && (
+              <p className="text-xs text-blue-600 font-medium mt-1">+{stats.todayOrders} اليوم</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Revenue */}
+        <Card className="rounded-xl shadow-sm">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+            <p className="text-2xl md:text-3xl font-bold">{formatPrice(stats.totalRevenue)}</p>
+            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{AR.dashboard.totalRevenue}</p>
+            {stats.todayRevenue > 0 && (
+              <p className="text-xs text-green-600 font-medium mt-1">+{formatPrice(stats.todayRevenue)} اليوم</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Products */}
+        <Card className="rounded-xl shadow-sm">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <Package className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+            <p className="text-2xl md:text-3xl font-bold">{stats.totalProducts}</p>
+            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{AR.dashboard.totalProducts}</p>
+          </CardContent>
+        </Card>
+
+        {/* Pending Orders */}
+        <Card className={`rounded-xl shadow-sm ${stats.pendingOrders > 0 ? 'border-amber-200 bg-amber-50/30 dark:border-amber-800 dark:bg-amber-900/10' : ''}`}>
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.pendingOrders > 0 ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-muted'}`}>
+                <Clock className={`w-5 h-5 ${stats.pendingOrders > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`} />
+              </div>
+              {stats.pendingOrders > 0 && (
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                </span>
+              )}
+            </div>
+            <p className="text-2xl md:text-3xl font-bold">{stats.pendingOrders}</p>
+            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{AR.dashboard.pendingOrders}</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Recent Orders */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{AR.dashboard.newOrders}</CardTitle>
-          <Link to="/dashboard/orders">
-            <Button variant="ghost" size="sm">
-              {AR.common.viewAll}
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {recentOrders.length === 0 ? (
-            <div className="text-center py-8">
-              <ShoppingCart className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">لا توجد طلبات حتى الآن</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {recentOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-mono text-sm">{order.order_number}</p>
-                    <p className="text-muted-foreground text-sm">
-                      {order.customer_name || order.delivery_phone}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(order.created_at).toLocaleDateString("ar-EG")}
-                    </p>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Pending Orders — Left Column */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="rounded-xl shadow-sm">
+            <CardHeader className="pb-3 px-4 md:px-6">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
                   </div>
-                  <div className="text-left">
-                    <p className="font-bold text-primary">
-                      {formatPrice(order.total)}
-                    </p>
-                    <Badge
-                      variant={
-                        order.status === "DELIVERED"
-                          ? "delivered"
-                          : order.status === "PREPARING"
-                          ? "preparing"
-                          : "placed"
-                      }
-                    >
-                      {
-                        AR.orderStatus[
-                          order.status as keyof typeof AR.orderStatus
-                        ]
-                      }
+                  طلبات معلقة
+                  {stats.pendingOrders > 0 && (
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                      {stats.pendingOrders}
                     </Badge>
-                  </div>
+                  )}
+                </CardTitle>
+                <Link to="/dashboard/orders">
+                  <Button variant="ghost" size="sm" className="text-xs h-7">
+                    عرض الكل
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 md:px-6">
+              {pendingOrdersList.length === 0 ? (
+                <div className="text-center py-8">
+                  <CheckCircle className="w-10 h-10 mx-auto text-green-500/50 mb-2" />
+                  <p className="text-sm text-muted-foreground font-medium">لا توجد طلبات معلقة</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">ممتاز! كل الطلبات تمت معالجتها</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              ) : (
+                <div className="space-y-2">
+                  {pendingOrdersList.map((order) => (
+                    <Link
+                      key={order.id}
+                      to="/dashboard/orders"
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer group"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={order.status === "PLACED" ? "placed" : "preparing"}
+                            className="text-[10px] h-5"
+                          >
+                            {order.status === "PLACED" ? "جديد" : "مؤكد"}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground truncate">
+                            {order.customer_name || order.delivery_phone}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 font-mono truncate">
+                          {order.order_number}
+                        </p>
+                      </div>
+                      <div className="text-left flex-shrink-0 mr-2">
+                        <p className="font-bold text-sm text-primary">{formatPrice(order.total)}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {new Date(order.created_at).toLocaleTimeString("ar-EG", { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Analytics Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            {AR.dashboard.analytics}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg">
-            <p className="text-muted-foreground">الرسوم البيانية قريباً</p>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Recent Orders — Right Column */}
+        <div className="lg:col-span-3 space-y-6">
+          <Card className="rounded-xl shadow-sm">
+            <CardHeader className="pb-3 px-4 md:px-6">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <ShoppingCart className="w-3.5 h-3.5 text-blue-600" />
+                  </div>
+                  آخر الطلبات
+                </CardTitle>
+                <Link to="/dashboard/orders">
+                  <Button variant="ghost" size="sm" className="text-xs h-7">
+                    {AR.common.viewAll}
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 md:px-6">
+              {recentOrders.length === 0 ? (
+                <div className="text-center py-8">
+                  <ShoppingCart className="w-10 h-10 mx-auto text-muted-foreground/40 mb-2" />
+                  <p className="text-sm text-muted-foreground">لا توجد طلبات حتى الآن</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {recentOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-mono text-xs text-muted-foreground truncate">{order.order_number}</p>
+                        <p className="text-sm font-medium truncate">
+                          {order.customer_name || order.delivery_phone || "عميل"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(order.created_at).toLocaleDateString("ar-EG")}
+                        </p>
+                      </div>
+                      <div className="text-left flex-shrink-0 mr-2 flex flex-col items-end gap-1">
+                        <p className="font-bold text-sm text-primary">
+                          {formatPrice(order.total)}
+                        </p>
+                        <Badge
+                          variant={
+                            order.status === "DELIVERED"
+                              ? "delivered"
+                              : order.status === "PREPARING"
+                              ? "preparing"
+                              : order.status === "CANCELLED"
+                              ? "cancelled"
+                              : order.status === "CONFIRMED"
+                              ? "confirmed"
+                              : order.status === "READY" || order.status === "PICKED_UP" || order.status === "OUT_FOR_DELIVERY"
+                              ? "outForDelivery"
+                              : "placed"
+                          }
+                          className="text-[10px] h-5"
+                        >
+                          {
+                            AR.orderStatus[
+                              order.status as keyof typeof AR.orderStatus
+                            ] || order.status
+                          }
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 7-Day Revenue Chart */}
+        <Card className="rounded-xl shadow-sm">
+          <CardHeader className="pb-2 px-4 md:px-6">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <BarChart3 className="w-3.5 h-3.5 text-green-600" />
+              </div>
+              الإيرادات — آخر 7 أيام
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 md:px-6 pb-6">
+            {dailyRevenue.every(d => d.amount === 0) ? (
+              <div className="h-48 flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">لا توجد مبيعات خلال هذه الفترة</p>
+              </div>
+            ) : (
+              <div className="h-48 flex items-end gap-2 pt-4">
+                {dailyRevenue.map((d, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground font-medium">
+                      {d.amount > 0 ? formatPrice(d.amount) : ""}
+                    </span>
+                    <div
+                      className="w-full rounded-t-md bg-gradient-to-t from-primary to-primary/70 transition-all duration-500 min-h-[4px]"
+                      style={{ height: `${Math.max((d.amount / maxRevenue) * 140, 4)}px` }}
+                    />
+                    <span className="text-[10px] text-muted-foreground">{d.day}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Orders by Status */}
+        <Card className="rounded-xl shadow-sm">
+          <CardHeader className="pb-2 px-4 md:px-6">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <BarChart3 className="w-3.5 h-3.5 text-purple-600" />
+              </div>
+              توزيع الطلبات حسب الحالة
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 md:px-6 pb-6">
+            {ordersByStatus.length === 0 ? (
+              <div className="h-48 flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">لا توجد بيانات بعد</p>
+              </div>
+            ) : (
+              <div className="space-y-3 pt-2">
+                {ordersByStatus.map((s) => (
+                  <div key={s.status} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{s.label}</span>
+                      <span className="text-muted-foreground">{s.count}</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${s.color} transition-all duration-500`}
+                        style={{ width: `${(s.count / stats.totalOrders) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Share Card for approved shops */}
+      {shop && shop.approval_status === 'APPROVED' && shop.is_active && (
+        <ShopShareCard shop={shop} />
+      )}
     </div>
   );
 }
-
 
 function DashboardProducts() {
   const { user } = useAuth();
@@ -814,6 +1137,10 @@ function DashboardProducts() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Crop state
+  const [showCropper, setShowCropper] = useState(false);
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null);
 
   // Initialize Filter Hook
   const {
@@ -911,13 +1238,44 @@ function DashboardProducts() {
         notify.error("حجم الصورة يجب أن يكون أقل من 5 ميجابايت");
         return;
       }
-      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setRawImageSrc(reader.result as string);
+        setShowCropper(true);
       };
       reader.readAsDataURL(file);
     }
+    // Reset input so re-selecting same file works
+    e.target.value = "";
+  };
+
+  const handleCropComplete = (croppedFile: File) => {
+    setImageFile(croppedFile);
+    setImagePreview(URL.createObjectURL(croppedFile));
+    setShowCropper(false);
+    setRawImageSrc(null);
+  };
+
+  const handleRemoveImage = async () => {
+    // If editing and the product had an existing image, delete from storage
+    if (editingProduct?.image_url && !imageFile) {
+      try {
+        const url = editingProduct.image_url;
+        const parts = url.split('/storage/v1/object/public/products/');
+        if (parts.length > 1) {
+          const path = decodeURIComponent(parts[1]);
+          await deleteImage('products', path);
+        }
+        // Clear from DB
+        await productsService.update(editingProduct.id, { image_url: null } as any);
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, image_url: null } as any : p));
+        notify.success('تم حذف الصورة');
+      } catch (err) {
+        console.error('Failed to delete image:', err);
+      }
+    }
+    setImageFile(null);
+    setImagePreview(null);
   };
 
   const handleSave = async () => {
@@ -1010,9 +1368,34 @@ function DashboardProducts() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">{AR.dashboard.products}</h1>
-            <p className="text-muted-foreground">جاري التحميل...</p>
+            <div className="h-8 w-40 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-56 bg-muted rounded animate-pulse mt-2" />
           </div>
+          <div className="h-10 w-32 bg-muted rounded-lg animate-pulse" />
+        </div>
+        {/* Filter bar skeleton */}
+        <div className="flex gap-3">
+          <div className="h-10 flex-1 bg-muted rounded-lg animate-pulse" />
+          <div className="h-10 w-28 bg-muted rounded-lg animate-pulse" />
+          <div className="h-10 w-28 bg-muted rounded-lg animate-pulse" />
+        </div>
+        {/* Product cards skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i} className="rounded-xl overflow-hidden">
+              <div className="animate-pulse">
+                <div className="h-40 bg-muted" />
+                <CardContent className="p-4 space-y-3">
+                  <div className="h-5 w-3/4 bg-muted rounded" />
+                  <div className="h-4 w-1/2 bg-muted rounded" />
+                  <div className="flex justify-between pt-2">
+                    <div className="h-6 w-20 bg-muted rounded" />
+                    <div className="h-8 w-16 bg-muted rounded-lg" />
+                  </div>
+                </CardContent>
+              </div>
+            </Card>
+          ))}
         </div>
       </div>
     );
@@ -1085,6 +1468,59 @@ function DashboardProducts() {
         lowStockCount={stats.lowStockCount}
       />
 
+      {/* Stock Warning Banners */}
+      {stats.outOfStockCount > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-4 h-4 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-red-800">
+                {stats.outOfStockCount} منتج نفذت الكمية!
+              </p>
+              <p className="text-xs text-red-600">
+                هذه المنتجات لن تظهر للعملاء حتى يتم تحديث المخزون
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs border-red-300 text-red-700 hover:bg-red-100 flex-shrink-0"
+            onClick={() => setStockFilter("OUT")}
+          >
+            عرض المنتجات
+          </Button>
+        </div>
+      )}
+
+      {stats.lowStockCount > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <Package className="w-4 h-4 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-amber-800">
+                {stats.lowStockCount} منتج المخزون على وشك النفاذ
+              </p>
+              <p className="text-xs text-amber-600">
+                يُنصح بتحديث الكميات قبل نفاذ المخزون
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-100 flex-shrink-0"
+            onClick={() => setStockFilter("LOW")}
+          >
+            عرض المنتجات
+          </Button>
+        </div>
+      )}
+
       {filteredProducts.length === 0 ? (
         <Card>
           <CardContent className="p-6">
@@ -1130,67 +1566,65 @@ function DashboardProducts() {
               <DialogTitle>
                 {editingProduct ? "تعديل المنتج" : "إضافة منتج جديد"}
               </DialogTitle>
+              <DialogDescription>
+                {editingProduct ? "قم بتعديل بيانات المنتج ثم اضغط تحديث" : "أدخل بيانات المنتج الجديد"}
+              </DialogDescription>
             </DialogHeader>
           </div>
           
-          <div className="flex-1 overflow-y-auto px-6 py-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">اسم المنتج *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="مثال: طماطم طازجة"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">الوصف</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder="وصف المنتج..."
-                  rows={3}
-                />
-              </div>
-              {/* Image Upload */}
-              <div className="space-y-2">
-                <Label>صورة المنتج</Label>
-                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/50 transition-colors">
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div className="space-y-5">
+              {/* Image Upload — Top */}
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">صورة المنتج</Label>
+                <div className="border-2 border-dashed border-border rounded-xl p-3 text-center hover:border-primary/50 transition-colors bg-muted/20">
                   {imagePreview ? (
-                    <div className="relative">
+                    <div className="relative group">
                       <img
                         src={imagePreview}
                         alt="معاينة"
-                        className="w-full h-32 object-cover rounded-lg"
+                        className="w-full h-40 object-contain rounded-lg bg-white"
                       />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 left-2 h-6 w-6"
-                        onClick={() => {
-                          setImageFile(null);
-                          setImagePreview(null);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
+                      <div className="absolute top-2 left-2 flex gap-1.5">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="h-7 w-7 opacity-90 hover:opacity-100"
+                          onClick={handleRemoveImage}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <label className="absolute bottom-2 left-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 text-xs gap-1 opacity-90 hover:opacity-100 pointer-events-none"
+                        >
+                          <Upload className="w-3 h-3" />
+                          تغيير
+                        </Button>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          onChange={handleImageChange}
+                        />
+                      </label>
                     </div>
                   ) : (
                     <label className="cursor-pointer block">
-                      <div className="flex flex-col items-center gap-2 py-4">
-                        <Upload className="w-8 h-8 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
+                      <div className="flex flex-col items-center gap-2 py-6">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Upload className="w-6 h-6 text-primary" />
+                        </div>
+                        <span className="text-sm font-medium">
                           اضغط لرفع صورة
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          PNG, JPG حتى 5 ميجابايت
+                          PNG, JPG — حتى 5 ميجابايت — سيتم قصها تلقائياً
                         </span>
                       </div>
                       <input
@@ -1203,9 +1637,41 @@ function DashboardProducts() {
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price">السعر (ج.م) *</Label>
+
+              {/* Name */}
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-sm font-medium">اسم المنتج <span className="text-destructive">*</span></Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="مثال: طماطم طازجة"
+                />
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <Label htmlFor="description" className="text-sm font-medium">الوصف</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="وصف مختصر عن المنتج..."
+                  rows={2}
+                  className="resize-none"
+                />
+              </div>
+
+              <Separator />
+
+              {/* Pricing */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="price" className="text-sm font-medium">السعر (ج.م) <span className="text-destructive">*</span></Label>
                   <Input
                     id="price"
                     type="number"
@@ -1216,8 +1682,8 @@ function DashboardProducts() {
                     placeholder="25"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="compare_price">السعر قبل الخصم</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="compare_price" className="text-sm font-medium">السعر قبل الخصم</Label>
                   <Input
                     id="compare_price"
                     type="number"
@@ -1232,37 +1698,41 @@ function DashboardProducts() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">التصنيف *</Label>
-                <Select
-                  value={formData.category_id}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, category_id: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر التصنيف" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="stock">الكمية المتوفرة</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  value={formData.stock_quantity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stock_quantity: e.target.value })
-                  }
-                  placeholder="10"
-                />
+
+              {/* Category + Stock */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="category" className="text-sm font-medium">التصنيف <span className="text-destructive">*</span></Label>
+                  <Select
+                    value={formData.category_id}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, category_id: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر التصنيف" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="stock" className="text-sm font-medium">الكمية المتوفرة</Label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    value={formData.stock_quantity}
+                    onChange={(e) =>
+                      setFormData({ ...formData, stock_quantity: e.target.value })
+                    }
+                    placeholder="10"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1272,6 +1742,7 @@ function DashboardProducts() {
               onClick={handleSave}
               disabled={isSaving || isUploading}
               className="flex-1"
+              size="lg"
             >
               {isUploading
                 ? "جاري رفع الصورة..."
@@ -1279,14 +1750,25 @@ function DashboardProducts() {
                 ? "جاري الحفظ..."
                 : editingProduct
                 ? "تحديث"
-                : "إضافة"}
+                : "إضافة المنتج"}
             </Button>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+            <Button variant="outline" size="lg" onClick={() => setShowAddDialog(false)}>
               إلغاء
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Image Cropper */}
+      {rawImageSrc && (
+        <ImageCropper
+          open={showCropper}
+          onClose={() => { setShowCropper(false); setRawImageSrc(null); }}
+          imageSrc={rawImageSrc}
+          onCropComplete={handleCropComplete}
+          aspect={1}
+        />
+      )}
     </div>
   );
 }
@@ -1751,6 +2233,11 @@ function DashboardSettings() {
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Image Cropper State
+  const [showCropperSettings, setShowCropperSettings] = useState(false);
+  const [rawImageSrcSettings, setRawImageSrcSettings] = useState("");
+  const [cropTypeSettings, setCropTypeSettings] = useState<'logo' | 'cover'>('logo');
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -1821,19 +2308,32 @@ function DashboardSettings() {
          notify.error("حجم الملف يجب أن لا يتجاوز 5 ميجابايت");
          return;
        }
-       
-       const preview = URL.createObjectURL(file);
-       if (type === 'logo') {
-         setLogoFile(file);
-         setLogoPreview(preview);
-       } else {
-         setCoverFile(file);
-         setCoverPreview(preview);
-       }
+
+       // Open cropper instead of directly setting
+       const reader = new FileReader();
+       reader.onloadend = () => {
+         setRawImageSrcSettings(reader.result as string);
+         setCropTypeSettings(type);
+         setShowCropperSettings(true);
+       };
+       reader.readAsDataURL(file);
+       // Reset input so the same file can be re-selected
+       e.target.value = '';
      }
   };
 
-  const uploadImage = async (file: File, bucket: string): Promise<string> => {
+  const handleCropCompleteSettings = (croppedFile: File) => {
+    const preview = URL.createObjectURL(croppedFile);
+    if (cropTypeSettings === 'logo') {
+      setLogoFile(croppedFile);
+      setLogoPreview(preview);
+    } else {
+      setCoverFile(croppedFile);
+      setCoverPreview(preview);
+    }
+  };
+
+  const uploadShopImage = async (file: File, bucket: string): Promise<string> => {
      const fileExt = file.name.split(".").pop();
      const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
      const { error } = await supabase.storage
@@ -1844,6 +2344,52 @@ function DashboardSettings() {
      
      const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
      return data.publicUrl;
+  };
+
+  // Extract storage path from a public URL
+  const extractStoragePath = (url: string, bucket: string): string | null => {
+    try {
+      const parts = url.split(`/storage/v1/object/public/${bucket}/`);
+      return parts.length > 1 ? decodeURIComponent(parts[1]) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Delete image from storage bucket AND clear from DB
+  const handleDeleteImage = async (type: 'logo' | 'cover') => {
+    if (!shop) return;
+    const url = type === 'logo' ? shop.logo_url : shop.cover_url;
+    const bucket = type === 'logo' ? 'shop-logos' : 'shop-covers';
+    const dbField = type === 'logo' ? 'logo_url' : 'cover_url';
+
+    try {
+      // Remove from storage
+      if (url) {
+        const path = extractStoragePath(url, bucket);
+        if (path) {
+          await supabase.storage.from(bucket).remove([path]);
+        }
+      }
+
+      // Clear from DB
+      await supabase.from('shops').update({ [dbField]: null }).eq('id', shop.id);
+
+      // Update local state
+      if (type === 'logo') {
+        setLogoPreview(null);
+        setLogoFile(null);
+      } else {
+        setCoverPreview(null);
+        setCoverFile(null);
+      }
+      setShop({ ...shop, [dbField]: null } as any);
+      queryClient.invalidateQueries({ queryKey: ["shop", "owner", user?.id] });
+      notify.success(type === 'logo' ? 'تم حذف الشعار' : 'تم حذف الغلاف');
+    } catch (error: any) {
+      console.error('Delete image error:', error);
+      notify.error('فشل حذف الصورة');
+    }
   };
 
   const handleSave = async () => {
@@ -1872,12 +2418,22 @@ function DashboardSettings() {
       let logoUrl = shop?.logo_url;
       let coverUrl = shop?.cover_url;
 
-      // Upload Images if changed
+      // Upload Images if changed (and clean up old ones from storage)
       if (logoFile) {
-        logoUrl = await uploadImage(logoFile, "shop-logos");
+        // Delete old logo from storage before uploading new one
+        if (shop?.logo_url) {
+          const oldPath = extractStoragePath(shop.logo_url, 'shop-logos');
+          if (oldPath) await supabase.storage.from('shop-logos').remove([oldPath]);
+        }
+        logoUrl = await uploadShopImage(logoFile, "shop-logos");
       }
       if (coverFile) {
-        coverUrl = await uploadImage(coverFile, "shop-covers");
+        // Delete old cover from storage before uploading new one
+        if (shop?.cover_url) {
+          const oldPath = extractStoragePath(shop.cover_url, 'shop-covers');
+          if (oldPath) await supabase.storage.from('shop-covers').remove([oldPath]);
+        }
+        coverUrl = await uploadShopImage(coverFile, "shop-covers");
       }
 
       setIsUploading(false); // Done uploading
@@ -1942,9 +2498,48 @@ function DashboardSettings() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">{AR.dashboard.settings}</h1>
-          <p className="text-muted-foreground">جاري التحميل...</p>
+          <div className="h-8 w-48 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-64 bg-muted rounded animate-pulse mt-2" />
         </div>
+        {/* Tab skeleton */}
+        <div className="flex gap-2">
+          <div className="h-10 w-32 bg-muted rounded-lg animate-pulse" />
+          <div className="h-10 w-40 bg-muted rounded-lg animate-pulse" />
+        </div>
+        {/* Cover + Logo skeleton */}
+        <Card className="rounded-xl overflow-hidden">
+          <div className="animate-pulse">
+            <div className="h-40 bg-muted" />
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-center gap-4 -mt-12">
+                <div className="w-20 h-20 rounded-xl bg-muted border-4 border-background" />
+                <div className="pt-8 space-y-2">
+                  <div className="h-5 w-32 bg-muted rounded" />
+                  <div className="h-3 w-20 bg-muted rounded" />
+                </div>
+              </div>
+              <div className="space-y-3 pt-4">
+                <div className="h-10 w-full bg-muted rounded-lg" />
+                <div className="h-10 w-full bg-muted rounded-lg" />
+                <div className="h-20 w-full bg-muted rounded-lg" />
+              </div>
+            </CardContent>
+          </div>
+        </Card>
+        {/* Contact skeleton */}
+        <Card className="rounded-xl">
+          <div className="animate-pulse">
+            <CardContent className="p-6 space-y-4">
+              <div className="h-5 w-36 bg-muted rounded" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="h-10 bg-muted rounded-lg" />
+                <div className="h-10 bg-muted rounded-lg" />
+                <div className="h-10 bg-muted rounded-lg" />
+                <div className="h-10 bg-muted rounded-lg" />
+              </div>
+            </CardContent>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -1996,150 +2591,167 @@ function DashboardSettings() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24 md:pb-8">
+      {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
           {shop ? "إعدادات المتجر" : "إنشاء متجر جديد"}
         </h1>
-        <p className="text-muted-foreground">
-          {shop ? "قم بتحديث بيانات متجرك" : "أنشئ متجرك للبدء في بيع المنتجات"}
+        <p className="text-muted-foreground mt-1">
+          {shop ? "قم بتحديث بيانات متجرك، الشعار، والموقع" : "أنشئ متجرك للبدء في بيع المنتجات"}
         </p>
       </div>
 
       {renderStatusBanner()}
 
       <Tabs defaultValue="general" className="space-y-6" dir="rtl">
-        <TabsList>
-            <TabsTrigger value="general">بيانات المتجر</TabsTrigger>
-            {shop && <TabsTrigger value="hours">ساعات العمل والحالة</TabsTrigger>}
+        <TabsList className="w-full md:w-auto">
+            <TabsTrigger value="general" className="flex-1 md:flex-none">بيانات المتجر</TabsTrigger>
+            {shop && <TabsTrigger value="hours" className="flex-1 md:flex-none">ساعات العمل والحالة</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="general">
-          <Card>
-            <CardHeader>
-              <CardTitle>بيانات المتجر</CardTitle>
-              <CardDescription>
-                قم بتحديث بيانات متجرك، الشعار، ومناطق التوصيل.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Logo & Cover */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Logo Upload */}
-                  <div className="space-y-2">
-                      <Label>شعار المتجر</Label>
-                      <div 
-                        className="h-32 w-32 rounded-full border-2 border-dashed flex items-center justify-center relative overflow-hidden bg-muted cursor-pointer hover:bg-muted/80 transition-colors mx-auto md:mx-0"
-                      >
-                        {logoPreview ? (
-                            <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="text-center p-2 pointer-events-none">
-                              <Upload className="w-6 h-6 mx-auto text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground block mt-1">اضغط للرفع</span>
-                            </div>
-                        )}
-                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'logo')} />
-                      </div>
-                  </div>
-
-                  {/* Cover Upload */}
-                  <div className="space-y-2">
-                      <Label>غلاف المتجر</Label>
-                      <div 
-                        className="h-32 w-full rounded-lg border-2 border-dashed flex items-center justify-center relative overflow-hidden bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
-                      >
-                        {coverPreview ? (
-                            <img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="space-y-2 pointer-events-none">
-                              <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground block">اضغط للرفع</span>
-                            </div>
-                        )}
-                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'cover')} />
-                      </div>
-                  </div>
+        <TabsContent value="general" className="space-y-6">
+          {/* ──────────── Card 1: Store Identity ──────────── */}
+          <Card className="rounded-xl shadow-sm overflow-hidden">
+            {/* Cover Photo Banner */}
+            <div className="relative h-36 md:h-44 bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b">
+              {coverPreview ? (
+                <img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground/60">
+                  <Upload className="w-8 h-8 mb-1" />
+                  <span className="text-xs">اضغط لرفع غلاف المتجر</span>
                 </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                onChange={(e) => handleFileChange(e, 'cover')}
+              />
+              {coverPreview && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 left-2 h-7 text-xs gap-1 opacity-90 hover:opacity-100"
+                  onClick={(e) => { e.stopPropagation(); handleDeleteImage('cover'); }}
+                >
+                  <Trash2 className="w-3 h-3" />
+                  حذف
+                </Button>
+              )}
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="shopName">اسم المتجر *</Label>
-                    <Input
-                      id="shopName"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="مثال: سوبر ماركت النور"
+            {/* Logo overlapping cover */}
+            <div className="px-4 md:px-6 -mt-12 relative z-10">
+              <div className="flex items-end gap-4">
+                <div className="relative">
+                  <div className="h-24 w-24 rounded-xl border-4 border-background bg-muted flex items-center justify-center overflow-hidden shadow-md">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center pointer-events-none">
+                        <Store className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={(e) => handleFileChange(e, 'logo')}
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="category">نوع المتجر *</Label>
-                    <Select
-                      value={formData.category_id}
-                      onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                  {logoPreview && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImage('logo')}
+                      className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center shadow-sm hover:bg-destructive/90 transition-colors"
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="اختر نوع المتجر" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            <div className="flex items-center gap-2">
-                              {/* {cat.icon_url && <img src={cat.icon_url} className="w-4 h-4" />} */}
-                              <span>{cat.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
+                <div className="pb-1">
+                  <p className="text-sm font-medium">{formData.name || "اسم المتجر"}</p>
+                  <p className="text-xs text-muted-foreground">اضغط على الشعار أو الغلاف لتغييره</p>
+                </div>
+              </div>
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="shopDesc">وصف المتجر</Label>
-                  <Textarea
-                    id="shopDesc"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="وصف مختصر عن متجرك..."
-                    rows={3}
+            <CardContent className="pt-6 px-4 md:px-6 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="shopName" className="text-sm font-medium">اسم المتجر <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="shopName"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="مثال: سوبر ماركت النور"
                   />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">رقم الهاتف *</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      dir="ltr"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="01xxxxxxxxx"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="region">المنطقة *</Label>
-                      <Select
-                        value={formData.region_id}
-                        onValueChange={(value) => setFormData({ ...formData, region_id: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="اختر المنطقة" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {regions.map((region) => (
-                            <SelectItem key={region.id} value={region.id}>{region.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                  </div>
+                
+                <div className="space-y-1.5">
+                  <Label htmlFor="category" className="text-sm font-medium">نوع المتجر <span className="text-destructive">*</span></Label>
+                  <Select
+                    value={formData.category_id}
+                    onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر نوع المتجر" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          <span>{cat.name}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="whatsapp">واتساب</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="shopDesc" className="text-sm font-medium">وصف المتجر</Label>
+                <Textarea
+                  id="shopDesc"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="وصف مختصر عن متجرك ومنتجاتك..."
+                  rows={3}
+                  className="resize-none"
+                />
+                <p className="text-xs text-muted-foreground">يظهر هذا الوصف للعملاء في صفحة متجرك</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ──────────── Card 2: Contact Information ──────────── */}
+          <Card className="rounded-xl shadow-sm">
+            <CardHeader className="pb-4 px-4 md:px-6">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <MapPin className="w-4 h-4 text-primary" />
+                </div>
+                معلومات التواصل والموقع
+              </CardTitle>
+              <CardDescription>رقم الهاتف، الواتساب، العنوان، والمنطقة</CardDescription>
+            </CardHeader>
+            <CardContent className="px-4 md:px-6 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="phone" className="text-sm font-medium">رقم الهاتف <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    dir="ltr"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="01xxxxxxxxx"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="whatsapp" className="text-sm font-medium">واتساب</Label>
                   <Input
                     id="whatsapp"
                     type="tel"
@@ -2148,10 +2760,15 @@ function DashboardSettings() {
                     onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
                     placeholder="01xxxxxxxxx"
                   />
+                  <p className="text-xs text-muted-foreground">اختياري — للتواصل السريع مع العملاء</p>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="address">العنوان التفصيلي *</Label>
+              <Separator />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="address" className="text-sm font-medium">العنوان التفصيلي <span className="text-destructive">*</span></Label>
                   <Input
                     id="address"
                     value={formData.address}
@@ -2159,68 +2776,107 @@ function DashboardSettings() {
                     placeholder="شارع، مبنى، علامة مميزة..."
                   />
                 </div>
-
-                {/* STORE LOCATION MAP */}
-                <div className="space-y-2 pt-4 border-t">
-                  <Label>موقع المتجر على الخريطة *</Label>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowMapPicker(true)}
-                      className="w-full"
-                    >
-                      <MapPin className="w-4 h-4 ml-2" />
-                      {formData.latitude && formData.latitude !== 30.7865 ? "تغيير الموقع" : "تحديد الموقع"}
-                    </Button>
-                  </div>
-
-                  <div 
-                    className="h-[200px] w-full rounded-lg overflow-hidden border cursor-pointer hover:opacity-90 transition-opacity relative bg-muted"
-                    onClick={() => setShowMapPicker(true)}
+                <div className="space-y-1.5">
+                  <Label htmlFor="region" className="text-sm font-medium">المنطقة <span className="text-destructive">*</span></Label>
+                  <Select
+                    value={formData.region_id}
+                    onValueChange={(value) => setFormData({ ...formData, region_id: value })}
                   >
-                      {formData.latitude && !showMapPicker ? (
-                        <LocationPreviewMap 
-                          position={{ lat: formData.latitude, lng: formData.longitude }} 
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                          <span>اضغط لتحديد الموقع</span>
-                        </div>
-                      )}
-                  </div>
-                  
-                  <p className="text-xs text-muted-foreground">
-                    هذا الموقع سيظهر للمناديب لتسهيل الوصول إليك.
-                  </p>
-
-                  <MapLocationPicker 
-                    open={showMapPicker}
-                    onClose={() => setShowMapPicker(false)}
-                    initialPosition={
-                        formData.latitude && formData.longitude 
-                        ? { lat: formData.latitude, lng: formData.longitude }
-                        : undefined
-                    }
-                    onLocationSelect={(loc) => {
-                        setFormData(prev => ({ ...prev, latitude: loc.lat, longitude: loc.lng }));
-                    }}
-                    regionBoundary={(regions.find(r => r.id === formData.region_id) as any)?.boundary_coordinates}
-                    regionName={regions.find(r => r.id === formData.region_id)?.name}
-                  />
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر المنطقة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.map((region) => (
+                        <SelectItem key={region.id} value={region.id}>{region.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving || isUploading}
-                  className="w-full mt-6"
-                >
-                  {isUploading ? "جاري رفع الملفات..." : isSaving ? "جاري الحفظ..." : shop ? "حفظ التغييرات" : "إنشاء المتجر"}
-                </Button>
               </div>
             </CardContent>
           </Card>
+
+          {/* ──────────── Card 3: Location Map ──────────── */}
+          <Card className="rounded-xl shadow-sm">
+            <CardHeader className="pb-4 px-4 md:px-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">موقع المتجر</CardTitle>
+                    <CardDescription className="mt-0.5">حدد موقعك الدقيق ليتمكن المناديب من الوصول إليك</CardDescription>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowMapPicker(true)}
+                  className="gap-1.5 hidden md:flex"
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  {formData.latitude && formData.latitude !== 30.7865 ? "تغيير الموقع" : "تحديد الموقع"}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 md:px-6 space-y-3">
+              <div 
+                className="h-[200px] md:h-[260px] w-full rounded-xl overflow-hidden border cursor-pointer hover:shadow-md transition-shadow relative bg-muted"
+                onClick={() => setShowMapPicker(true)}
+              >
+                  {formData.latitude && !showMapPicker ? (
+                    <LocationPreviewMap 
+                      position={{ lat: formData.latitude, lng: formData.longitude }} 
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2">
+                      <MapPin className="w-8 h-8 text-muted-foreground/40" />
+                      <span className="text-sm">اضغط لتحديد الموقع على الخريطة</span>
+                    </div>
+                  )}
+              </div>
+
+              {/* Mobile button */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowMapPicker(true)}
+                className="w-full md:hidden gap-1.5"
+              >
+                <MapPin className="w-4 h-4" />
+                {formData.latitude && formData.latitude !== 30.7865 ? "تغيير الموقع" : "تحديد الموقع"}
+              </Button>
+
+              <MapLocationPicker 
+                open={showMapPicker}
+                onClose={() => setShowMapPicker(false)}
+                initialPosition={
+                    formData.latitude && formData.longitude 
+                    ? { lat: formData.latitude, lng: formData.longitude }
+                    : undefined
+                }
+                onLocationSelect={(loc) => {
+                    setFormData(prev => ({ ...prev, latitude: loc.lat, longitude: loc.lng }));
+                }}
+                regionBoundary={(regions.find(r => r.id === formData.region_id) as any)?.boundary_coordinates}
+                regionName={regions.find(r => r.id === formData.region_id)?.name}
+              />
+            </CardContent>
+          </Card>
+
+          {/* ──────────── Desktop Save Button ──────────── */}
+          <div className="hidden md:block">
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || isUploading}
+              size="lg"
+              className="w-full gap-2"
+            >
+              {isUploading ? "جاري رفع الملفات..." : isSaving ? "جاري الحفظ..." : shop ? "حفظ التغييرات" : "إنشاء المتجر"}
+            </Button>
+          </div>
         </TabsContent>
 
         {shop && (
@@ -2229,6 +2885,27 @@ function DashboardSettings() {
           </TabsContent>
         )}
       </Tabs>
+
+      {/* ──────────── Mobile Sticky Save ──────────── */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t shadow-lg md:hidden z-40">
+        <Button
+          onClick={handleSave}
+          disabled={isSaving || isUploading}
+          size="lg"
+          className="w-full gap-2"
+        >
+          {isUploading ? "جاري رفع الملفات..." : isSaving ? "جاري الحفظ..." : shop ? "حفظ التغييرات" : "إنشاء المتجر"}
+        </Button>
+      </div>
+
+      {/* Image Cropper for Settings */}
+      <ImageCropper
+        open={showCropperSettings}
+        onClose={() => setShowCropperSettings(false)}
+        imageSrc={rawImageSrcSettings}
+        onCropComplete={handleCropCompleteSettings}
+        aspect={cropTypeSettings === 'logo' ? 1 : 16 / 9}
+      />
     </div>
   );
 }
@@ -3328,6 +4005,12 @@ function AdminUsers() {
 export default function DashboardPage() {
   const location = useLocation();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Auto-close sidebar on navigation
+  useEffect(() => {
+    setSheetOpen(false);
+  }, [location.pathname]);
 
   // Show loading while auth state is being determined
   if (isLoading) {
@@ -3372,7 +4055,7 @@ export default function DashboardPage() {
           {/* Mobile Header overlay */}
           <div className="lg:hidden flex items-center justify-between mb-4 bg-background p-4 rounded-lg shadow-sm">
             <h2 className="text-xl font-bold">لوحة التحكم</h2>
-            <Sheet>
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon">
                   <Menu className="w-5 h-5" />

@@ -238,22 +238,24 @@ export function ShopHoursSettings({ shop }: ShopHoursSettingsProps) {
 
                     return (
                         <AccordionItem key={day.id} value={`day-${day.id}`}>
-                            <AccordionTrigger className="hover:no-underline">
-                                <div className="flex items-center gap-4 w-full">
+                            <div className="flex items-center">
+                              <div className="flex items-center gap-2 pr-2" onClick={(e) => e.stopPropagation()}>
+                                <Switch 
+                                    checked={enabled}
+                                    onCheckedChange={(checked) => handleToggleDay(day.id, checked)}
+                                />
+                              </div>
+                              <AccordionTrigger className="hover:no-underline flex-1">
+                                <div className="flex items-center gap-3 w-full">
                                     <span className="font-medium min-w-[60px] text-right">{day.label}</span>
-                                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                        <Switch 
-                                            checked={enabled}
-                                            onCheckedChange={(checked) => handleToggleDay(day.id, checked)}
-                                        />
-                                        <span className={`text-xs ${enabled ? "text-green-600 font-medium" : "text-muted-foreground"}`}>
-                                            {enabled ? 
-                                              (shifts.length > 1 ? "فترتان" : "متاح") 
-                                              : "مغلق"}
-                                        </span>
-                                    </div>
+                                    <span className={`text-xs ${enabled ? "text-green-600 font-medium" : "text-muted-foreground"}`}>
+                                        {enabled ? 
+                                          (shifts.length > 1 ? "فترتان" : "متاح") 
+                                          : "مغلق"}
+                                    </span>
                                 </div>
-                            </AccordionTrigger>
+                              </AccordionTrigger>
+                            </div>
                             <AccordionContent className="px-1 pt-2 pb-4 space-y-4">
                                 {enabled && (
                                   <>
