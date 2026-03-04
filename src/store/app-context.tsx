@@ -101,7 +101,7 @@ interface AppContextType extends AppState {
     fullName: string;
     phone?: string;
     role?: "CUSTOMER" | "SHOP_OWNER";
-  }) => Promise<{ error: Error | null }>;
+  }) => Promise<{ error: Error | null; needsVerification?: boolean }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   refreshCart: () => Promise<void>;
@@ -190,8 +190,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     phone?: string;
     role?: "CUSTOMER" | "SHOP_OWNER";
   }) => {
-    const { user, error } = await authService.register(data);
+    const { user, error, needsVerification } = await authService.register(data);
     if (error) return { error };
+    if (needsVerification) return { error: null, needsVerification: true };
     dispatch({ type: "SET_USER", payload: user });
     return { error: null };
   };

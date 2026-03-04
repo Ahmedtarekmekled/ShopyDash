@@ -1,10 +1,17 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { notify } from "@/lib/notify";
-import { Eye, EyeOff, Store } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Store,
+  AlertTriangle,
+  RefreshCw,
+  CheckCircle2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { AR } from "@/lib/i18n";
 import { useAuth } from "@/store";
 import { signInWithGoogle } from "@/lib/supabase";
+import { authService } from "@/services/auth.service";
 
 const loginSchema = z.object({
   email: z.string().email(AR.validation.email),
@@ -29,10 +37,31 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  // Email verification state
+  const [showVerificationAlert, setShowVerificationAlert] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isResending, setIsResending] = useState(false);
+
+  // Success messages from URL params
+  const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    const verified = searchParams.get("verified");
+    const reset = searchParams.get("reset");
+    if (verified === "true") {
+      setSuccessMessage("تم تأكيد بريدك الإلكتروني بنجاح! يمكنك الآن تسجيل الدخول.");
+    }
+    if (reset === "true") {
+      setSuccessMessage("تم تغيير كلمة المرور بنجاح! سجّل الدخول بكلمة المرور الجديدة.");
+    }
+  }, [searchParams]);
 
   const {
     register,
@@ -42,11 +71,55 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  const startCooldown = () => {
+    setResendCooldown(60);
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleResendVerification = async () => {
+    if (resendCooldown > 0 || isResending) return;
+    setIsResending(true);
+    try {
+      const { error } = await authService.resendVerification(unverifiedEmail);
+      if (error) {
+        notify.error("فشل إعادة إرسال رسالة التأكيد");
+      } else {
+        notify.success("تم إعادة إرسال رسالة التأكيد");
+        startCooldown();
+      }
+    } catch {
+      notify.error("حدث خطأ غير متوقع");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
+    setShowVerificationAlert(false);
+    setSuccessMessage("");
     try {
-      const { error, user } = await login(data.email, data.password);
+      const { error, user } = await login(
+        data.email.trim().toLowerCase(),
+        data.password
+      );
       if (error) {
+        // Check for email not verified
+        if (error.message === "EMAIL_NOT_VERIFIED") {
+          setUnverifiedEmail(data.email.trim().toLowerCase());
+          setShowVerificationAlert(true);
+          setIsLoading(false);
+          return;
+        }
+
         // Map common errors to Arabic
         const errorMap: Record<string, string> = {
           "Invalid login credentials": "بيانات الدخول غير صحيحة",
@@ -61,8 +134,11 @@ export default function LoginPage() {
       notify.success(AR.auth.loginSuccess);
       setIsLoading(false);
 
-      // Redirect based on user role
-      if (user?.role === "SHOP_OWNER" || user?.role === "ADMIN") {
+      // Redirect based on user role or redirect param
+      const redirectTo = searchParams.get("redirect");
+      if (redirectTo) {
+        navigate(redirectTo);
+      } else if (user?.role === "SHOP_OWNER" || user?.role === "ADMIN") {
         navigate("/dashboard");
       } else {
         navigate("/");
@@ -105,6 +181,48 @@ export default function LoginPage() {
             <CardDescription>أدخل بياناتك للدخول إلى حسابك</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Success message */}
+            {successMessage && (
+              <div className="mb-4 p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-green-800 dark:text-green-200">
+                  {successMessage}
+                </p>
+              </div>
+            )}
+
+            {/* Email not verified alert */}
+            {showVerificationAlert && (
+              <div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 space-y-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                      البريد الإلكتروني غير مُفعّل
+                    </p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                      يرجى التحقق من بريدك الإلكتروني والضغط على رابط التأكيد.
+                      تحقق من مجلد البريد غير المرغوب فيه (Spam).
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 text-xs"
+                  onClick={handleResendVerification}
+                  disabled={resendCooldown > 0 || isResending}
+                >
+                  <RefreshCw
+                    className={`w-3 h-3 ${isResending ? "animate-spin" : ""}`}
+                  />
+                  {resendCooldown > 0
+                    ? `إعادة الإرسال بعد ${resendCooldown} ثانية`
+                    : "إعادة إرسال رسالة التأكيد"}
+                </Button>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" required>

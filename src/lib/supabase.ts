@@ -29,12 +29,13 @@ export const signUp = async (
   fullName: string
 ) => {
   const { data, error } = await supabase.auth.signUp({
-    email,
+    email: email.trim().toLowerCase(),
     password,
     options: {
       data: {
         full_name: fullName,
       },
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
     },
   });
   return { data, error };
@@ -62,6 +63,36 @@ export const signInWithGoogle = async () => {
 export const signOut = async () => {
   const { error } = await supabase.auth.signOut();
   return { error };
+};
+
+export const globalSignOut = async () => {
+  const { error } = await supabase.auth.signOut({ scope: "global" });
+  return { error };
+};
+
+export const resendVerificationEmail = async (email: string) => {
+  const { data, error } = await supabase.auth.resend({
+    type: "signup",
+    email: email.trim().toLowerCase(),
+  });
+  return { data, error };
+};
+
+export const forgotPassword = async (email: string) => {
+  const { data, error } = await supabase.auth.resetPasswordForEmail(
+    email.trim().toLowerCase(),
+    {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    }
+  );
+  return { data, error };
+};
+
+export const resetPassword = async (newPassword: string) => {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+  return { data, error };
 };
 
 export const getCurrentUser = async () => {
