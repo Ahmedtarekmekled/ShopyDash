@@ -1,23 +1,22 @@
 import { useState, useEffect, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// Fix Leaflet marker icon
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
+// Fix Leaflet default marker icon
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-let DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
 });
 
-L.Marker.prototype.options.icon = DefaultIcon;
 import { Link } from "react-router-dom";
 import {
-  ShoppingCart,
   Store,
   Search,
   MapPin,
@@ -34,6 +33,7 @@ import {
   VolumeX,
   AlertCircle,
   History,
+  ExternalLink,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -48,15 +48,8 @@ import { toast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -65,54 +58,76 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 // ─── Pipeline column definition ─────────────────────────────────────────
 const PIPELINE_COLUMNS = [
-  { status: "PLACED",           label: "جديد",           color: "bg-blue-500",   textColor: "text-blue-700",   bg: "bg-blue-50 dark:bg-blue-950/30",   ring: "ring-blue-200" },
-  { status: "CONFIRMED",        label: "مؤكد",           color: "bg-indigo-500", textColor: "text-indigo-700", bg: "bg-indigo-50 dark:bg-indigo-950/30", ring: "ring-indigo-200" },
-  { status: "PREPARING",        label: "قيد التجهيز",   color: "bg-amber-500",  textColor: "text-amber-700",  bg: "bg-amber-50 dark:bg-amber-950/30",  ring: "ring-amber-200" },
-  { status: "READY_FOR_PICKUP", label: "جاهز للاستلام", color: "bg-purple-500", textColor: "text-purple-700", bg: "bg-purple-50 dark:bg-purple-950/30", ring: "ring-purple-200" },
-  { status: "OUT_FOR_DELIVERY", label: "في الطريق",     color: "bg-orange-500", textColor: "text-orange-700", bg: "bg-orange-50 dark:bg-orange-950/30", ring: "ring-orange-200" },
-  { status: "DELIVERED",        label: "مكتمل",          color: "bg-green-500",  textColor: "text-green-700",  bg: "bg-green-50 dark:bg-green-950/30",  ring: "ring-green-200" },
+  { status: "PLACED",           label: "جديد",           color: "bg-blue-500",   textColor: "text-blue-700 dark:text-blue-400",   bg: "bg-blue-50 dark:bg-blue-950/30" },
+  { status: "CONFIRMED",        label: "مؤكد",           color: "bg-indigo-500", textColor: "text-indigo-700 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950/30" },
+  { status: "PREPARING",        label: "قيد التجهيز",   color: "bg-amber-500",  textColor: "text-amber-700 dark:text-amber-400",  bg: "bg-amber-50 dark:bg-amber-950/30" },
+  { status: "READY_FOR_PICKUP", label: "جاهز للاستلام", color: "bg-purple-500", textColor: "text-purple-700 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/30" },
+  { status: "OUT_FOR_DELIVERY", label: "في الطريق",     color: "bg-orange-500", textColor: "text-orange-700 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/30" },
 ];
 
-// ─── Active statuses (pipeline shows only active orders) ─────────────────
 const ACTIVE_STATUSES = ["PLACED", "CONFIRMED", "PREPARING", "READY_FOR_PICKUP", "OUT_FOR_DELIVERY"];
 
-// ─── Map Component ───────────────────────────────────────────────────────
-const OrderMap = ({ latitude, longitude, address }: { latitude?: number | null; longitude?: number | null; address: string }) => {
-  if (!latitude || !longitude) {
+// ─── Geocoding Minimap ────────────────────────────────────────────────────────
+function RecenterMap({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap();
+  useEffect(() => { map.setView([lat, lng], 15); }, [lat, lng, map]);
+  return null;
+}
+
+function AddressMinimap({ address, lat, lng }: { address: string; lat?: number | null; lng?: number | null }) {
+  // If we have coordinates from the DB, show map directly — no geocoding needed
+  if (lat && lng) {
     return (
-      <div className="bg-muted/30 rounded-lg h-40 flex flex-col items-center justify-center text-center p-4">
-        <MapPin className="w-8 h-8 text-muted-foreground mb-2 opacity-50" />
-        <p className="text-sm text-muted-foreground">الإحداثيات غير متوفرة</p>
-        <p className="text-xs text-muted-foreground mt-1">{address}</p>
+      <div className="h-40 rounded-xl overflow-hidden border relative z-0">
+        <MapContainer
+          center={[lat, lng]}
+          zoom={15}
+          scrollWheelZoom={false}
+          zoomControl={false}
+          dragging={false}
+          style={{ height: "100%", width: "100%" }}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          />
+          <Marker position={[lat, lng]}>
+            <Popup>{address}</Popup>
+          </Marker>
+          <RecenterMap lat={lat} lng={lng} />
+        </MapContainer>
       </div>
     );
   }
+
+  // Fallback: No coordinates — show Google Maps iframe with address search
   return (
-    <div className="h-48 rounded-lg overflow-hidden border relative z-0">
-      <MapContainer center={[latitude, longitude]} zoom={15} scrollWheelZoom={false} style={{ height: "100%", width: "100%" }}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
-        <Marker position={[latitude, longitude]}>
-          <Popup>{address}</Popup>
-        </Marker>
-      </MapContainer>
+    <div className="h-40 rounded-xl overflow-hidden border">
+      <iframe
+        title="موقع العميل"
+        width="100%"
+        height="100%"
+        style={{ border: 0 }}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+      />
     </div>
   );
-};
+}
 
-// ─── Icon Mapping ────────────────────────────────────────────────────────
-const ICON_MAP: Record<string, any> = {
-  ClipboardList,
-  CheckCircle,
-  Package,
-  Truck,
-  CheckCircle2: CheckCircle,
-  XCircle: X,
-};
 
 // ─── Status helpers ──────────────────────────────────────────────────────
 const getNextStatus = (currentStatus: string): string | null => {
@@ -136,81 +151,85 @@ const getNextStatusLabel = (status: string): string => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ─── Pipeline Order Card ─────────────────────────────────────────────────
+// ─── Pipeline Card ───────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════
 const PipelineCard = ({ order, onUpdateStatus, onViewDetails, isUpdating }: any) => {
-  const statusConfig = ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG] || ORDER_STATUS_CONFIG.PLACED;
   const nextStatus = getNextStatus(order.status);
   const driver = order.delivery_user || order.parent_order?.delivery_user;
-  const IconComponent = ICON_MAP[statusConfig.icon] || ClipboardList;
   const timeAgo = formatDistanceToNow(new Date(order.created_at), { locale: ar, addSuffix: true });
+  const shortId = order.order_number?.slice(-4) || order.order_number;
 
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-all duration-200 border border-border/60">
-      {/* Card Header */}
-      <div className="p-3 pb-2">
-        <div className="flex items-center justify-between mb-2">
+    <div className="rounded-xl border bg-background hover:shadow-md transition-all duration-200">
+      {/* Top section */}
+      <div className="p-3 space-y-2">
+        {/* Order # + badge */}
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <span className="font-mono font-bold text-sm">#{order.order_number?.split("-")[1] || order.order_number}</span>
-            {order.parent_order_id && <Badge variant="outline" className="text-[10px] px-1 py-0">مشترك</Badge>}
+            <span className="font-mono font-bold text-sm">#{shortId}</span>
+            {order.parent_order_id && (
+              <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">مشترك</Badge>
+            )}
           </div>
-          <span className="font-bold text-primary">{formatPrice(order.total)}</span>
+          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {timeAgo}
+          </span>
         </div>
 
         {/* Customer */}
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1">
-          <User className="w-3.5 h-3.5 flex-shrink-0" />
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <User className="w-3 h-3 flex-shrink-0" />
           <span className="truncate">{order.customer_name || "عميل زائر"}</span>
         </div>
 
         {/* Address */}
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <MapPin className="w-3 h-3 flex-shrink-0" />
           <span className="line-clamp-1">{order.delivery_address}</span>
         </div>
 
-        {/* Time */}
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Clock className="w-3 h-3 flex-shrink-0" />
-          <span>{timeAgo}</span>
-        </div>
-
-        {/* Driver badge */}
+        {/* Driver */}
         {driver && (
-          <div className="flex items-center gap-1.5 text-xs text-primary mt-2 bg-primary/5 px-2 py-1 rounded-md w-fit">
+          <div className="flex items-center gap-1 text-[11px] text-primary bg-primary/5 px-2 py-1 rounded-md w-fit">
             <Truck className="w-3 h-3" />
-            <span>المندوب: {driver.full_name}</span>
+            <span className="truncate">{driver.full_name}</span>
           </div>
         )}
+
+        {/* Price - always full width, prominent */}
+        <div className="bg-primary/5 rounded-lg px-3 py-1.5 text-center" dir="rtl">
+          <span className="font-bold text-primary text-base">{formatPrice(order.total)}</span>
+        </div>
       </div>
 
-      {/* Card Actions */}
-      <div className="flex items-center gap-1.5 p-2 pt-0 border-t mt-1">
+      {/* Actions */}
+      <div className="flex gap-1.5 p-2 border-t bg-muted/20 rounded-b-xl">
         {nextStatus && (
           <Button
             size="sm"
-            className="flex-1 h-8 text-xs"
+            className="flex-1 h-7 text-[11px] font-semibold"
             onClick={() => onUpdateStatus(order.id, nextStatus)}
             disabled={isUpdating}
           >
-            {isUpdating ? "جاري..." : getNextStatusLabel(nextStatus)}
+            {isUpdating ? "..." : getNextStatusLabel(nextStatus)}
           </Button>
         )}
-        <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={onViewDetails}>
+        <Button variant="outline" size="sm" className="flex-1 h-7 text-[11px]" onClick={onViewDetails}>
           التفاصيل
         </Button>
         {ACTIVE_STATUSES.includes(order.status) && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-destructive hover:bg-destructive/10 flex-shrink-0"
+            className="h-7 w-7 text-destructive hover:bg-destructive/10 flex-shrink-0"
             onClick={() => onUpdateStatus(order.id, "CANCEL_TRIGGER")}
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </Button>
         )}
       </div>
-    </Card>
+    </div>
   );
 };
 
@@ -221,151 +240,170 @@ function OrderDetailsDialog({ order, open, onOpenChange }: any) {
   if (!order) return null;
   const parentOrder = order.parent_order;
   const driver = order.delivery_user || parentOrder?.delivery_user;
-  const lat = order.delivery_latitude || parentOrder?.delivery_latitude;
-  const lng = order.delivery_longitude || parentOrder?.delivery_longitude;
+  const statusConfig = ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG];
+  const isCancelled = order.status?.startsWith("CANCELLED");
+  const shortOrderNum = order.order_number?.slice(-6) || order.order_number;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span>تفاصيل الطلب #{order.order_number}</span>
-              <Badge className={ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.color}>
-                {ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.label}
-              </Badge>
-            </div>
-            <span className="text-sm font-normal text-muted-foreground">
-              {format(new Date(order.created_at), "PPP p", { locale: ar })}
-            </span>
-          </DialogTitle>
-          {(order.status === "CANCELLED" || order.status === "CANCELLED_BY_SHOP" || order.status === "CANCELLED_BY_ADMIN") && order.cancellation_reason && (
-            <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md text-destructive text-sm font-medium flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold mb-1">سبب الإلغاء:</p>
-                <p>{order.cancellation_reason}</p>
-                <p className="text-xs opacity-70 mt-1">
-                  {order.cancelled_by ? (order.status === "CANCELLED_BY_ADMIN" ? "بواسطة الإدارة" : "بواسطة المتجر") : ""} •{" "}
-                  {order.cancelled_at ? format(new Date(order.cancelled_at), "p", { locale: ar }) : ""}
-                </p>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
+        {/* ── Dialog Header ── */}
+        <div className="px-6 pt-6 pb-4 border-b bg-muted/30">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <DialogTitle className="text-lg font-bold mb-1">
+                طلب #{shortOrderNum}
+              </DialogTitle>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className={cn("text-xs", statusConfig?.color)}>
+                  {statusConfig?.label}
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  {format(new Date(order.created_at), "d MMM yyyy • h:mm a", { locale: ar })}
+                </span>
               </div>
             </div>
-          )}
-        </DialogHeader>
-
-        <div className="grid md:grid-cols-2 gap-6 py-4">
-          {/* Customer & Location */}
-          <div className="space-y-4">
-            <h4 className="font-semibold flex items-center gap-2 border-b pb-2">
-              <User className="w-4 h-4" /> بيانات العميل
-            </h4>
-            <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-[24px_1fr] gap-2">
-                <User className="w-4 h-4 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="font-medium">{order.customer_name || "عميل زائر"}</p>
-                  <p className="text-muted-foreground">الاسم</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-[24px_1fr] gap-2">
-                <Phone className="w-4 h-4 text-muted-foreground mt-0.5" />
-                <div>
-                  <a href={`tel:${order.delivery_phone || order.customer_phone}`} className="font-medium hover:underline text-primary">
-                    {order.delivery_phone || order.customer_phone}
-                  </a>
-                  <p className="text-muted-foreground">رقم الهاتف (اضغط للاتصال)</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-[24px_1fr] gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="font-medium">{order.delivery_address}</p>
-                  <p className="text-muted-foreground">العنوان</p>
-                </div>
-              </div>
-              <OrderMap latitude={lat} longitude={lng} address={order.delivery_address} />
+            <div className="text-left">
+              <p className="text-2xl font-bold text-primary">{formatPrice(order.total)}</p>
             </div>
           </div>
 
-          {/* Order Details & Delivery */}
-          <div className="space-y-6">
+          {/* Cancellation reason */}
+          {isCancelled && order.cancellation_reason && (
+            <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-xs">سبب الإلغاء:</p>
+                <p className="text-xs mt-0.5">{order.cancellation_reason}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Dialog Body ── */}
+        <ScrollArea className="max-h-[60vh]">
+          <div className="px-6 py-5 space-y-6">
+            {/* Customer Info Card */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <User className="w-3.5 h-3.5 text-primary" />
+                </div>
+                بيانات العميل
+              </h4>
+              <div className="bg-muted/30 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">{order.customer_name || "عميل زائر"}</span>
+                  </div>
+                  {(order.delivery_phone || order.customer_phone) && (
+                    <a
+                      href={`tel:${order.delivery_phone || order.customer_phone}`}
+                      className="flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+                      dir="ltr"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      {order.delivery_phone || order.customer_phone}
+                    </a>
+                  )}
+                </div>
+                <Separator />
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-muted-foreground">{order.delivery_address}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Minimap */}
+            <AddressMinimap
+              address={order.delivery_address}
+              lat={order.parent_order?.delivery_latitude}
+              lng={order.parent_order?.delivery_longitude}
+            />
+
             {/* Delivery Info */}
-            <div className="space-y-4">
-              <h4 className="font-semibold flex items-center gap-2 border-b pb-2">
-                <Truck className="w-4 h-4" /> معلومات التوصيل
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Truck className="w-3.5 h-3.5 text-primary" />
+                </div>
+                معلومات التوصيل
               </h4>
               {driver ? (
-                <div className="bg-primary/5 rounded-lg p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
-                      {driver.avatar_url ? (
-                        <img src={driver.avatar_url} alt={driver.full_name} className="w-full h-full object-cover" />
-                      ) : (
-                        <User className="w-5 h-5" />
-                      )}
+                <div className="bg-primary/5 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center overflow-hidden">
+                        {driver.avatar_url ? (
+                          <img src={driver.avatar_url} alt={driver.full_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-5 h-5 text-primary" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{driver.full_name}</p>
+                        <p className="text-xs text-muted-foreground">مندوب التوصيل</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold">{driver.full_name}</p>
-                      <p className="text-xs text-muted-foreground">مندوب التوصيل</p>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                      <span className="text-xs text-green-600 font-medium">
+                        {parentOrder?.status === "OUT_FOR_DELIVERY" ? "جاري التوصيل" : parentOrder?.status === "DELIVERED" ? "تم التوصيل" : "تم التعيين"}
+                      </span>
                     </div>
                   </div>
                   {driver.phone && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="w-4 h-4" />
-                      <a href={`tel:${driver.phone}`} className="hover:underline" dir="ltr">{driver.phone}</a>
-                    </div>
+                    <a href={`tel:${driver.phone}`} className="flex items-center gap-2 text-sm text-primary mt-3 hover:underline" dir="ltr">
+                      <Phone className="w-3.5 h-3.5" /> {driver.phone}
+                    </a>
                   )}
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>
-                      {parentOrder?.status === "OUT_FOR_DELIVERY" ? "جاري التوصيل" : parentOrder?.status === "DELIVERED" ? "تم التوصيل" : "تم تعيين المندوب"}
-                    </span>
-                  </div>
                 </div>
               ) : (
-                <div className="bg-muted/30 rounded-lg p-4 text-center text-muted-foreground text-sm">
-                  <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p>لم يتم تعيين مندوب بعد</p>
-                  {parentOrder?.status === "DELIVERED" && <p className="text-destructive font-bold text-xs mt-1">(خطأ: الطلب مكتمل ولكن لا يوجد مندوب مسجل)</p>}
+                <div className="bg-muted/20 rounded-xl p-4 text-center border border-dashed border-muted-foreground/20">
+                  <Clock className="w-6 h-6 mx-auto mb-1.5 text-muted-foreground/40" />
+                  <p className="text-sm text-muted-foreground/60">لم يتم تعيين مندوب بعد</p>
                 </div>
               )}
             </div>
 
-            {/* Order Items Summary */}
+            {/* Products */}
             <div className="space-y-3">
-              <h4 className="font-semibold flex items-center gap-2 border-b pb-2">
-                <Package className="w-4 h-4" /> المنتجات ({order.items.length})
-              </h4>
-              <ScrollArea className="h-[200px] pr-4">
-                <div className="space-y-3">
-                  {order.items.map((item: any, i: number) => (
-                    <div key={i} className="flex justify-between items-start text-sm">
-                      <div className="flex gap-2">
-                        <div className="font-medium bg-muted w-6 h-6 flex items-center justify-center rounded text-xs">
-                          {item.quantity}x
-                        </div>
-                        <div>
-                          <p className="font-medium">{item.product_name}</p>
-                          {item.modifiers && item.modifiers.length > 0 && (
-                            <p className="text-xs text-muted-foreground">
-                              + {item.modifiers.map((m: any) => m.name).join(", ")}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <p className="font-medium">{formatPrice(item.total_price)}</p>
-                    </div>
-                  ))}
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Package className="w-3.5 h-3.5 text-primary" />
                 </div>
-              </ScrollArea>
-              <Separator />
-              <div className="flex justify-between items-center font-bold text-lg">
-                <span>الإجمالي</span>
-                <span>{formatPrice(order.total)}</span>
+                المنتجات ({order.items?.length || 0})
+              </h4>
+              <div className="bg-muted/30 rounded-xl divide-y">
+                {order.items?.map((item: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                        {item.quantity}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{item.product_name}</p>
+                        {item.modifiers && item.modifiers.length > 0 && (
+                          <p className="text-[11px] text-muted-foreground">
+                            + {item.modifiers.map((m: any) => m.name).join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold">{formatPrice(item.total_price)}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
+        </ScrollArea>
+
+        {/* ── Dialog Footer — Total ── */}
+        <div className="px-6 py-4 border-t bg-muted/30 flex items-center justify-between">
+          <span className="font-bold text-base">الإجمالي</span>
+          <span className="font-bold text-xl text-primary">{formatPrice(order.total)}</span>
         </div>
       </DialogContent>
     </Dialog>
@@ -381,13 +419,10 @@ export function ShopOrders() {
   const [shop, setShop] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Interactions
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isMuted, setIsMuted] = useState(SoundService.getMuteStatus());
-
-  // Search
   const [searchQuery, setSearchQuery] = useState("");
 
   // Cancellation
@@ -418,7 +453,6 @@ export function ShopOrders() {
     }
   };
 
-  // Load Data
   const loadData = async (silent = false) => {
     if (!user) return;
     if (!silent) setIsLoading(true);
@@ -437,25 +471,20 @@ export function ShopOrders() {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, [user]);
+  useEffect(() => { loadData(); }, [user]);
 
-  // Real-time
   useShopRealtime(shop?.id, () => loadData(true), () => loadData(true));
 
-  // Sound
   const toggleMute = () => {
-    const newMuteStatus = SoundService.toggleMute();
-    setIsMuted(newMuteStatus);
-    toast({ description: newMuteStatus ? "تم كتم الصوت" : "تم تفعيل الصوت" });
+    const s = SoundService.toggleMute();
+    setIsMuted(s);
+    toast({ description: s ? "تم كتم الصوت" : "تم تفعيل الصوت" });
   };
   const enableAudio = async () => {
-    const enabled = await SoundService.enableAudio();
-    if (enabled) toast({ description: "تم تفعيل التنبيهات الصوتية" });
+    const ok = await SoundService.enableAudio();
+    if (ok) toast({ description: "تم تفعيل التنبيهات الصوتية" });
   };
 
-  // Status updates
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     if (!user) return;
     setIsUpdating(true);
@@ -478,12 +507,10 @@ export function ShopOrders() {
     setShowOrderDialog(true);
   };
 
-  // Filter: active orders only, + search
   const activeOrders = useMemo(() => {
     let result = orders
-      .filter((o) => [...ACTIVE_STATUSES, "DELIVERED"].includes(o.status))
+      .filter((o) => ACTIVE_STATUSES.includes(o.status))
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -497,10 +524,8 @@ export function ShopOrders() {
     return result;
   }, [orders, searchQuery]);
 
-  // Count active (non-delivered) for the header
   const activeCount = useMemo(() => orders.filter((o) => ACTIVE_STATUSES.includes(o.status)).length, [orders]);
 
-  // ── Loading ──
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -510,7 +535,6 @@ export function ShopOrders() {
             <div key={i} className="w-72 flex-shrink-0 space-y-3">
               <div className="h-10 bg-muted rounded-xl" />
               <div className="h-36 bg-muted rounded-xl" />
-              <div className="h-36 bg-muted rounded-xl" />
             </div>
           ))}
         </div>
@@ -518,7 +542,6 @@ export function ShopOrders() {
     );
   }
 
-  // ── No Shop ──
   if (!shop) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
@@ -532,7 +555,7 @@ export function ShopOrders() {
 
   return (
     <div className="space-y-4 pb-20">
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{shop.name}</h1>
@@ -541,7 +564,6 @@ export function ShopOrders() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Sound Controls */}
           <div className="flex bg-muted/50 rounded-lg p-1">
             <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8">
               {isMuted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-primary" />}
@@ -551,7 +573,6 @@ export function ShopOrders() {
               <Bell className="w-4 h-4" />
             </Button>
           </div>
-          {/* History link */}
           <Button variant="outline" size="sm" asChild className="gap-1.5">
             <Link to="/dashboard/orders/history">
               <History className="w-4 h-4" />
@@ -561,25 +582,19 @@ export function ShopOrders() {
         </div>
       </div>
 
-      {/* ── Search ── */}
+      {/* Search */}
       <div className="relative">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="بحث برقم الطلب، اسم العميل، رقم الهاتف..."
-          className="pr-9"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+        <Input placeholder="بحث برقم الطلب، اسم العميل، رقم الهاتف..." className="pr-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
       </div>
 
-      {/* ── Pipeline Board ── */}
+      {/* Pipeline Board */}
       <div className="overflow-x-auto pb-4 -mx-2 px-2 scrollbar-thin">
         <div className="flex gap-3" style={{ minWidth: `${PIPELINE_COLUMNS.length * 280}px` }}>
           {PIPELINE_COLUMNS.map((col) => {
             const colOrders = activeOrders.filter((o) => o.status === col.status);
             return (
               <div key={col.status} className="flex flex-col flex-shrink-0 w-[268px]">
-                {/* Column Header */}
                 <div className={cn("flex items-center justify-between px-3 py-2 rounded-xl mb-2", col.bg)}>
                   <div className="flex items-center gap-2">
                     <div className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", col.color)} />
@@ -589,8 +604,6 @@ export function ShopOrders() {
                     {colOrders.length}
                   </span>
                 </div>
-
-                {/* Column Cards */}
                 <div className="flex flex-col gap-2 min-h-[180px]">
                   {colOrders.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-28 rounded-xl border-2 border-dashed border-muted text-muted-foreground/40">
@@ -618,10 +631,8 @@ export function ShopOrders() {
         </div>
       </div>
 
-      {/* ── Details Dialog ── */}
       <OrderDetailsDialog order={selectedOrder} open={showOrderDialog} onOpenChange={setShowOrderDialog} />
 
-      {/* ── Cancellation Dialog ── */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <DialogContent>
           <DialogHeader>

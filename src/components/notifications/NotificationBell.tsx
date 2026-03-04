@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, Check, ShoppingBag, Truck } from "lucide-react";
+import { Bell, Check, ShoppingBag, Truck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -78,6 +78,13 @@ export function NotificationBell() {
      await notificationService.markAllAsRead(user.id);
   };
 
+  const handleClearAll = async () => {
+     if (!user) return;
+     setNotifications([]);
+     setUnreadCount(0);
+     await notificationService.clearAll(user.id);
+  };
+
   // Click Handler
   const handleNotificationClick = (item: Notification | Order) => {
     setIsOpen(false);
@@ -127,10 +134,18 @@ export function NotificationBell() {
             <DropdownMenuLabel>
                 {isDelivery ? "طلبات متاحة (مباشر)" : "الإشعارات"}
             </DropdownMenuLabel>
-            {!isDelivery && unreadCount > 0 && (
-                <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="text-xs h-6">
-                    تحديد الكل كمقروء
-                </Button>
+            {!isDelivery && notifications.length > 0 && (
+                <div className="flex items-center gap-1">
+                    {unreadCount > 0 && (
+                        <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="text-xs h-6 px-2">
+                            تحديد كمقروء
+                        </Button>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={handleClearAll} className="text-xs h-6 px-2 text-destructive hover:text-destructive">
+                        <Trash2 className="w-3 h-3 ml-1" />
+                        مسح الكل
+                    </Button>
+                </div>
             )}
         </div>
         <DropdownMenuSeparator />

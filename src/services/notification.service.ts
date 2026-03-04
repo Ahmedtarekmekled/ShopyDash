@@ -79,5 +79,19 @@ export const notificationService = {
     return () => {
       supabase.removeChannel(channel);
     };
-  }
+  },
+
+  /**
+   * Delete all notifications for user (clear all)
+   */
+  async clearAll(userId: string): Promise<void> {
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("Error clearing notifications:", error);
+    }
+  },
 };
