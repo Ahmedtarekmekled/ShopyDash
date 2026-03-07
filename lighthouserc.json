@@ -3,14 +3,14 @@
     "collect": {
       "puppeteerScript": "./lighthouse-login.cjs",
       "url": [
-        "http://localhost:4173/",
-        "http://localhost:4173/shops",
-        "http://localhost:4173/shops/shop-1769811882795-7ws25h",
-        "http://localhost:4173/products",
-        "http://localhost:4173/products/3acbed20-3250-48fd-ab7b-13129b788ba9a",
-        "http://localhost:4173/cart",
-        "http://localhost:4173/checkout",
-        "http://localhost:4173/account"
+        "http://127.0.0.1:4173/",
+        "http://127.0.0.1:4173/shops",
+        "http://127.0.0.1:4173/shops/shop-1769811882795-7ws25h",
+        "http://127.0.0.1:4173/products",
+        "http://127.0.0.1:4173/products/3acbed20-3250-48fd-ab7b-13129b788ba9a",
+        "http://127.0.0.1:4173/cart",
+        "http://127.0.0.1:4173/checkout",
+        "http://127.0.0.1:4173/account"
       ],
       "numberOfRuns": 2,
       "settings": {

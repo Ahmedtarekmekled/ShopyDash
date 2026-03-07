@@ -8,7 +8,7 @@ module.exports = async (browser, context) => {
   
   try {
     // Navigate to the login page
-    await page.goto('http://localhost:4173/login', { waitUntil: 'networkidle0' });
+    await page.goto('http://127.0.0.1:4173/login', { waitUntil: 'networkidle0' });
 
     // Ensure email input exists and type credentials
     await page.waitForSelector('input[type="email"]', { timeout: 5000 });

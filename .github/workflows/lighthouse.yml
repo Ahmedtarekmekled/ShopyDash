@@ -26,12 +26,12 @@ jobs:
         run: npm run build
 
       - name: Start preview server
-        run: npm run preview > server.log 2>&1 &
+        run: npm run preview -- --host 127.0.0.1 --port 4173 > server.log 2>&1 &
         env:
           NODE_ENV: production
 
       - name: Wait for server to start
-        run: sleep 10
+        run: npx wait-on http://127.0.0.1:4173 -t 30000
 
       - name: Install Lighthouse and Puppeteer
         run: npm install -g @lhci/cli@0.13.0 && npm install puppeteer --no-save
