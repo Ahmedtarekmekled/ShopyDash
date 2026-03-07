@@ -9,7 +9,7 @@ on:
 jobs:
   lighthouse:
     name: Lighthouse Performance Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
 
