@@ -295,7 +295,7 @@ export default function ProductPage() {
                   </div>
 
                   {/* Sticky Mobile Add to Cart Block or Standard Block */}
-                  <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/85 backdrop-blur-xl border-t border-border/50 shadow-[0_-10px_40px_rgba(0,0,0,0.06)] md:relative md:p-0 md:bg-transparent md:border-t-0 md:shadow-none md:backdrop-blur-none z-50 transition-all">
+                  <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/85 backdrop-blur-xl border-t border-border/50 shadow-[0_-10px_40px_rgba(0,0,0,0.06)] md:relative md:p-0 md:bg-transparent md:border-t-0 md:shadow-none md:backdrop-blur-none z-40 transition-all">
                     <div className="container-app md:px-0 md:max-w-none">
                       <Button
                         className="w-full h-14 md:h-12 text-lg md:text-base font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:shadow-md transition-all duration-300 relative overflow-hidden group rounded-2xl md:rounded-xl"

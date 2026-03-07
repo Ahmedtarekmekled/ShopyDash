@@ -9,10 +9,13 @@ export function MobileCartBar() {
   const { cartItemCount, cartTotal } = useCart();
   const location = useLocation();
 
-  // Hide on cart and checkout pages
+  // Hide on cart, checkout pages, and product details page (where AddToCart is sticky)
   const hiddenPaths = ["/cart", "/checkout"];
-  if (cartItemCount === 0 || hiddenPaths.includes(location.pathname))
+  const isProductDetailsPage = location.pathname.match(/^\/products\/[a-zA-Z0-9_-]+/);
+  
+  if (cartItemCount === 0 || hiddenPaths.includes(location.pathname) || isProductDetailsPage) {
     return null;
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 glass border-t p-4 md:hidden animate-slide-up">
