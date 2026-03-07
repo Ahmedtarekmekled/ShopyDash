@@ -32,12 +32,12 @@ export function ShopShareCard({ shop }: ShopShareCardProps) {
   };
 
   const shareToWhatsApp = () => {
-    const text = `تسوق من ${shop.name} على سوق أبو حمص! ${shopUrl}`;
+    const text = `تسوق من ${shop.name} على شوبي داش! ${shopUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const shareToTwitter = () => {
-    const text = `تسوق من ${shop.name} على سوق أبو حمص!`;
+    const text = `تسوق من ${shop.name} على شوبي داش!`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shopUrl)}`, '_blank');
   };
 
@@ -80,7 +80,7 @@ export function ShopShareCard({ shop }: ShopShareCardProps) {
       ctx.fillStyle = "rgba(255,255,255,0.8)";
       ctx.font = "bold 14px 'Segoe UI', sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("سوق أبو حمص", el.offsetWidth / 2, 35);
+      ctx.fillText("شوبي داش", el.offsetWidth / 2, 35);
 
       // Shop name
       ctx.fillStyle = "#ffffff";
@@ -174,7 +174,7 @@ export function ShopShareCard({ shop }: ShopShareCardProps) {
 
           {/* Platform */}
           <p className="text-white/80 text-sm font-medium relative z-10">
-            سوق أبو حمص
+            شوبي داش
           </p>
 
           {/* Shop name */}

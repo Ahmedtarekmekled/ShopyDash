@@ -22,11 +22,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-                <Store className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <span className="font-bold text-xl">{AR.app.name}</span>
+            <Link to="/" className="flex items-center gap-3">
+              <img src="/logo.png" alt="Shopydash Logo" className="h-14 w-14 object-contain" />
+              <span className="font-bold text-2xl" style={{ fontFamily: "'Trebuchet MS', 'Segoe UI', sans-serif", letterSpacing: "-1px" }}>Shopydash</span>
             </Link>
             <p className="text-muted-foreground text-sm">
               {AR.footer.aboutText}
@@ -58,7 +56,7 @@ export function Footer() {
                   {AR.footer.email}:
                 </span>
                 <br />
-                support@abo-hommos.com
+                support@shopydash.com
               </p>
               <p>
                 <span className="font-medium text-foreground">

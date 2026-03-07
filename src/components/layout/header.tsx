@@ -69,14 +69,8 @@ export function Header() {
               )}
             </Button>
 
-            {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-                <Store className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <span className="font-bold text-xl hidden sm:block">
-                {AR.app.name}
-              </span>
+              <img src="/logo.png" alt="Shopydash Logo" className="h-14 w-14 object-contain" />
             </Link>
           </div>
 

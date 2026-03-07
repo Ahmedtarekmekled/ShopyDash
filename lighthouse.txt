@@ -1,0 +1,1112 @@
+2026-03-07T19:42:31.8063007Z Current runner version: '2.332.0'
+2026-03-07T19:42:31.8099730Z ##[group]Runner Image Provisioner
+2026-03-07T19:42:31.8101273Z Hosted Compute Agent
+2026-03-07T19:42:31.8102296Z Version: 20260213.493
+2026-03-07T19:42:31.8103387Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+2026-03-07T19:42:31.8104927Z Build Date: 2026-02-13T00:28:41Z
+2026-03-07T19:42:31.8106140Z Worker ID: {fcbafe35-bb2b-4987-b15e-a40bf09855a3}
+2026-03-07T19:42:31.8107347Z Azure Region: centralus
+2026-03-07T19:42:31.8108487Z ##[endgroup]
+2026-03-07T19:42:31.8110669Z ##[group]Operating System
+2026-03-07T19:42:31.8111692Z Ubuntu
+2026-03-07T19:42:31.8112666Z 22.04.5
+2026-03-07T19:42:31.8113488Z LTS
+2026-03-07T19:42:31.8114205Z ##[endgroup]
+2026-03-07T19:42:31.8115479Z ##[group]Runner Image
+2026-03-07T19:42:31.8116574Z Image: ubuntu-22.04
+2026-03-07T19:42:31.8117647Z Version: 20260302.50.1
+2026-03-07T19:42:31.8119759Z Included Software: https://github.com/actions/runner-images/blob/ubuntu22/20260302.50/images/ubuntu/Ubuntu2204-Readme.md
+2026-03-07T19:42:31.8122563Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu22%2F20260302.50
+2026-03-07T19:42:31.8124296Z ##[endgroup]
+2026-03-07T19:42:31.8126710Z ##[group]GITHUB_TOKEN Permissions
+2026-03-07T19:42:31.8129647Z Contents: read
+2026-03-07T19:42:31.8130601Z Metadata: read
+2026-03-07T19:42:31.8131550Z Packages: read
+2026-03-07T19:42:31.8132514Z ##[endgroup]
+2026-03-07T19:42:31.8135632Z Secret source: Actions
+2026-03-07T19:42:31.8137386Z Prepare workflow directory
+2026-03-07T19:42:31.8532405Z Prepare all required actions
+2026-03-07T19:42:31.8588239Z Getting action download info
+2026-03-07T19:42:32.1609159Z Download action repository 'actions/checkout@v3' (SHA:f43a0e5ff2bd294095638e18286ca9a3d1956744)
+2026-03-07T19:42:32.3051432Z Download action repository 'actions/setup-node@v3' (SHA:3235b876344d2a9aa001b8d1453c930bba69e610)
+2026-03-07T19:42:32.5396361Z Complete job name: Lighthouse Performance Test
+2026-03-07T19:42:32.6102944Z ##[group]Run actions/checkout@v3
+2026-03-07T19:42:32.6103810Z with:
+2026-03-07T19:42:32.6104233Z   repository: Ahmedtarekmekled/AboHommos
+2026-03-07T19:42:32.6105225Z   token: ***
+2026-03-07T19:42:32.6105619Z   ssh-strict: true
+2026-03-07T19:42:32.6106040Z   persist-credentials: true
+2026-03-07T19:42:32.6106489Z   clean: true
+2026-03-07T19:42:32.6106890Z   sparse-checkout-cone-mode: true
+2026-03-07T19:42:32.6107373Z   fetch-depth: 1
+2026-03-07T19:42:32.6107768Z   fetch-tags: false
+2026-03-07T19:42:32.6108158Z   lfs: false
+2026-03-07T19:42:32.6108531Z   submodules: false
+2026-03-07T19:42:32.6108934Z   set-safe-directory: true
+2026-03-07T19:42:32.6109637Z ##[endgroup]
+2026-03-07T19:42:32.6971562Z Syncing repository: Ahmedtarekmekled/AboHommos
+2026-03-07T19:42:32.6973854Z ##[group]Getting Git version info
+2026-03-07T19:42:32.6974944Z Working directory is '/home/runner/work/AboHommos/AboHommos'
+2026-03-07T19:42:32.6976027Z [command]/usr/bin/git version
+2026-03-07T19:42:32.7030317Z git version 2.53.0
+2026-03-07T19:42:32.7057822Z ##[endgroup]
+2026-03-07T19:42:32.7074750Z Temporarily overriding HOME='/home/runner/work/_temp/efe3863b-d9a1-4211-b5a4-e3ab8c9a7718' before making global git config changes
+2026-03-07T19:42:32.7077125Z Adding repository directory to the temporary git global config as a safe directory
+2026-03-07T19:42:32.7079109Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/AboHommos/AboHommos
+2026-03-07T19:42:32.7113910Z Deleting the contents of '/home/runner/work/AboHommos/AboHommos'
+2026-03-07T19:42:32.7118569Z ##[group]Initializing the repository
+2026-03-07T19:42:32.7122344Z [command]/usr/bin/git init /home/runner/work/AboHommos/AboHommos
+2026-03-07T19:42:32.7211254Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-03-07T19:42:32.7212615Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-03-07T19:42:32.7214043Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-03-07T19:42:32.7215243Z hint: call:
+2026-03-07T19:42:32.7216295Z hint:
+2026-03-07T19:42:32.7217140Z hint: 	git config --global init.defaultBranch <name>
+2026-03-07T19:42:32.7218198Z hint:
+2026-03-07T19:42:32.7219414Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-03-07T19:42:32.7221006Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-03-07T19:42:32.7222304Z hint:
+2026-03-07T19:42:32.7223005Z hint: 	git branch -m <name>
+2026-03-07T19:42:32.7223764Z hint:
+2026-03-07T19:42:32.7224971Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-03-07T19:42:32.7226732Z Initialized empty Git repository in /home/runner/work/AboHommos/AboHommos/.git/
+2026-03-07T19:42:32.7229485Z [command]/usr/bin/git remote add origin https://github.com/Ahmedtarekmekled/AboHommos
+2026-03-07T19:42:32.7261929Z ##[endgroup]
+2026-03-07T19:42:32.7263168Z ##[group]Disabling automatic garbage collection
+2026-03-07T19:42:32.7265331Z [command]/usr/bin/git config --local gc.auto 0
+2026-03-07T19:42:32.7292881Z ##[endgroup]
+2026-03-07T19:42:32.7294118Z ##[group]Setting up auth
+2026-03-07T19:42:32.7299338Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-03-07T19:42:32.7328294Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-03-07T19:42:32.7642679Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-03-07T19:42:32.7670524Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-03-07T19:42:32.7902768Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-03-07T19:42:32.7937759Z ##[endgroup]
+2026-03-07T19:42:32.7945948Z ##[group]Fetching the repository
+2026-03-07T19:42:32.7948020Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin +8e8782f1a3b78294032e8f6df021d34285db26d8:refs/remotes/pull/10/merge
+2026-03-07T19:42:33.0143568Z remote: Enumerating objects: 236, done.        
+2026-03-07T19:42:33.0145446Z remote: Counting objects:   0% (1/236)        
+2026-03-07T19:42:33.0146853Z remote: Counting objects:   1% (3/236)        
+2026-03-07T19:42:33.0147863Z remote: Counting objects:   2% (5/236)        
+2026-03-07T19:42:33.0148716Z remote: Counting objects:   3% (8/236)        
+2026-03-07T19:42:33.0149576Z remote: Counting objects:   4% (10/236)        
+2026-03-07T19:42:33.0150432Z remote: Counting objects:   5% (12/236)        
+2026-03-07T19:42:33.0151278Z remote: Counting objects:   6% (15/236)        
+2026-03-07T19:42:33.0152118Z remote: Counting objects:   7% (17/236)        
+2026-03-07T19:42:33.0152993Z remote: Counting objects:   8% (19/236)        
+2026-03-07T19:42:33.0153838Z remote: Counting objects:   9% (22/236)        
+2026-03-07T19:42:33.0154998Z remote: Counting objects:  10% (24/236)        
+2026-03-07T19:42:33.0155878Z remote: Counting objects:  11% (26/236)        
+2026-03-07T19:42:33.0156743Z remote: Counting objects:  12% (29/236)        
+2026-03-07T19:42:33.0157405Z remote: Counting objects:  13% (31/236)        
+2026-03-07T19:42:33.0157997Z remote: Counting objects:  14% (34/236)        
+2026-03-07T19:42:33.0158576Z remote: Counting objects:  15% (36/236)        
+2026-03-07T19:42:33.0159157Z remote: Counting objects:  16% (38/236)        
+2026-03-07T19:42:33.0159734Z remote: Counting objects:  17% (41/236)        
+2026-03-07T19:42:33.0160317Z remote: Counting objects:  18% (43/236)        
+2026-03-07T19:42:33.0160892Z remote: Counting objects:  19% (45/236)        
+2026-03-07T19:42:33.0161472Z remote: Counting objects:  20% (48/236)        
+2026-03-07T19:42:33.0162050Z remote: Counting objects:  21% (50/236)        
+2026-03-07T19:42:33.0162647Z remote: Counting objects:  22% (52/236)        
+2026-03-07T19:42:33.0163569Z remote: Counting objects:  23% (55/236)        
+2026-03-07T19:42:33.0164155Z remote: Counting objects:  24% (57/236)        
+2026-03-07T19:42:33.0164863Z remote: Counting objects:  25% (59/236)        
+2026-03-07T19:42:33.0165447Z remote: Counting objects:  26% (62/236)        
+2026-03-07T19:42:33.0166025Z remote: Counting objects:  27% (64/236)        
+2026-03-07T19:42:33.0166606Z remote: Counting objects:  28% (67/236)        
+2026-03-07T19:42:33.0167198Z remote: Counting objects:  29% (69/236)        
+2026-03-07T19:42:33.0167802Z remote: Counting objects:  30% (71/236)        
+2026-03-07T19:42:33.0168367Z remote: Counting objects:  31% (74/236)        
+2026-03-07T19:42:33.0168924Z remote: Counting objects:  32% (76/236)        
+2026-03-07T19:42:33.0169484Z remote: Counting objects:  33% (78/236)        
+2026-03-07T19:42:33.0170032Z remote: Counting objects:  34% (81/236)        
+2026-03-07T19:42:33.0170606Z remote: Counting objects:  35% (83/236)        
+2026-03-07T19:42:33.0171175Z remote: Counting objects:  36% (85/236)        
+2026-03-07T19:42:33.0171741Z remote: Counting objects:  37% (88/236)        
+2026-03-07T19:42:33.0172293Z remote: Counting objects:  38% (90/236)        
+2026-03-07T19:42:33.0172853Z remote: Counting objects:  39% (93/236)        
+2026-03-07T19:42:33.0173415Z remote: Counting objects:  40% (95/236)        
+2026-03-07T19:42:33.0173993Z remote: Counting objects:  41% (97/236)        
+2026-03-07T19:42:33.0174668Z remote: Counting objects:  42% (100/236)        
+2026-03-07T19:42:33.0175253Z remote: Counting objects:  43% (102/236)        
+2026-03-07T19:42:33.0175829Z remote: Counting objects:  44% (104/236)        
+2026-03-07T19:42:33.0176412Z remote: Counting objects:  45% (107/236)        
+2026-03-07T19:42:33.0176982Z remote: Counting objects:  46% (109/236)        
+2026-03-07T19:42:33.0177611Z remote: Counting objects:  47% (111/236)        
+2026-03-07T19:42:33.0178410Z remote: Counting objects:  48% (114/236)        
+2026-03-07T19:42:33.0178997Z remote: Counting objects:  49% (116/236)        
+2026-03-07T19:42:33.0179571Z remote: Counting objects:  50% (118/236)        
+2026-03-07T19:42:33.0180136Z remote: Counting objects:  51% (121/236)        
+2026-03-07T19:42:33.0180710Z remote: Counting objects:  52% (123/236)        
+2026-03-07T19:42:33.0181276Z remote: Counting objects:  53% (126/236)        
+2026-03-07T19:42:33.0181845Z remote: Counting objects:  54% (128/236)        
+2026-03-07T19:42:33.0182417Z remote: Counting objects:  55% (130/236)        
+2026-03-07T19:42:33.0183000Z remote: Counting objects:  56% (133/236)        
+2026-03-07T19:42:33.0183567Z remote: Counting objects:  57% (135/236)        
+2026-03-07T19:42:33.0184141Z remote: Counting objects:  58% (137/236)        
+2026-03-07T19:42:33.0185016Z remote: Counting objects:  59% (140/236)        
+2026-03-07T19:42:33.0185598Z remote: Counting objects:  60% (142/236)        
+2026-03-07T19:42:33.0186185Z remote: Counting objects:  61% (144/236)        
+2026-03-07T19:42:33.0186748Z remote: Counting objects:  62% (147/236)        
+2026-03-07T19:42:33.0187333Z remote: Counting objects:  63% (149/236)        
+2026-03-07T19:42:33.0187901Z remote: Counting objects:  64% (152/236)        
+2026-03-07T19:42:33.0188457Z remote: Counting objects:  65% (154/236)        
+2026-03-07T19:42:33.0189020Z remote: Counting objects:  66% (156/236)        
+2026-03-07T19:42:33.0189582Z remote: Counting objects:  67% (159/236)        
+2026-03-07T19:42:33.0190146Z remote: Counting objects:  68% (161/236)        
+2026-03-07T19:42:33.0190713Z remote: Counting objects:  69% (163/236)        
+2026-03-07T19:42:33.0191270Z remote: Counting objects:  70% (166/236)        
+2026-03-07T19:42:33.0191835Z remote: Counting objects:  71% (168/236)        
+2026-03-07T19:42:33.0192402Z remote: Counting objects:  72% (170/236)        
+2026-03-07T19:42:33.0192965Z remote: Counting objects:  73% (173/236)        
+2026-03-07T19:42:33.0193527Z remote: Counting objects:  74% (175/236)        
+2026-03-07T19:42:33.0194090Z remote: Counting objects:  75% (177/236)        
+2026-03-07T19:42:33.0195132Z remote: Counting objects:  76% (180/236)        
+2026-03-07T19:42:33.0195711Z remote: Counting objects:  77% (182/236)        
+2026-03-07T19:42:33.0196277Z remote: Counting objects:  78% (185/236)        
+2026-03-07T19:42:33.0196841Z remote: Counting objects:  79% (187/236)        
+2026-03-07T19:42:33.0197416Z remote: Counting objects:  80% (189/236)        
+2026-03-07T19:42:33.0197996Z remote: Counting objects:  81% (192/236)        
+2026-03-07T19:42:33.0198557Z remote: Counting objects:  82% (194/236)        
+2026-03-07T19:42:33.0199118Z remote: Counting objects:  83% (196/236)        
+2026-03-07T19:42:33.0199681Z remote: Counting objects:  84% (199/236)        
+2026-03-07T19:42:33.0200242Z remote: Counting objects:  85% (201/236)        
+2026-03-07T19:42:33.0213926Z remote: Counting objects:  86% (203/236)        
+2026-03-07T19:42:33.0214839Z remote: Counting objects:  87% (206/236)        
+2026-03-07T19:42:33.0215431Z remote: Counting objects:  88% (208/236)        
+2026-03-07T19:42:33.0216010Z remote: Counting objects:  89% (211/236)        
+2026-03-07T19:42:33.0216595Z remote: Counting objects:  90% (213/236)        
+2026-03-07T19:42:33.0217172Z remote: Counting objects:  91% (215/236)        
+2026-03-07T19:42:33.0217749Z remote: Counting objects:  92% (218/236)        
+2026-03-07T19:42:33.0218359Z remote: Counting objects:  93% (220/236)        
+2026-03-07T19:42:33.0218931Z remote: Counting objects:  94% (222/236)        
+2026-03-07T19:42:33.0219495Z remote: Counting objects:  95% (225/236)        
+2026-03-07T19:42:33.0220070Z remote: Counting objects:  96% (227/236)        
+2026-03-07T19:42:33.0220635Z remote: Counting objects:  97% (229/236)        
+2026-03-07T19:42:33.0221197Z remote: Counting objects:  98% (232/236)        
+2026-03-07T19:42:33.0221764Z remote: Counting objects:  99% (234/236)        
+2026-03-07T19:42:33.0222322Z remote: Counting objects: 100% (236/236)        
+2026-03-07T19:42:33.0223118Z remote: Counting objects: 100% (236/236), done.        
+2026-03-07T19:42:33.0223765Z remote: Compressing objects:   0% (1/207)        
+2026-03-07T19:42:33.0224564Z remote: Compressing objects:   1% (3/207)        
+2026-03-07T19:42:33.0225186Z remote: Compressing objects:   2% (5/207)        
+2026-03-07T19:42:33.0225774Z remote: Compressing objects:   3% (7/207)        
+2026-03-07T19:42:33.0226358Z remote: Compressing objects:   4% (9/207)        
+2026-03-07T19:42:33.0226951Z remote: Compressing objects:   5% (11/207)        
+2026-03-07T19:42:33.0293734Z remote: Compressing objects:   6% (13/207)        
+2026-03-07T19:42:33.0295269Z remote: Compressing objects:   7% (15/207)        
+2026-03-07T19:42:33.0296519Z remote: Compressing objects:   8% (17/207)        
+2026-03-07T19:42:33.0297504Z remote: Compressing objects:   9% (19/207)        
+2026-03-07T19:42:33.0298486Z remote: Compressing objects:  10% (21/207)        
+2026-03-07T19:42:33.0299482Z remote: Compressing objects:  11% (23/207)        
+2026-03-07T19:42:33.0300453Z remote: Compressing objects:  12% (25/207)        
+2026-03-07T19:42:33.0370273Z remote: Compressing objects:  13% (27/207)        
+2026-03-07T19:42:33.0371202Z remote: Compressing objects:  14% (29/207)        
+2026-03-07T19:42:33.0372061Z remote: Compressing objects:  15% (32/207)        
+2026-03-07T19:42:33.0372893Z remote: Compressing objects:  16% (34/207)        
+2026-03-07T19:42:33.0373722Z remote: Compressing objects:  17% (36/207)        
+2026-03-07T19:42:33.0380825Z remote: Compressing objects:  18% (38/207)        
+2026-03-07T19:42:33.0392056Z remote: Compressing objects:  19% (40/207)        
+2026-03-07T19:42:33.0392870Z remote: Compressing objects:  20% (42/207)        
+2026-03-07T19:42:33.0393656Z remote: Compressing objects:  21% (44/207)        
+2026-03-07T19:42:33.0395218Z remote: Compressing objects:  22% (46/207)        
+2026-03-07T19:42:33.0399846Z remote: Compressing objects:  23% (48/207)        
+2026-03-07T19:42:33.0403194Z remote: Compressing objects:  24% (50/207)        
+2026-03-07T19:42:33.0405031Z remote: Compressing objects:  25% (52/207)        
+2026-03-07T19:42:33.0409866Z remote: Compressing objects:  26% (54/207)        
+2026-03-07T19:42:33.0412414Z remote: Compressing objects:  27% (56/207)        
+2026-03-07T19:42:33.0424327Z remote: Compressing objects:  28% (58/207)        
+2026-03-07T19:42:33.0426455Z remote: Compressing objects:  29% (61/207)        
+2026-03-07T19:42:33.0445434Z remote: Compressing objects:  30% (63/207)        
+2026-03-07T19:42:33.0452748Z remote: Compressing objects:  31% (65/207)        
+2026-03-07T19:42:33.0461041Z remote: Compressing objects:  32% (67/207)        
+2026-03-07T19:42:33.0463762Z remote: Compressing objects:  33% (69/207)        
+2026-03-07T19:42:33.0465524Z remote: Compressing objects:  34% (71/207)        
+2026-03-07T19:42:33.0472413Z remote: Compressing objects:  35% (73/207)        
+2026-03-07T19:42:33.0473743Z remote: Compressing objects:  36% (75/207)        
+2026-03-07T19:42:33.0475048Z remote: Compressing objects:  37% (77/207)        
+2026-03-07T19:42:33.0475838Z remote: Compressing objects:  38% (79/207)        
+2026-03-07T19:42:33.0476680Z remote: Compressing objects:  39% (81/207)        
+2026-03-07T19:42:33.0477532Z remote: Compressing objects:  40% (83/207)        
+2026-03-07T19:42:33.0527167Z remote: Compressing objects:  41% (85/207)        
+2026-03-07T19:42:33.0528888Z remote: Compressing objects:  42% (87/207)        
+2026-03-07T19:42:33.0530401Z remote: Compressing objects:  43% (90/207)        
+2026-03-07T19:42:33.0531970Z remote: Compressing objects:  44% (92/207)        
+2026-03-07T19:42:33.0533262Z remote: Compressing objects:  45% (94/207)        
+2026-03-07T19:42:33.0535107Z remote: Compressing objects:  46% (96/207)        
+2026-03-07T19:42:33.0536090Z remote: Compressing objects:  47% (98/207)        
+2026-03-07T19:42:33.0537002Z remote: Compressing objects:  48% (100/207)        
+2026-03-07T19:42:33.0537694Z remote: Compressing objects:  49% (102/207)        
+2026-03-07T19:42:33.0538560Z remote: Compressing objects:  50% (104/207)        
+2026-03-07T19:42:33.0539208Z remote: Compressing objects:  51% (106/207)        
+2026-03-07T19:42:33.0539825Z remote: Compressing objects:  52% (108/207)        
+2026-03-07T19:42:33.0540449Z remote: Compressing objects:  53% (110/207)        
+2026-03-07T19:42:33.0541077Z remote: Compressing objects:  54% (112/207)        
+2026-03-07T19:42:33.0541703Z remote: Compressing objects:  55% (114/207)        
+2026-03-07T19:42:33.0542323Z remote: Compressing objects:  56% (116/207)        
+2026-03-07T19:42:33.0542955Z remote: Compressing objects:  57% (118/207)        
+2026-03-07T19:42:33.0543630Z remote: Compressing objects:  58% (121/207)        
+2026-03-07T19:42:33.0544240Z remote: Compressing objects:  59% (123/207)        
+2026-03-07T19:42:33.0545112Z remote: Compressing objects:  60% (125/207)        
+2026-03-07T19:42:33.0545751Z remote: Compressing objects:  61% (127/207)        
+2026-03-07T19:42:33.0546382Z remote: Compressing objects:  62% (129/207)        
+2026-03-07T19:42:33.0546995Z remote: Compressing objects:  63% (131/207)        
+2026-03-07T19:42:33.0547614Z remote: Compressing objects:  64% (133/207)        
+2026-03-07T19:42:33.0548223Z remote: Compressing objects:  65% (135/207)        
+2026-03-07T19:42:33.0548828Z remote: Compressing objects:  66% (137/207)        
+2026-03-07T19:42:33.0549430Z remote: Compressing objects:  67% (139/207)        
+2026-03-07T19:42:33.0550039Z remote: Compressing objects:  68% (141/207)        
+2026-03-07T19:42:33.0550642Z remote: Compressing objects:  69% (143/207)        
+2026-03-07T19:42:33.0551243Z remote: Compressing objects:  70% (145/207)        
+2026-03-07T19:42:33.0551849Z remote: Compressing objects:  71% (147/207)        
+2026-03-07T19:42:33.0552453Z remote: Compressing objects:  72% (150/207)        
+2026-03-07T19:42:33.0553055Z remote: Compressing objects:  73% (152/207)        
+2026-03-07T19:42:33.0553657Z remote: Compressing objects:  74% (154/207)        
+2026-03-07T19:42:33.0554263Z remote: Compressing objects:  75% (156/207)        
+2026-03-07T19:42:33.0555110Z remote: Compressing objects:  76% (158/207)        
+2026-03-07T19:42:33.0555923Z remote: Compressing objects:  77% (160/207)        
+2026-03-07T19:42:33.0556529Z remote: Compressing objects:  78% (162/207)        
+2026-03-07T19:42:33.0557138Z remote: Compressing objects:  79% (164/207)        
+2026-03-07T19:42:33.0557732Z remote: Compressing objects:  80% (166/207)        
+2026-03-07T19:42:33.0558327Z remote: Compressing objects:  81% (168/207)        
+2026-03-07T19:42:33.0558945Z remote: Compressing objects:  82% (170/207)        
+2026-03-07T19:42:33.0559541Z remote: Compressing objects:  83% (172/207)        
+2026-03-07T19:42:33.0560131Z remote: Compressing objects:  84% (174/207)        
+2026-03-07T19:42:33.0560729Z remote: Compressing objects:  85% (176/207)        
+2026-03-07T19:42:33.0561333Z remote: Compressing objects:  86% (179/207)        
+2026-03-07T19:42:33.0561924Z remote: Compressing objects:  87% (181/207)        
+2026-03-07T19:42:33.0562532Z remote: Compressing objects:  88% (183/207)        
+2026-03-07T19:42:33.0563131Z remote: Compressing objects:  89% (185/207)        
+2026-03-07T19:42:33.0563740Z remote: Compressing objects:  90% (187/207)        
+2026-03-07T19:42:33.0564337Z remote: Compressing objects:  91% (189/207)        
+2026-03-07T19:42:33.0565243Z remote: Compressing objects:  92% (191/207)        
+2026-03-07T19:42:33.0565861Z remote: Compressing objects:  93% (193/207)        
+2026-03-07T19:42:33.0566486Z remote: Compressing objects:  94% (195/207)        
+2026-03-07T19:42:33.0567105Z remote: Compressing objects:  95% (197/207)        
+2026-03-07T19:42:33.0567710Z remote: Compressing objects:  96% (199/207)        
+2026-03-07T19:42:33.0568305Z remote: Compressing objects:  97% (201/207)        
+2026-03-07T19:42:33.0568896Z remote: Compressing objects:  98% (203/207)        
+2026-03-07T19:42:33.0569494Z remote: Compressing objects:  99% (205/207)        
+2026-03-07T19:42:33.0570240Z remote: Compressing objects: 100% (207/207)        
+2026-03-07T19:42:33.0570901Z remote: Compressing objects: 100% (207/207), done.        
+2026-03-07T19:42:33.0655156Z Receiving objects:   0% (1/236)
+2026-03-07T19:42:33.0656082Z Receiving objects:   1% (3/236)
+2026-03-07T19:42:33.0656930Z Receiving objects:   2% (5/236)
+2026-03-07T19:42:33.0657793Z Receiving objects:   3% (8/236)
+2026-03-07T19:42:33.0658628Z Receiving objects:   4% (10/236)
+2026-03-07T19:42:33.0821306Z Receiving objects:   5% (12/236)
+2026-03-07T19:42:33.0822449Z Receiving objects:   6% (15/236)
+2026-03-07T19:42:33.0823519Z Receiving objects:   7% (17/236)
+2026-03-07T19:42:33.0824983Z Receiving objects:   8% (19/236)
+2026-03-07T19:42:33.0826022Z Receiving objects:   9% (22/236)
+2026-03-07T19:42:33.0827337Z Receiving objects:  10% (24/236)
+2026-03-07T19:42:33.0828690Z Receiving objects:  11% (26/236)
+2026-03-07T19:42:33.0829977Z Receiving objects:  12% (29/236)
+2026-03-07T19:42:33.0831296Z Receiving objects:  13% (31/236)
+2026-03-07T19:42:33.0832646Z Receiving objects:  14% (34/236)
+2026-03-07T19:42:33.0833928Z Receiving objects:  15% (36/236)
+2026-03-07T19:42:33.0835476Z Receiving objects:  16% (38/236)
+2026-03-07T19:42:33.0836445Z Receiving objects:  17% (41/236)
+2026-03-07T19:42:33.0837168Z Receiving objects:  18% (43/236)
+2026-03-07T19:42:33.0837805Z Receiving objects:  19% (45/236)
+2026-03-07T19:42:33.0838293Z Receiving objects:  20% (48/236)
+2026-03-07T19:42:33.0838779Z Receiving objects:  21% (50/236)
+2026-03-07T19:42:33.0839274Z Receiving objects:  22% (52/236)
+2026-03-07T19:42:33.0841675Z Receiving objects:  23% (55/236)
+2026-03-07T19:42:33.0843368Z Receiving objects:  24% (57/236)
+2026-03-07T19:42:33.0844179Z Receiving objects:  25% (59/236)
+2026-03-07T19:42:33.0845146Z Receiving objects:  26% (62/236)
+2026-03-07T19:42:33.0866540Z Receiving objects:  27% (64/236)
+2026-03-07T19:42:33.0867418Z Receiving objects:  28% (67/236)
+2026-03-07T19:42:33.0869074Z Receiving objects:  29% (69/236)
+2026-03-07T19:42:33.0872037Z Receiving objects:  30% (71/236)
+2026-03-07T19:42:33.0886799Z Receiving objects:  31% (74/236)
+2026-03-07T19:42:33.0887682Z Receiving objects:  32% (76/236)
+2026-03-07T19:42:33.0889775Z Receiving objects:  33% (78/236)
+2026-03-07T19:42:33.0913255Z Receiving objects:  34% (81/236)
+2026-03-07T19:42:33.0937021Z Receiving objects:  35% (83/236)
+2026-03-07T19:42:33.1006829Z Receiving objects:  36% (85/236)
+2026-03-07T19:42:33.1050282Z Receiving objects:  37% (88/236)
+2026-03-07T19:42:33.1053734Z Receiving objects:  38% (90/236)
+2026-03-07T19:42:33.1057670Z Receiving objects:  39% (93/236)
+2026-03-07T19:42:33.1061359Z Receiving objects:  40% (95/236)
+2026-03-07T19:42:33.1073542Z Receiving objects:  41% (97/236)
+2026-03-07T19:42:33.1074897Z Receiving objects:  42% (100/236)
+2026-03-07T19:42:33.1075785Z Receiving objects:  43% (102/236)
+2026-03-07T19:42:33.1077099Z Receiving objects:  44% (104/236)
+2026-03-07T19:42:33.1078225Z Receiving objects:  45% (107/236)
+2026-03-07T19:42:33.1079087Z Receiving objects:  46% (109/236)
+2026-03-07T19:42:33.1082855Z Receiving objects:  47% (111/236)
+2026-03-07T19:42:33.1083811Z Receiving objects:  48% (114/236)
+2026-03-07T19:42:33.1084977Z Receiving objects:  49% (116/236)
+2026-03-07T19:42:33.1085899Z Receiving objects:  50% (118/236)
+2026-03-07T19:42:33.1086886Z Receiving objects:  51% (121/236)
+2026-03-07T19:42:33.1087729Z Receiving objects:  52% (123/236)
+2026-03-07T19:42:33.1088653Z Receiving objects:  53% (126/236)
+2026-03-07T19:42:33.1089314Z Receiving objects:  54% (128/236)
+2026-03-07T19:42:33.1090221Z Receiving objects:  55% (130/236)
+2026-03-07T19:42:33.1091077Z Receiving objects:  56% (133/236)
+2026-03-07T19:42:33.1091603Z Receiving objects:  57% (135/236)
+2026-03-07T19:42:33.1097201Z Receiving objects:  58% (137/236)
+2026-03-07T19:42:33.1098768Z Receiving objects:  59% (140/236)
+2026-03-07T19:42:33.1099543Z Receiving objects:  60% (142/236)
+2026-03-07T19:42:33.1100964Z Receiving objects:  61% (144/236)
+2026-03-07T19:42:33.1103691Z Receiving objects:  62% (147/236)
+2026-03-07T19:42:33.1108193Z Receiving objects:  63% (149/236)
+2026-03-07T19:42:33.1122625Z Receiving objects:  64% (152/236)
+2026-03-07T19:42:33.1143682Z Receiving objects:  65% (154/236)
+2026-03-07T19:42:33.1148191Z Receiving objects:  66% (156/236)
+2026-03-07T19:42:33.1150821Z Receiving objects:  67% (159/236)
+2026-03-07T19:42:33.1156198Z Receiving objects:  68% (161/236)
+2026-03-07T19:42:33.1159259Z Receiving objects:  69% (163/236)
+2026-03-07T19:42:33.1166892Z Receiving objects:  70% (166/236)
+2026-03-07T19:42:33.1169388Z Receiving objects:  71% (168/236)
+2026-03-07T19:42:33.1171244Z Receiving objects:  72% (170/236)
+2026-03-07T19:42:33.1172039Z Receiving objects:  73% (173/236)
+2026-03-07T19:42:33.1172835Z Receiving objects:  74% (175/236)
+2026-03-07T19:42:33.1175442Z Receiving objects:  75% (177/236)
+2026-03-07T19:42:33.1177079Z Receiving objects:  76% (180/236)
+2026-03-07T19:42:33.1179897Z Receiving objects:  77% (182/236)
+2026-03-07T19:42:33.1180831Z Receiving objects:  78% (185/236)
+2026-03-07T19:42:33.1181361Z Receiving objects:  79% (187/236)
+2026-03-07T19:42:33.1181881Z Receiving objects:  80% (189/236)
+2026-03-07T19:42:33.1182372Z Receiving objects:  81% (192/236)
+2026-03-07T19:42:33.1182867Z Receiving objects:  82% (194/236)
+2026-03-07T19:42:33.1183353Z Receiving objects:  83% (196/236)
+2026-03-07T19:42:33.1183841Z Receiving objects:  84% (199/236)
+2026-03-07T19:42:33.1280830Z Receiving objects:  85% (201/236)
+2026-03-07T19:42:33.1284251Z Receiving objects:  86% (203/236)
+2026-03-07T19:42:33.1285939Z Receiving objects:  87% (206/236)
+2026-03-07T19:42:33.1286818Z Receiving objects:  88% (208/236)
+2026-03-07T19:42:33.1288050Z Receiving objects:  89% (211/236)
+2026-03-07T19:42:33.1290363Z Receiving objects:  90% (213/236)
+2026-03-07T19:42:33.1292943Z Receiving objects:  91% (215/236)
+2026-03-07T19:42:33.1293959Z Receiving objects:  92% (218/236)
+2026-03-07T19:42:33.1295106Z Receiving objects:  93% (220/236)
+2026-03-07T19:42:33.2061495Z Receiving objects:  94% (222/236)
+2026-03-07T19:42:33.2393331Z Receiving objects:  95% (225/236)
+2026-03-07T19:42:33.2715584Z Receiving objects:  96% (227/236)
+2026-03-07T19:42:33.3409121Z Receiving objects:  97% (229/236)
+2026-03-07T19:42:33.3837346Z Receiving objects:  98% (232/236)
+2026-03-07T19:42:33.4117818Z Receiving objects:  99% (234/236)
+2026-03-07T19:42:33.4120252Z remote: Total 236 (delta 16), reused 145 (delta 12), pack-reused 0 (from 0)        
+2026-03-07T19:42:33.4128430Z Receiving objects: 100% (236/236)
+2026-03-07T19:42:33.4130298Z Receiving objects: 100% (236/236), 20.24 MiB | 58.39 MiB/s, done.
+2026-03-07T19:42:33.4135745Z Resolving deltas:   0% (0/16)
+2026-03-07T19:42:33.4137134Z Resolving deltas:   6% (1/16)
+2026-03-07T19:42:33.4138327Z Resolving deltas:  12% (2/16)
+2026-03-07T19:42:33.4139525Z Resolving deltas:  25% (4/16)
+2026-03-07T19:42:33.4140813Z Resolving deltas:  31% (5/16)
+2026-03-07T19:42:33.4142005Z Resolving deltas:  37% (6/16)
+2026-03-07T19:42:33.4143178Z Resolving deltas:  43% (7/16)
+2026-03-07T19:42:33.4144023Z Resolving deltas:  50% (8/16)
+2026-03-07T19:42:33.4145205Z Resolving deltas:  56% (9/16)
+2026-03-07T19:42:33.4146038Z Resolving deltas:  62% (10/16)
+2026-03-07T19:42:33.4146872Z Resolving deltas:  68% (11/16)
+2026-03-07T19:42:33.4147628Z Resolving deltas:  75% (12/16)
+2026-03-07T19:42:33.4148360Z Resolving deltas:  81% (13/16)
+2026-03-07T19:42:33.4149097Z Resolving deltas:  87% (14/16)
+2026-03-07T19:42:33.4149823Z Resolving deltas:  93% (15/16)
+2026-03-07T19:42:33.4150555Z Resolving deltas: 100% (16/16)
+2026-03-07T19:42:33.4151294Z Resolving deltas: 100% (16/16), done.
+2026-03-07T19:42:33.4277759Z From https://github.com/Ahmedtarekmekled/AboHommos
+2026-03-07T19:42:33.4280158Z  * [new ref]         8e8782f1a3b78294032e8f6df021d34285db26d8 -> pull/10/merge
+2026-03-07T19:42:33.4315137Z ##[endgroup]
+2026-03-07T19:42:33.4317620Z ##[group]Determining the checkout info
+2026-03-07T19:42:33.4320541Z ##[endgroup]
+2026-03-07T19:42:33.4323064Z ##[group]Checking out the ref
+2026-03-07T19:42:33.4325049Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/10/merge
+2026-03-07T19:42:33.5073473Z Note: switching to 'refs/remotes/pull/10/merge'.
+2026-03-07T19:42:33.5075243Z 
+2026-03-07T19:42:33.5076138Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-03-07T19:42:33.5078306Z changes and commit them, and you can discard any commits you make in this
+2026-03-07T19:42:33.5080515Z state without impacting any branches by switching back to a branch.
+2026-03-07T19:42:33.5081777Z 
+2026-03-07T19:42:33.5082575Z If you want to create a new branch to retain commits you create, you may
+2026-03-07T19:42:33.5084791Z do so (now or later) by using -c with the switch command. Example:
+2026-03-07T19:42:33.5086128Z 
+2026-03-07T19:42:33.5086773Z   git switch -c <new-branch-name>
+2026-03-07T19:42:33.5087842Z 
+2026-03-07T19:42:33.5088280Z Or undo this operation with:
+2026-03-07T19:42:33.5089053Z 
+2026-03-07T19:42:33.5089429Z   git switch -
+2026-03-07T19:42:33.5090046Z 
+2026-03-07T19:42:33.5090866Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-03-07T19:42:33.5092196Z 
+2026-03-07T19:42:33.5093607Z HEAD is now at 8e8782f Merge baba78afd7f37cc4fd02247ca6751501732fac90 into 246a510a0e604acbbc7eb3d6a290cbe11306edc7
+2026-03-07T19:42:33.5098497Z ##[endgroup]
+2026-03-07T19:42:33.5126634Z [command]/usr/bin/git log -1 --format='%H'
+2026-03-07T19:42:33.5148707Z '8e8782f1a3b78294032e8f6df021d34285db26d8'
+2026-03-07T19:42:33.5463376Z ##[group]Run actions/setup-node@v3
+2026-03-07T19:42:33.5464626Z with:
+2026-03-07T19:42:33.5465320Z   node-version: 18
+2026-03-07T19:42:33.5466072Z   cache: npm
+2026-03-07T19:42:33.5466779Z   always-auth: false
+2026-03-07T19:42:33.5467568Z   check-latest: false
+2026-03-07T19:42:33.5468630Z   token: ***
+2026-03-07T19:42:33.5469330Z ##[endgroup]
+2026-03-07T19:42:33.7633789Z Attempting to download 18...
+2026-03-07T19:42:34.2172299Z Acquiring 18.20.8 - x64 from https://github.com/actions/node-versions/releases/download/18.20.8-14110393767/node-18.20.8-linux-x64.tar.gz
+2026-03-07T19:42:34.7383874Z Extracting ...
+2026-03-07T19:42:34.7488987Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword -C /home/runner/work/_temp/2547737e-a715-453d-a254-feddb96a03fd -f /home/runner/work/_temp/c1d2af51-0842-4012-af96-bc4961b4ad16
+2026-03-07T19:42:35.6651919Z Adding to the cache ...
+2026-03-07T19:42:37.4018770Z ##[group]Environment details
+2026-03-07T19:42:37.7050176Z node: v18.20.8
+2026-03-07T19:42:37.7050749Z npm: 10.8.2
+2026-03-07T19:42:37.7051115Z yarn: 1.22.22
+2026-03-07T19:42:37.7052312Z ##[endgroup]
+2026-03-07T19:42:37.7061903Z [command]/opt/hostedtoolcache/node/18.20.8/x64/bin/npm config get cache
+2026-03-07T19:42:37.8208246Z /home/runner/.npm
+2026-03-07T19:42:37.9609250Z Cache hit for: node-cache-Linux-npm-d538ffa73c318fe47e4a8d1257736e1a3cb4d6f7a10328c82951f91003dc907a
+2026-03-07T19:42:38.9260288Z Received 81396787 of 81396787 (100.0%), 92.4 MBs/sec
+2026-03-07T19:42:38.9261625Z Cache Size: ~78 MB (81396787 B)
+2026-03-07T19:42:38.9333707Z [command]/usr/bin/tar -xf /home/runner/work/_temp/a17253f9-39ef-4df7-bbcf-33956b4674f8/cache.tzst -P -C /home/runner/work/AboHommos/AboHommos --use-compress-program unzstd
+2026-03-07T19:42:39.5281570Z Cache restored successfully
+2026-03-07T19:42:39.5467103Z Cache restored from key: node-cache-Linux-npm-d538ffa73c318fe47e4a8d1257736e1a3cb4d6f7a10328c82951f91003dc907a
+2026-03-07T19:42:39.5632691Z ##[group]Run npm ci
+2026-03-07T19:42:39.5633024Z [36;1mnpm ci[0m
+2026-03-07T19:42:39.5693392Z shell: /usr/bin/bash -e {0}
+2026-03-07T19:42:39.5693680Z ##[endgroup]
+2026-03-07T19:42:40.1627026Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1631607Z npm warn EBADENGINE   package: '@supabase/auth-js@2.91.0',
+2026-03-07T19:42:40.1636210Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:42:40.1637150Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1637905Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1638986Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1639879Z npm warn EBADENGINE   package: '@supabase/functions-js@2.91.0',
+2026-03-07T19:42:40.1640798Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:42:40.1641722Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1642472Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1643155Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1643977Z npm warn EBADENGINE   package: '@supabase/postgrest-js@2.91.0',
+2026-03-07T19:42:40.1645090Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:42:40.1646014Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1646720Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1647290Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1648137Z npm warn EBADENGINE   package: '@supabase/realtime-js@2.91.0',
+2026-03-07T19:42:40.1649035Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:42:40.1649952Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1650665Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1651256Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1652073Z npm warn EBADENGINE   package: '@supabase/storage-js@2.91.0',
+2026-03-07T19:42:40.1652952Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:42:40.1653852Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1654686Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1655211Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1656066Z npm warn EBADENGINE   package: '@supabase/supabase-js@2.91.0',
+2026-03-07T19:42:40.1656916Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:42:40.1657902Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1658548Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1659047Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1659714Z npm warn EBADENGINE   package: 'bin-links@6.0.0',
+2026-03-07T19:42:40.1660584Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:42:40.1661574Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1662665Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1663323Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1664043Z npm warn EBADENGINE   package: 'cmd-shim@8.0.0',
+2026-03-07T19:42:40.1665240Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:42:40.1666198Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1666861Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1675439Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1676452Z npm warn EBADENGINE   package: 'iceberg-js@0.8.1',
+2026-03-07T19:42:40.1677195Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:42:40.1678005Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1678619Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1684306Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1685432Z npm warn EBADENGINE   package: 'npm-normalize-package-bin@5.0.0',
+2026-03-07T19:42:40.1686313Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:42:40.1687202Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1688207Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1688772Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1689419Z npm warn EBADENGINE   package: 'proc-log@6.1.0',
+2026-03-07T19:42:40.1690194Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:42:40.1691035Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1691642Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1692131Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1692799Z npm warn EBADENGINE   package: 'read-cmd-shim@6.0.0',
+2026-03-07T19:42:40.1693590Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:42:40.1694249Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1694862Z npm warn EBADENGINE }
+2026-03-07T19:42:40.1696481Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:42:40.1697230Z npm warn EBADENGINE   package: 'write-file-atomic@7.0.0',
+2026-03-07T19:42:40.1698054Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:42:40.1698909Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:42:40.1699514Z npm warn EBADENGINE }
+2026-03-07T19:42:41.6316818Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-03-07T19:42:41.7367975Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2026-03-07T19:42:41.7425488Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2026-03-07T19:42:41.8099541Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2026-03-07T19:42:41.8227481Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2026-03-07T19:42:42.2307015Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2026-03-07T19:42:43.5728316Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2026-03-07T19:42:46.6341580Z 
+2026-03-07T19:42:46.6342387Z added 429 packages, and audited 430 packages in 7s
+2026-03-07T19:42:46.6342821Z 
+2026-03-07T19:42:46.6343070Z 73 packages are looking for funding
+2026-03-07T19:42:46.6343535Z   run `npm fund` for details
+2026-03-07T19:42:46.6617697Z 
+2026-03-07T19:42:46.6618513Z 8 vulnerabilities (3 moderate, 5 high)
+2026-03-07T19:42:46.6618900Z 
+2026-03-07T19:42:46.6619253Z To address issues that do not require attention, run:
+2026-03-07T19:42:46.6619801Z   npm audit fix
+2026-03-07T19:42:46.6620002Z 
+2026-03-07T19:42:46.6620373Z To address all issues (including breaking changes), run:
+2026-03-07T19:42:46.6620923Z   npm audit fix --force
+2026-03-07T19:42:46.6621568Z 
+2026-03-07T19:42:46.6621763Z Run `npm audit` for details.
+2026-03-07T19:42:46.7057337Z ##[group]Run npm run build
+2026-03-07T19:42:46.7057630Z [36;1mnpm run build[0m
+2026-03-07T19:42:46.7102956Z shell: /usr/bin/bash -e {0}
+2026-03-07T19:42:46.7103220Z env:
+2026-03-07T19:42:46.7103680Z   VITE_SUPABASE_URL: ***
+2026-03-07T19:42:46.7105291Z   VITE_SUPABASE_ANON_KEY: ***
+2026-03-07T19:42:46.7105551Z ##[endgroup]
+2026-03-07T19:42:46.8375013Z 
+2026-03-07T19:42:46.8375845Z > abo-hommos-marketplace@1.0.0 build
+2026-03-07T19:42:46.8376403Z > tsc && vite build
+2026-03-07T19:42:46.8376612Z 
+2026-03-07T19:43:00.1966267Z [36mvite v5.4.21 [32mbuilding for production...[36m[39m
+2026-03-07T19:43:00.4896870Z transforming...
+2026-03-07T19:43:08.0025275Z [32m✓[39m 3509 modules transformed.
+2026-03-07T19:43:08.5624589Z rendering chunks...
+2026-03-07T19:43:08.8383232Z computing gzip size...
+2026-03-07T19:43:08.8620404Z [2mdist/[22m[32mindex.html                                       [39m[1m[2m  1.29 kB[22m[1m[22m[2m │ gzip:   0.64 kB[22m
+2026-03-07T19:43:08.8626251Z [2mdist/[22m[2massets/[22m[35mdashboard-D8Md-CES.css                    [39m[1m[2m  6.23 kB[22m[1m[22m[2m │ gzip:   1.30 kB[22m
+2026-03-07T19:43:08.8628189Z [2mdist/[22m[2massets/[22m[35mMapLocationPicker-Dgihpmma.css            [39m[1m[2m 15.04 kB[22m[1m[22m[2m │ gzip:   6.38 kB[22m
+2026-03-07T19:43:08.8629329Z [2mdist/[22m[2massets/[22m[35mindex-6rwktZIN.css                        [39m[1m[2m 87.96 kB[22m[1m[22m[2m │ gzip:  14.30 kB[22m
+2026-03-07T19:43:08.8630654Z [2mdist/[22m[2massets/[22m[36mreact-core-QXyfP2O6.js                    [39m[1m[2m  0.04 kB[22m[1m[22m[2m │ gzip:   0.06 kB[22m
+2026-03-07T19:43:08.8631890Z [2mdist/[22m[2massets/[22m[36mskeleton-Gm0tRgqm.js                      [39m[1m[2m  0.21 kB[22m[1m[22m[2m │ gzip:   0.18 kB[22m
+2026-03-07T19:43:08.8633554Z [2mdist/[22m[2massets/[22m[36mlabel-D1dePZ6-.js                         [39m[1m[2m  0.54 kB[22m[1m[22m[2m │ gzip:   0.35 kB[22m
+2026-03-07T19:43:08.8635252Z [2mdist/[22m[2massets/[22m[36minput-BbPtyQB3.js                         [39m[1m[2m  0.77 kB[22m[1m[22m[2m │ gzip:   0.45 kB[22m
+2026-03-07T19:43:08.8636980Z [2mdist/[22m[2massets/[22m[36mcard-DbQHgJxu.js                          [39m[1m[2m  1.17 kB[22m[1m[22m[2m │ gzip:   0.48 kB[22m
+2026-03-07T19:43:08.8638322Z [2mdist/[22m[2massets/[22m[36mcallback-CiZTaGsJ.js                      [39m[1m[2m  1.19 kB[22m[1m[22m[2m │ gzip:   0.70 kB[22m
+2026-03-07T19:43:08.8639294Z [2mdist/[22m[2massets/[22m[36mtabs-C2VqESvp.js                          [39m[1m[2m  1.19 kB[22m[1m[22m[2m │ gzip:   0.50 kB[22m
+2026-03-07T19:43:08.8640268Z [2mdist/[22m[2massets/[22m[36mshop-helpers-DF2KZ4qs.js                  [39m[1m[2m  1.43 kB[22m[1m[22m[2m │ gzip:   0.59 kB[22m
+2026-03-07T19:43:08.8641232Z [2mdist/[22m[2massets/[22m[36mNotFound-m6jzg-d1.js                      [39m[1m[2m  1.47 kB[22m[1m[22m[2m │ gzip:   0.72 kB[22m
+2026-03-07T19:43:08.8642199Z [2mdist/[22m[2massets/[22m[36mShopCard-CaLfVeyc.js                      [39m[1m[2m  2.44 kB[22m[1m[22m[2m │ gzip:   1.11 kB[22m
+2026-03-07T19:43:08.8643169Z [2mdist/[22m[2massets/[22m[36mShopProductCard-CFUnCVDd.js               [39m[1m[2m  2.90 kB[22m[1m[22m[2m │ gzip:   1.35 kB[22m
+2026-03-07T19:43:08.8644142Z [2mdist/[22m[2massets/[22m[36mselect-CTrUBx3H.js                        [39m[1m[2m  3.23 kB[22m[1m[22m[2m │ gzip:   1.20 kB[22m
+2026-03-07T19:43:08.8645358Z [2mdist/[22m[2massets/[22m[36mshops-B4a4x0uN.js                         [39m[1m[2m  3.56 kB[22m[1m[22m[2m │ gzip:   1.66 kB[22m
+2026-03-07T19:43:08.8646333Z [2mdist/[22m[2massets/[22m[36mforgot-password-BOYV56zG.js               [39m[1m[2m  3.59 kB[22m[1m[22m[2m │ gzip:   1.65 kB[22m
+2026-03-07T19:43:08.8647327Z [2mdist/[22m[2massets/[22m[36mreset-password-CFjam3oj.js                [39m[1m[2m  3.61 kB[22m[1m[22m[2m │ gzip:   1.71 kB[22m
+2026-03-07T19:43:08.8648861Z [2mdist/[22m[2massets/[22m[36mAddressFormDialog-CeRd3ZYj.js             [39m[1m[2m  5.36 kB[22m[1m[22m[2m │ gzip:   2.27 kB[22m
+2026-03-07T19:43:08.8649947Z [2mdist/[22m[2massets/[22m[36mmulti-store-checkout.service-CpGYTX1u.js  [39m[1m[2m  5.57 kB[22m[1m[22m[2m │ gzip:   2.57 kB[22m
+2026-03-07T19:43:08.8650961Z [2mdist/[22m[2massets/[22m[36mcart-CwAXA-T_.js                          [39m[1m[2m  6.34 kB[22m[1m[22m[2m │ gzip:   2.09 kB[22m
+2026-03-07T19:43:08.8651888Z [2mdist/[22m[2massets/[22m[36morders-CiKYi210.js                        [39m[1m[2m  6.64 kB[22m[1m[22m[2m │ gzip:   2.56 kB[22m
+2026-03-07T19:43:08.8652823Z [2mdist/[22m[2massets/[22m[36mlogin-s4JdflQI.js                         [39m[1m[2m  6.84 kB[22m[1m[22m[2m │ gzip:   2.94 kB[22m
+2026-03-07T19:43:08.8653759Z [2mdist/[22m[2massets/[22m[36mregister-DG5L1GCx.js                      [39m[1m[2m  7.37 kB[22m[1m[22m[2m │ gzip:   2.91 kB[22m
+2026-03-07T19:43:08.8655105Z [2mdist/[22m[2massets/[22m[36mcatalog.service-D7823fH-.js               [39m[1m[2m  8.07 kB[22m[1m[22m[2m │ gzip:   1.82 kB[22m
+2026-03-07T19:43:08.8656858Z [2mdist/[22m[2massets/[22m[36mhome-BO6UIfLi.js                          [39m[1m[2m  9.02 kB[22m[1m[22m[2m │ gzip:   2.94 kB[22m
+2026-03-07T19:43:08.8658733Z [2mdist/[22m[2massets/[22m[36mMapLocationPicker-D-kbfyZG.js             [39m[1m[2m  9.61 kB[22m[1m[22m[2m │ gzip:   3.82 kB[22m
+2026-03-07T19:43:08.8660602Z [2mdist/[22m[2massets/[22m[36mproduct-uqSvuqH1.js                       [39m[1m[2m 10.32 kB[22m[1m[22m[2m │ gzip:   3.61 kB[22m
+2026-03-07T19:43:08.8662317Z [2mdist/[22m[2massets/[22m[36mproducts-akZaP55i.js                      [39m[1m[2m 10.57 kB[22m[1m[22m[2m │ gzip:   4.21 kB[22m
+2026-03-07T19:43:08.8664004Z [2mdist/[22m[2massets/[22m[36maccount-UmwLsslm.js                       [39m[1m[2m 10.79 kB[22m[1m[22m[2m │ gzip:   3.56 kB[22m
+2026-03-07T19:43:08.8665885Z [2mdist/[22m[2massets/[22m[36mshop-YUwWOgqu.js                          [39m[1m[2m 11.19 kB[22m[1m[22m[2m │ gzip:   3.83 kB[22m
+2026-03-07T19:43:08.8667529Z [2mdist/[22m[2massets/[22m[36morder-DVMWxk8Q.js                         [39m[1m[2m 19.73 kB[22m[1m[22m[2m │ gzip:   4.71 kB[22m
+2026-03-07T19:43:08.8669177Z [2mdist/[22m[2massets/[22m[36mutils-CbK4XRml.js                         [39m[1m[2m 21.04 kB[22m[1m[22m[2m │ gzip:   7.14 kB[22m
+2026-03-07T19:43:08.8670895Z [2mdist/[22m[2massets/[22m[36mdate-utils-D1iX10Yi.js                    [39m[1m[2m 23.89 kB[22m[1m[22m[2m │ gzip:   6.77 kB[22m
+2026-03-07T19:43:08.8672639Z [2mdist/[22m[2massets/[22m[36mcheckout-CAbN8IVz.js                      [39m[1m[2m 29.57 kB[22m[1m[22m[2m │ gzip:   7.50 kB[22m
+2026-03-07T19:43:08.8674506Z [2mdist/[22m[2massets/[22m[36mlucide-B0q5RO0r.js                        [39m[1m[2m 35.99 kB[22m[1m[22m[2m │ gzip:   6.73 kB[22m
+2026-03-07T19:43:08.8676223Z [2mdist/[22m[2massets/[22m[36mquery-t2kTbTCL.js                         [39m[1m[2m 41.71 kB[22m[1m[22m[2m │ gzip:  12.61 kB[22m
+2026-03-07T19:43:08.8677914Z [2mdist/[22m[2massets/[22m[36mindex-sNFapy_q.js                         [39m[1m[2m 74.29 kB[22m[1m[22m[2m │ gzip:  23.14 kB[22m
+2026-03-07T19:43:08.8679607Z [2mdist/[22m[2massets/[22m[36mtypes-ja-K9Jgw.js                         [39m[1m[2m 78.74 kB[22m[1m[22m[2m │ gzip:  21.48 kB[22m
+2026-03-07T19:43:08.8681329Z [2mdist/[22m[2massets/[22m[36mradix-ui-3aMecnjA.js                      [39m[1m[2m139.80 kB[22m[1m[22m[2m │ gzip:  43.31 kB[22m
+2026-03-07T19:43:08.8683049Z [2mdist/[22m[2massets/[22m[36mmap-C0tRAB0E.js                           [39m[1m[2m155.13 kB[22m[1m[22m[2m │ gzip:  45.27 kB[22m
+2026-03-07T19:43:08.8684918Z [2mdist/[22m[2massets/[22m[36mreact-router-rg7Oiks_.js                  [39m[1m[2m163.27 kB[22m[1m[22m[2m │ gzip:  53.31 kB[22m
+2026-03-07T19:43:08.8687091Z [2mdist/[22m[2massets/[22m[36msupabase-DEvIEdQL.js                      [39m[1m[2m172.96 kB[22m[1m[22m[2m │ gzip:  44.70 kB[22m
+2026-03-07T19:43:08.8688851Z [2mdist/[22m[2massets/[22m[36mdashboard-DfUjp6QH.js                     [39m[1m[2m288.31 kB[22m[1m[22m[2m │ gzip:  78.61 kB[22m
+2026-03-07T19:43:08.8690591Z [2mdist/[22m[2massets/[22m[36mcharts-CvHlpcRA.js                        [39m[1m[2m383.20 kB[22m[1m[22m[2m │ gzip: 105.35 kB[22m
+2026-03-07T19:43:08.8691578Z [32m✓ built in 8.64s[39m
+2026-03-07T19:43:08.9552713Z ##[group]Run npm run preview -- --host 127.0.0.1 --port 4173 > server.log 2>&1 &
+2026-03-07T19:43:08.9553264Z [36;1mnpm run preview -- --host 127.0.0.1 --port 4173 > server.log 2>&1 &[0m
+2026-03-07T19:43:08.9591129Z shell: /usr/bin/bash -e {0}
+2026-03-07T19:43:08.9591364Z env:
+2026-03-07T19:43:08.9591544Z   NODE_ENV: production
+2026-03-07T19:43:08.9591955Z   VITE_SUPABASE_URL: ***
+2026-03-07T19:43:08.9593230Z   VITE_SUPABASE_ANON_KEY: ***
+2026-03-07T19:43:08.9593469Z ##[endgroup]
+2026-03-07T19:43:08.9675499Z ##[group]Run npx wait-on http://127.0.0.1:4173 -t 60000
+2026-03-07T19:43:08.9675900Z [36;1mnpx wait-on http://127.0.0.1:4173 -t 60000[0m
+2026-03-07T19:43:08.9709111Z shell: /usr/bin/bash -e {0}
+2026-03-07T19:43:08.9709358Z ##[endgroup]
+2026-03-07T19:43:10.1218979Z ##[group]Run cat server.log || echo "server.log not found"
+2026-03-07T19:43:10.1219412Z [36;1mcat server.log || echo "server.log not found"[0m
+2026-03-07T19:43:10.1258263Z shell: /usr/bin/bash -e {0}
+2026-03-07T19:43:10.1258531Z ##[endgroup]
+2026-03-07T19:43:10.1324076Z 
+2026-03-07T19:43:10.1324655Z > abo-hommos-marketplace@1.0.0 preview
+2026-03-07T19:43:10.1325370Z > vite preview --host 127.0.0.1 --port 4173
+2026-03-07T19:43:10.1325629Z 
+2026-03-07T19:43:10.1326197Z   [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m4173[22m/[39m
+2026-03-07T19:43:10.1351106Z ##[group]Run npm install -g @lhci/cli@0.13.0 && npm install puppeteer --no-save
+2026-03-07T19:43:10.1351661Z [36;1mnpm install -g @lhci/cli@0.13.0 && npm install puppeteer --no-save[0m
+2026-03-07T19:43:10.1383976Z shell: /usr/bin/bash -e {0}
+2026-03-07T19:43:10.1384224Z ##[endgroup]
+2026-03-07T19:43:18.7351866Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-03-07T19:43:18.7824275Z npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+2026-03-07T19:43:18.8111695Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2026-03-07T19:43:18.8473310Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-03-07T19:43:20.3886578Z 
+2026-03-07T19:43:20.3887102Z added 347 packages in 10s
+2026-03-07T19:43:20.3887543Z 
+2026-03-07T19:43:20.3887822Z 31 packages are looking for funding
+2026-03-07T19:43:20.3888334Z   run `npm fund` for details
+2026-03-07T19:43:22.4163861Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4164990Z npm warn EBADENGINE   package: '@supabase/auth-js@2.91.0',
+2026-03-07T19:43:22.4165849Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:43:22.4166755Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4167439Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4168006Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4168792Z npm warn EBADENGINE   package: '@supabase/functions-js@2.91.0',
+2026-03-07T19:43:22.4169619Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:43:22.4170526Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4171214Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4172134Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4172929Z npm warn EBADENGINE   package: '@supabase/postgrest-js@2.91.0',
+2026-03-07T19:43:22.4173795Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:43:22.4174876Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4175535Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4176047Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4176821Z npm warn EBADENGINE   package: '@supabase/realtime-js@2.91.0',
+2026-03-07T19:43:22.4177651Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:43:22.4178528Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4179185Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4179716Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4180521Z npm warn EBADENGINE   package: '@supabase/storage-js@2.91.0',
+2026-03-07T19:43:22.4181321Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:43:22.4182188Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4182855Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4183376Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4184156Z npm warn EBADENGINE   package: '@supabase/supabase-js@2.91.0',
+2026-03-07T19:43:22.4185243Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:43:22.4186120Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4186805Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4187344Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4188045Z npm warn EBADENGINE   package: 'bin-links@6.0.0',
+2026-03-07T19:43:22.4188962Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:43:22.4189880Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4191017Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4195455Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4196175Z npm warn EBADENGINE   package: 'cmd-shim@8.0.0',
+2026-03-07T19:43:22.4196986Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:43:22.4197884Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4198555Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4204326Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4205311Z npm warn EBADENGINE   package: 'iceberg-js@0.8.1',
+2026-03-07T19:43:22.4206062Z npm warn EBADENGINE   required: { node: '>=20.0.0' },
+2026-03-07T19:43:22.4206913Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4207584Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4211533Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4212397Z npm warn EBADENGINE   package: 'npm-normalize-package-bin@5.0.0',
+2026-03-07T19:43:22.4213382Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:43:22.4214529Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4215221Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4215761Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4216463Z npm warn EBADENGINE   package: 'proc-log@6.1.0',
+2026-03-07T19:43:22.4217327Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:43:22.4218231Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4218882Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4219416Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4220134Z npm warn EBADENGINE   package: 'read-cmd-shim@6.0.0',
+2026-03-07T19:43:22.4220998Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:43:22.4221934Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4222605Z npm warn EBADENGINE }
+2026-03-07T19:43:22.4223115Z npm warn EBADENGINE Unsupported engine {
+2026-03-07T19:43:22.4223846Z npm warn EBADENGINE   package: 'write-file-atomic@7.0.0',
+2026-03-07T19:43:22.4225213Z npm warn EBADENGINE   required: { node: '^20.17.0 || >=22.9.0' },
+2026-03-07T19:43:22.4226081Z npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+2026-03-07T19:43:22.4226682Z npm warn EBADENGINE }
+2026-03-07T19:43:29.3340094Z 
+2026-03-07T19:43:29.3341036Z added 68 packages, changed 1 package, and audited 498 packages in 9s
+2026-03-07T19:43:29.3341399Z 
+2026-03-07T19:43:29.3341561Z 77 packages are looking for funding
+2026-03-07T19:43:29.3341841Z   run `npm fund` for details
+2026-03-07T19:43:29.3594595Z 
+2026-03-07T19:43:29.3595084Z 8 vulnerabilities (3 moderate, 5 high)
+2026-03-07T19:43:29.3595334Z 
+2026-03-07T19:43:29.3595559Z To address issues that do not require attention, run:
+2026-03-07T19:43:29.3595873Z   npm audit fix
+2026-03-07T19:43:29.3596003Z 
+2026-03-07T19:43:29.3596223Z To address all issues (including breaking changes), run:
+2026-03-07T19:43:29.3596552Z   npm audit fix --force
+2026-03-07T19:43:29.3596726Z 
+2026-03-07T19:43:29.3596837Z Run `npm audit` for details.
+2026-03-07T19:43:29.3786072Z ##[group]Run export CHROME_PATH=$(node -e "console.log(require('puppeteer').executablePath())")
+2026-03-07T19:43:29.3786758Z [36;1mexport CHROME_PATH=$(node -e "console.log(require('puppeteer').executablePath())")[0m
+2026-03-07T19:43:29.3787480Z [36;1mlhci autorun --chrome-flags="--no-sandbox --disable-setuid-sandbox --disable-gpu --headless=new --single-process"[0m
+2026-03-07T19:43:29.3829104Z shell: /usr/bin/bash -e {0}
+2026-03-07T19:43:29.3829336Z env:
+2026-03-07T19:43:29.3829761Z   LHCI_GITHUB_APP_TOKEN: ***
+2026-03-07T19:43:29.3830025Z   PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: false
+2026-03-07T19:43:29.3830297Z ##[endgroup]
+2026-03-07T19:43:30.2251357Z ✅  .lighthouseci/ directory writable
+2026-03-07T19:43:30.2257035Z ✅  Configuration file found
+2026-03-07T19:43:30.2258874Z ✅  Chrome installation found
+2026-03-07T19:43:30.2260487Z ✅  GitHub token set
+2026-03-07T19:43:30.2261017Z Healthcheck passed!
+2026-03-07T19:43:30.2319014Z 
+2026-03-07T19:43:30.5499423Z WARNING: collect.settings.chromeFlags option will be ignored.
+2026-03-07T19:43:30.5502024Z WARNING: If you want chromeFlags with puppeteerScript, use collect.puppeteerLaunchOptions.args option.
+2026-03-07T19:43:34.7533374Z Running Lighthouse 2 time(s) on http://127.0.0.1:4173/
+2026-03-07T19:43:47.9468660Z Run #1...done.
+2026-03-07T19:44:00.1389329Z Run #2...done.
+2026-03-07T19:44:17.1521560Z Puppeteer login failed to find elements. Page HTML:
+2026-03-07T19:44:17.1557813Z <!DOCTYPE html><html lang="ar" dir="rtl"><head>
+2026-03-07T19:44:17.1558435Z     <meta charset="UTF-8">
+2026-03-07T19:44:17.1559018Z     <link rel="icon" type="image/svg+xml" href="/vite.svg">
+2026-03-07T19:44:17.1559837Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-03-07T19:44:17.1561687Z     <meta name="description" content="سوق أبو حمص - منصة التسوق المحلية الأولى في المنطقة. تسوق من أفضل المتاجر المحلية واحصل على منتجاتك اليومية بسهولة.">
+2026-03-07T19:44:17.1562958Z     <meta name="keywords" content="سوق, تسوق, منتجات محلية, توصيل, أبو حمص">
+2026-03-07T19:44:17.1563824Z     <title>سوق أبو حمص | تسوق محلي سهل وسريع</title>
+2026-03-07T19:44:17.1564859Z     <script type="module" crossorigin="" src="/assets/index-sNFapy_q.js"></script>
+2026-03-07T19:44:17.1565911Z     <link rel="modulepreload" crossorigin="" href="/assets/react-router-rg7Oiks_.js">
+2026-03-07T19:44:17.1566943Z     <link rel="modulepreload" crossorigin="" href="/assets/query-t2kTbTCL.js">
+2026-03-07T19:44:17.1567934Z     <link rel="modulepreload" crossorigin="" href="/assets/supabase-DEvIEdQL.js">
+2026-03-07T19:44:17.1568947Z     <link rel="modulepreload" crossorigin="" href="/assets/radix-ui-3aMecnjA.js">
+2026-03-07T19:44:17.1569877Z     <link rel="modulepreload" crossorigin="" href="/assets/utils-CbK4XRml.js">
+2026-03-07T19:44:17.1570791Z     <link rel="modulepreload" crossorigin="" href="/assets/lucide-B0q5RO0r.js">
+2026-03-07T19:44:17.1571796Z     <link rel="modulepreload" crossorigin="" href="/assets/date-utils-D1iX10Yi.js">
+2026-03-07T19:44:17.1572804Z     <link rel="stylesheet" crossorigin="" href="/assets/index-6rwktZIN.css">
+2026-03-07T19:44:17.1579258Z   <link rel="modulepreload" as="script" crossorigin="" href="/assets/login-s4JdflQI.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/types-ja-K9Jgw.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/input-BbPtyQB3.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/label-D1dePZ6-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/card-DbQHgJxu.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/home-BO6UIfLi.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/skeleton-Gm0tRgqm.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/catalog.service-D7823fH-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/shop
+2026-03-07T19:44:17.1584104Z Puppeteer login script failed: TimeoutError: Waiting for selector `input[type="email"]` failed: Waiting failed: 15000ms exceeded
+2026-03-07T19:44:17.1585544Z     at new WaitTask (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/WaitTask.js:50:34)
+2026-03-07T19:44:17.1586858Z     at IsolatedWorld.waitForFunction (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Realm.js:25:26)
+2026-03-07T19:44:17.1588862Z     at PQueryHandler.waitFor (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/QueryHandler.js:170:95)
+2026-03-07T19:44:17.1589954Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-03-07T19:44:17.1591486Z     at async CdpFrame.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Frame.js:494:21)
+2026-03-07T19:44:17.1593661Z     at async CdpPage.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Page.js:1351:20)
+2026-03-07T19:44:17.1595231Z     at async module.exports (/home/runner/work/AboHommos/AboHommos/lighthouse-login.cjs:15:7)
+2026-03-07T19:44:17.1596191Z     at async PuppeteerManager.invokePuppeteerScriptForUrl (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/puppeteer-manager.js:113:5)
+2026-03-07T19:44:17.1597208Z     at async Object.runCommand (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/collect.js:251:7)
+2026-03-07T19:44:17.1597950Z     at async run (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/cli.js:100:7)
+2026-03-07T19:44:17.1642162Z Running Lighthouse 2 time(s) on http://127.0.0.1:4173/shops
+2026-03-07T19:44:29.4932109Z Run #1...done.
+2026-03-07T19:44:41.8030473Z Run #2...done.
+2026-03-07T19:44:58.7176251Z Puppeteer login failed to find elements. Page HTML:
+2026-03-07T19:44:58.7215068Z <!DOCTYPE html><html lang="ar" dir="rtl"><head>
+2026-03-07T19:44:58.7215637Z     <meta charset="UTF-8">
+2026-03-07T19:44:58.7215976Z     <link rel="icon" type="image/svg+xml" href="/vite.svg">
+2026-03-07T19:44:58.7216679Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-03-07T19:44:58.7218351Z     <meta name="description" content="سوق أبو حمص - منصة التسوق المحلية الأولى في المنطقة. تسوق من أفضل المتاجر المحلية واحصل على منتجاتك اليومية بسهولة.">
+2026-03-07T19:44:58.7219685Z     <meta name="keywords" content="سوق, تسوق, منتجات محلية, توصيل, أبو حمص">
+2026-03-07T19:44:58.7220527Z     <title>سوق أبو حمص | تسوق محلي سهل وسريع</title>
+2026-03-07T19:44:58.7221260Z     <script type="module" crossorigin="" src="/assets/index-sNFapy_q.js"></script>
+2026-03-07T19:44:58.7222318Z     <link rel="modulepreload" crossorigin="" href="/assets/react-router-rg7Oiks_.js">
+2026-03-07T19:44:58.7222897Z     <link rel="modulepreload" crossorigin="" href="/assets/query-t2kTbTCL.js">
+2026-03-07T19:44:58.7223470Z     <link rel="modulepreload" crossorigin="" href="/assets/supabase-DEvIEdQL.js">
+2026-03-07T19:44:58.7225110Z     <link rel="modulepreload" crossorigin="" href="/assets/radix-ui-3aMecnjA.js">
+2026-03-07T19:44:58.7225668Z     <link rel="modulepreload" crossorigin="" href="/assets/utils-CbK4XRml.js">
+2026-03-07T19:44:58.7226190Z     <link rel="modulepreload" crossorigin="" href="/assets/lucide-B0q5RO0r.js">
+2026-03-07T19:44:58.7226719Z     <link rel="modulepreload" crossorigin="" href="/assets/date-utils-D1iX10Yi.js">
+2026-03-07T19:44:58.7227238Z     <link rel="stylesheet" crossorigin="" href="/assets/index-6rwktZIN.css">
+2026-03-07T19:44:58.7231571Z   <link rel="modulepreload" as="script" crossorigin="" href="/assets/login-s4JdflQI.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/types-ja-K9Jgw.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/input-BbPtyQB3.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/label-D1dePZ6-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/card-DbQHgJxu.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/home-BO6UIfLi.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/skeleton-Gm0tRgqm.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/catalog.service-D7823fH-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/shop
+2026-03-07T19:44:58.7236811Z Puppeteer login script failed: TimeoutError: Waiting for selector `input[type="email"]` failed: Waiting failed: 15000ms exceeded
+2026-03-07T19:44:58.7238487Z     at new WaitTask (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/WaitTask.js:50:34)
+2026-03-07T19:44:58.7239651Z     at IsolatedWorld.waitForFunction (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Realm.js:25:26)
+2026-03-07T19:44:58.7240861Z     at PQueryHandler.waitFor (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/QueryHandler.js:170:95)
+2026-03-07T19:44:58.7241744Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-03-07T19:44:58.7242673Z     at async CdpFrame.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Frame.js:494:21)
+2026-03-07T19:44:58.7243853Z     at async CdpPage.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Page.js:1351:20)
+2026-03-07T19:44:58.7245030Z     at async module.exports (/home/runner/work/AboHommos/AboHommos/lighthouse-login.cjs:15:7)
+2026-03-07T19:44:58.7245986Z     at async PuppeteerManager.invokePuppeteerScriptForUrl (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/puppeteer-manager.js:113:5)
+2026-03-07T19:44:58.7247003Z     at async Object.runCommand (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/collect.js:251:7)
+2026-03-07T19:44:58.7247774Z     at async run (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/cli.js:100:7)
+2026-03-07T19:44:58.7281784Z Running Lighthouse 2 time(s) on http://127.0.0.1:4173/shops/shop-1769811882795-7ws25h
+2026-03-07T19:45:10.8596408Z Run #1...done.
+2026-03-07T19:45:23.4311477Z Run #2...done.
+2026-03-07T19:45:40.9887724Z Puppeteer login failed to find elements. Page HTML:
+2026-03-07T19:45:40.9932251Z <!DOCTYPE html><html lang="ar" dir="rtl"><head>
+2026-03-07T19:45:40.9932774Z     <meta charset="UTF-8">
+2026-03-07T19:45:40.9933140Z     <link rel="icon" type="image/svg+xml" href="/vite.svg">
+2026-03-07T19:45:40.9933794Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-03-07T19:45:40.9937818Z     <meta name="description" content="سوق أبو حمص - منصة التسوق المحلية الأولى في المنطقة. تسوق من أفضل المتاجر المحلية واحصل على منتجاتك اليومية بسهولة.">
+2026-03-07T19:45:40.9939139Z     <meta name="keywords" content="سوق, تسوق, منتجات محلية, توصيل, أبو حمص">
+2026-03-07T19:45:40.9940531Z     <title>سوق أبو حمص | تسوق محلي سهل وسريع</title>
+2026-03-07T19:45:40.9941272Z     <script type="module" crossorigin="" src="/assets/index-sNFapy_q.js"></script>
+2026-03-07T19:45:40.9942157Z     <link rel="modulepreload" crossorigin="" href="/assets/react-router-rg7Oiks_.js">
+2026-03-07T19:45:40.9943089Z     <link rel="modulepreload" crossorigin="" href="/assets/query-t2kTbTCL.js">
+2026-03-07T19:45:40.9944107Z     <link rel="modulepreload" crossorigin="" href="/assets/supabase-DEvIEdQL.js">
+2026-03-07T19:45:40.9945318Z     <link rel="modulepreload" crossorigin="" href="/assets/radix-ui-3aMecnjA.js">
+2026-03-07T19:45:40.9946290Z     <link rel="modulepreload" crossorigin="" href="/assets/utils-CbK4XRml.js">
+2026-03-07T19:45:40.9947280Z     <link rel="modulepreload" crossorigin="" href="/assets/lucide-B0q5RO0r.js">
+2026-03-07T19:45:40.9947876Z     <link rel="modulepreload" crossorigin="" href="/assets/date-utils-D1iX10Yi.js">
+2026-03-07T19:45:40.9948918Z     <link rel="stylesheet" crossorigin="" href="/assets/index-6rwktZIN.css">
+2026-03-07T19:45:40.9953630Z   <link rel="modulepreload" as="script" crossorigin="" href="/assets/login-s4JdflQI.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/types-ja-K9Jgw.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/input-BbPtyQB3.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/label-D1dePZ6-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/card-DbQHgJxu.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/home-BO6UIfLi.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/skeleton-Gm0tRgqm.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/catalog.service-D7823fH-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/shop
+2026-03-07T19:45:40.9957379Z Puppeteer login script failed: TimeoutError: Waiting for selector `input[type="email"]` failed: Waiting failed: 15000ms exceeded
+2026-03-07T19:45:40.9958434Z     at new WaitTask (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/WaitTask.js:50:34)
+2026-03-07T19:45:40.9959576Z     at IsolatedWorld.waitForFunction (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Realm.js:25:26)
+2026-03-07T19:45:40.9960758Z     at PQueryHandler.waitFor (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/QueryHandler.js:170:95)
+2026-03-07T19:45:40.9961623Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-03-07T19:45:40.9962517Z     at async CdpFrame.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Frame.js:494:21)
+2026-03-07T19:45:40.9963689Z     at async CdpPage.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Page.js:1351:20)
+2026-03-07T19:45:40.9964809Z     at async module.exports (/home/runner/work/AboHommos/AboHommos/lighthouse-login.cjs:15:7)
+2026-03-07T19:45:40.9965744Z     at async PuppeteerManager.invokePuppeteerScriptForUrl (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/puppeteer-manager.js:113:5)
+2026-03-07T19:45:40.9966948Z     at async Object.runCommand (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/collect.js:251:7)
+2026-03-07T19:45:40.9967847Z     at async run (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/cli.js:100:7)
+2026-03-07T19:45:40.9997631Z Running Lighthouse 2 time(s) on http://127.0.0.1:4173/products
+2026-03-07T19:45:52.8878567Z Run #1...done.
+2026-03-07T19:46:04.7559495Z Run #2...done.
+2026-03-07T19:46:21.7502303Z Puppeteer login failed to find elements. Page HTML:
+2026-03-07T19:46:21.7542652Z <!DOCTYPE html><html lang="ar" dir="rtl"><head>
+2026-03-07T19:46:21.7543675Z     <meta charset="UTF-8">
+2026-03-07T19:46:21.7544237Z     <link rel="icon" type="image/svg+xml" href="/vite.svg">
+2026-03-07T19:46:21.7545222Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-03-07T19:46:21.7546947Z     <meta name="description" content="سوق أبو حمص - منصة التسوق المحلية الأولى في المنطقة. تسوق من أفضل المتاجر المحلية واحصل على منتجاتك اليومية بسهولة.">
+2026-03-07T19:46:21.7548233Z     <meta name="keywords" content="سوق, تسوق, منتجات محلية, توصيل, أبو حمص">
+2026-03-07T19:46:21.7549044Z     <title>سوق أبو حمص | تسوق محلي سهل وسريع</title>
+2026-03-07T19:46:21.7549823Z     <script type="module" crossorigin="" src="/assets/index-sNFapy_q.js"></script>
+2026-03-07T19:46:21.7550794Z     <link rel="modulepreload" crossorigin="" href="/assets/react-router-rg7Oiks_.js">
+2026-03-07T19:46:21.7551552Z     <link rel="modulepreload" crossorigin="" href="/assets/query-t2kTbTCL.js">
+2026-03-07T19:46:21.7552536Z     <link rel="modulepreload" crossorigin="" href="/assets/supabase-DEvIEdQL.js">
+2026-03-07T19:46:21.7553601Z     <link rel="modulepreload" crossorigin="" href="/assets/radix-ui-3aMecnjA.js">
+2026-03-07T19:46:21.7554571Z     <link rel="modulepreload" crossorigin="" href="/assets/utils-CbK4XRml.js">
+2026-03-07T19:46:21.7555279Z     <link rel="modulepreload" crossorigin="" href="/assets/lucide-B0q5RO0r.js">
+2026-03-07T19:46:21.7555930Z     <link rel="modulepreload" crossorigin="" href="/assets/date-utils-D1iX10Yi.js">
+2026-03-07T19:46:21.7567930Z     <link rel="stylesheet" crossorigin="" href="/assets/index-6rwktZIN.css">
+2026-03-07T19:46:21.7571611Z   <link rel="modulepreload" as="script" crossorigin="" href="/assets/login-s4JdflQI.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/types-ja-K9Jgw.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/input-BbPtyQB3.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/label-D1dePZ6-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/card-DbQHgJxu.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/home-BO6UIfLi.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/skeleton-Gm0tRgqm.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/catalog.service-D7823fH-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/shop
+2026-03-07T19:46:21.7574989Z Puppeteer login script failed: TimeoutError: Waiting for selector `input[type="email"]` failed: Waiting failed: 15000ms exceeded
+2026-03-07T19:46:21.7576031Z     at new WaitTask (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/WaitTask.js:50:34)
+2026-03-07T19:46:21.7577226Z     at IsolatedWorld.waitForFunction (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Realm.js:25:26)
+2026-03-07T19:46:21.7578685Z     at PQueryHandler.waitFor (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/QueryHandler.js:170:95)
+2026-03-07T19:46:21.7579676Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-03-07T19:46:21.7580594Z     at async CdpFrame.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Frame.js:494:21)
+2026-03-07T19:46:21.7582203Z     at async CdpPage.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Page.js:1351:20)
+2026-03-07T19:46:21.7583778Z     at async module.exports (/home/runner/work/AboHommos/AboHommos/lighthouse-login.cjs:15:7)
+2026-03-07T19:46:21.7585583Z     at async PuppeteerManager.invokePuppeteerScriptForUrl (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/puppeteer-manager.js:113:5)
+2026-03-07T19:46:21.7587391Z     at async Object.runCommand (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/collect.js:251:7)
+2026-03-07T19:46:21.7588778Z     at async run (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/cli.js:100:7)
+2026-03-07T19:46:21.7609184Z Running Lighthouse 2 time(s) on http://127.0.0.1:4173/products/3acbed20-3250-48fd-ab7b-13129b788ba9a
+2026-03-07T19:46:33.4186010Z Run #1...done.
+2026-03-07T19:46:45.1682080Z Run #2...done.
+2026-03-07T19:47:02.7995499Z Puppeteer login failed to find elements. Page HTML:
+2026-03-07T19:47:02.8034844Z <!DOCTYPE html><html lang="ar" dir="rtl"><head>
+2026-03-07T19:47:02.8035371Z     <meta charset="UTF-8">
+2026-03-07T19:47:02.8035847Z     <link rel="icon" type="image/svg+xml" href="/vite.svg">
+2026-03-07T19:47:02.8036640Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-03-07T19:47:02.8038206Z     <meta name="description" content="سوق أبو حمص - منصة التسوق المحلية الأولى في المنطقة. تسوق من أفضل المتاجر المحلية واحصل على منتجاتك اليومية بسهولة.">
+2026-03-07T19:47:02.8039881Z     <meta name="keywords" content="سوق, تسوق, منتجات محلية, توصيل, أبو حمص">
+2026-03-07T19:47:02.8040994Z     <title>سوق أبو حمص | تسوق محلي سهل وسريع</title>
+2026-03-07T19:47:02.8041602Z     <script type="module" crossorigin="" src="/assets/index-sNFapy_q.js"></script>
+2026-03-07T19:47:02.8042196Z     <link rel="modulepreload" crossorigin="" href="/assets/react-router-rg7Oiks_.js">
+2026-03-07T19:47:02.8042761Z     <link rel="modulepreload" crossorigin="" href="/assets/query-t2kTbTCL.js">
+2026-03-07T19:47:02.8043310Z     <link rel="modulepreload" crossorigin="" href="/assets/supabase-DEvIEdQL.js">
+2026-03-07T19:47:02.8044064Z     <link rel="modulepreload" crossorigin="" href="/assets/radix-ui-3aMecnjA.js">
+2026-03-07T19:47:02.8045153Z     <link rel="modulepreload" crossorigin="" href="/assets/utils-CbK4XRml.js">
+2026-03-07T19:47:02.8046017Z     <link rel="modulepreload" crossorigin="" href="/assets/lucide-B0q5RO0r.js">
+2026-03-07T19:47:02.8046943Z     <link rel="modulepreload" crossorigin="" href="/assets/date-utils-D1iX10Yi.js">
+2026-03-07T19:47:02.8047808Z     <link rel="stylesheet" crossorigin="" href="/assets/index-6rwktZIN.css">
+2026-03-07T19:47:02.8052796Z   <link rel="modulepreload" as="script" crossorigin="" href="/assets/login-s4JdflQI.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/types-ja-K9Jgw.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/input-BbPtyQB3.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/label-D1dePZ6-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/card-DbQHgJxu.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/home-BO6UIfLi.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/skeleton-Gm0tRgqm.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/catalog.service-D7823fH-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/shop
+2026-03-07T19:47:02.8058043Z Puppeteer login script failed: TimeoutError: Waiting for selector `input[type="email"]` failed: Waiting failed: 15000ms exceeded
+2026-03-07T19:47:02.8059740Z     at new WaitTask (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/WaitTask.js:50:34)
+2026-03-07T19:47:02.8061665Z     at IsolatedWorld.waitForFunction (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Realm.js:25:26)
+2026-03-07T19:47:02.8063739Z     at PQueryHandler.waitFor (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/QueryHandler.js:170:95)
+2026-03-07T19:47:02.8065437Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-03-07T19:47:02.8067026Z     at async CdpFrame.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Frame.js:494:21)
+2026-03-07T19:47:02.8069226Z     at async CdpPage.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Page.js:1351:20)
+2026-03-07T19:47:02.8071115Z     at async module.exports (/home/runner/work/AboHommos/AboHommos/lighthouse-login.cjs:15:7)
+2026-03-07T19:47:02.8072774Z     at async PuppeteerManager.invokePuppeteerScriptForUrl (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/puppeteer-manager.js:113:5)
+2026-03-07T19:47:02.8074832Z     at async Object.runCommand (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/collect.js:251:7)
+2026-03-07T19:47:02.8076220Z     at async run (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/cli.js:100:7)
+2026-03-07T19:47:02.8109279Z Running Lighthouse 2 time(s) on http://127.0.0.1:4173/cart
+2026-03-07T19:47:14.8643996Z Run #1...done.
+2026-03-07T19:47:26.8556958Z Run #2...done.
+2026-03-07T19:47:43.9025739Z Puppeteer login failed to find elements. Page HTML:
+2026-03-07T19:47:43.9066895Z <!DOCTYPE html><html lang="ar" dir="rtl"><head>
+2026-03-07T19:47:43.9067392Z     <meta charset="UTF-8">
+2026-03-07T19:47:43.9067900Z     <link rel="icon" type="image/svg+xml" href="/vite.svg">
+2026-03-07T19:47:43.9068554Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-03-07T19:47:43.9070229Z     <meta name="description" content="سوق أبو حمص - منصة التسوق المحلية الأولى في المنطقة. تسوق من أفضل المتاجر المحلية واحصل على منتجاتك اليومية بسهولة.">
+2026-03-07T19:47:43.9071439Z     <meta name="keywords" content="سوق, تسوق, منتجات محلية, توصيل, أبو حمص">
+2026-03-07T19:47:43.9072209Z     <title>سوق أبو حمص | تسوق محلي سهل وسريع</title>
+2026-03-07T19:47:43.9073018Z     <script type="module" crossorigin="" src="/assets/index-sNFapy_q.js"></script>
+2026-03-07T19:47:43.9073927Z     <link rel="modulepreload" crossorigin="" href="/assets/react-router-rg7Oiks_.js">
+2026-03-07T19:47:43.9075021Z     <link rel="modulepreload" crossorigin="" href="/assets/query-t2kTbTCL.js">
+2026-03-07T19:47:43.9076029Z     <link rel="modulepreload" crossorigin="" href="/assets/supabase-DEvIEdQL.js">
+2026-03-07T19:47:43.9077059Z     <link rel="modulepreload" crossorigin="" href="/assets/radix-ui-3aMecnjA.js">
+2026-03-07T19:47:43.9078061Z     <link rel="modulepreload" crossorigin="" href="/assets/utils-CbK4XRml.js">
+2026-03-07T19:47:43.9079068Z     <link rel="modulepreload" crossorigin="" href="/assets/lucide-B0q5RO0r.js">
+2026-03-07T19:47:43.9080054Z     <link rel="modulepreload" crossorigin="" href="/assets/date-utils-D1iX10Yi.js">
+2026-03-07T19:47:43.9081021Z     <link rel="stylesheet" crossorigin="" href="/assets/index-6rwktZIN.css">
+2026-03-07T19:47:43.9086900Z   <link rel="modulepreload" as="script" crossorigin="" href="/assets/login-s4JdflQI.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/types-ja-K9Jgw.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/input-BbPtyQB3.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/label-D1dePZ6-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/card-DbQHgJxu.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/home-BO6UIfLi.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/skeleton-Gm0tRgqm.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/catalog.service-D7823fH-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/shop
+2026-03-07T19:47:43.9092484Z Puppeteer login script failed: TimeoutError: Waiting for selector `input[type="email"]` failed: Waiting failed: 15000ms exceeded
+2026-03-07T19:47:43.9093822Z     at new WaitTask (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/WaitTask.js:50:34)
+2026-03-07T19:47:43.9095418Z     at IsolatedWorld.waitForFunction (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Realm.js:25:26)
+2026-03-07T19:47:43.9096646Z     at PQueryHandler.waitFor (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/QueryHandler.js:170:95)
+2026-03-07T19:47:43.9097795Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-03-07T19:47:43.9098712Z     at async CdpFrame.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Frame.js:494:21)
+2026-03-07T19:47:43.9099897Z     at async CdpPage.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Page.js:1351:20)
+2026-03-07T19:47:43.9100796Z     at async module.exports (/home/runner/work/AboHommos/AboHommos/lighthouse-login.cjs:15:7)
+2026-03-07T19:47:43.9101747Z     at async PuppeteerManager.invokePuppeteerScriptForUrl (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/puppeteer-manager.js:113:5)
+2026-03-07T19:47:43.9102898Z     at async Object.runCommand (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/collect.js:251:7)
+2026-03-07T19:47:43.9103655Z     at async run (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/cli.js:100:7)
+2026-03-07T19:47:43.9135605Z Running Lighthouse 2 time(s) on http://127.0.0.1:4173/checkout
+2026-03-07T19:47:57.5914833Z Run #1...done.
+2026-03-07T19:48:11.2671085Z Run #2...done.
+2026-03-07T19:48:28.8722444Z Puppeteer login failed to find elements. Page HTML:
+2026-03-07T19:48:28.8760593Z <!DOCTYPE html><html lang="ar" dir="rtl"><head>
+2026-03-07T19:48:28.8761117Z     <meta charset="UTF-8">
+2026-03-07T19:48:28.8761462Z     <link rel="icon" type="image/svg+xml" href="/vite.svg">
+2026-03-07T19:48:28.8762249Z     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026-03-07T19:48:28.8763937Z     <meta name="description" content="سوق أبو حمص - منصة التسوق المحلية الأولى في المنطقة. تسوق من أفضل المتاجر المحلية واحصل على منتجاتك اليومية بسهولة.">
+2026-03-07T19:48:28.8765512Z     <meta name="keywords" content="سوق, تسوق, منتجات محلية, توصيل, أبو حمص">
+2026-03-07T19:48:28.8766336Z     <title>سوق أبو حمص | تسوق محلي سهل وسريع</title>
+2026-03-07T19:48:28.8767113Z     <script type="module" crossorigin="" src="/assets/index-sNFapy_q.js"></script>
+2026-03-07T19:48:28.8767960Z     <link rel="modulepreload" crossorigin="" href="/assets/react-router-rg7Oiks_.js">
+2026-03-07T19:48:28.8768778Z     <link rel="modulepreload" crossorigin="" href="/assets/query-t2kTbTCL.js">
+2026-03-07T19:48:28.8769696Z     <link rel="modulepreload" crossorigin="" href="/assets/supabase-DEvIEdQL.js">
+2026-03-07T19:48:28.8770577Z     <link rel="modulepreload" crossorigin="" href="/assets/radix-ui-3aMecnjA.js">
+2026-03-07T19:48:28.8771421Z     <link rel="modulepreload" crossorigin="" href="/assets/utils-CbK4XRml.js">
+2026-03-07T19:48:28.8772255Z     <link rel="modulepreload" crossorigin="" href="/assets/lucide-B0q5RO0r.js">
+2026-03-07T19:48:28.8773153Z     <link rel="modulepreload" crossorigin="" href="/assets/date-utils-D1iX10Yi.js">
+2026-03-07T19:48:28.8774630Z     <link rel="stylesheet" crossorigin="" href="/assets/index-6rwktZIN.css">
+2026-03-07T19:48:28.8779447Z   <link rel="modulepreload" as="script" crossorigin="" href="/assets/login-s4JdflQI.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/types-ja-K9Jgw.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/input-BbPtyQB3.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/label-D1dePZ6-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/card-DbQHgJxu.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/home-BO6UIfLi.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/skeleton-Gm0tRgqm.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/catalog.service-D7823fH-.js"><link rel="modulepreload" as="script" crossorigin="" href="/assets/shop
+2026-03-07T19:48:28.8784982Z Puppeteer login script failed: TimeoutError: Waiting for selector `input[type="email"]` failed: Waiting failed: 15000ms exceeded
+2026-03-07T19:48:28.8786765Z     at new WaitTask (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/WaitTask.js:50:34)
+2026-03-07T19:48:28.8788672Z     at IsolatedWorld.waitForFunction (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Realm.js:25:26)
+2026-03-07T19:48:28.8790819Z     at PQueryHandler.waitFor (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/common/QueryHandler.js:170:95)
+2026-03-07T19:48:28.8792384Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-03-07T19:48:28.8794003Z     at async CdpFrame.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Frame.js:494:21)
+2026-03-07T19:48:28.8796344Z     at async CdpPage.waitForSelector (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/node_modules/puppeteer-core/lib/cjs/puppeteer/api/Page.js:1351:20)
+2026-03-07T19:48:28.8797995Z     at async module.exports (/home/runner/work/AboHommos/AboHommos/lighthouse-login.cjs:15:7)
+2026-03-07T19:48:28.8799699Z     at async PuppeteerManager.invokePuppeteerScriptForUrl (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/puppeteer-manager.js:113:5)
+2026-03-07T19:48:28.8801484Z     at async Object.runCommand (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/collect/collect.js:251:7)
+2026-03-07T19:48:28.8802770Z     at async run (/opt/hostedtoolcache/node/18.20.8/x64/lib/node_modules/@lhci/cli/src/cli.js:100:7)
+2026-03-07T19:48:28.8828288Z Running Lighthouse 2 time(s) on http://127.0.0.1:4173/account
+2026-03-07T19:48:40.5787359Z Run #1...done.
+2026-03-07T19:48:52.3263685Z Run #2...done.
+2026-03-07T19:48:52.3266663Z Done running Lighthouse!
+2026-03-07T19:48:52.3436095Z 
+2026-03-07T19:48:52.7172328Z Checking assertions against 8 URL(s), 16 total run(s)
+2026-03-07T19:48:52.7172831Z 
+2026-03-07T19:48:52.7175912Z 1 result(s) for [1mhttp://127.0.0.1:4173/[0m :
+2026-03-07T19:48:52.7176360Z 
+2026-03-07T19:48:52.7176966Z   ⚠️  [1mcategories[0m.accessibility warning for [1mminScore[0m assertion
+2026-03-07T19:48:52.7177741Z         expected: >=[32m0.9[0m
+2026-03-07T19:48:52.7178233Z            found: [31m0.87[0m
+2026-03-07T19:48:52.7178725Z       [2mall values: 0.87, 0.87[0m
+2026-03-07T19:48:52.7179013Z 
+2026-03-07T19:48:52.7179433Z 1 result(s) for [1mhttp://127.0.0.1:4173/shops[0m :
+2026-03-07T19:48:52.7179822Z 
+2026-03-07T19:48:52.7180336Z   ⚠️  [1mcategories[0m.accessibility warning for [1mminScore[0m assertion
+2026-03-07T19:48:52.7181058Z         expected: >=[32m0.9[0m
+2026-03-07T19:48:52.7181613Z            found: [31m0.87[0m
+2026-03-07T19:48:52.7182106Z       [2mall values: 0.87, 0.87[0m
+2026-03-07T19:48:52.7182398Z 
+2026-03-07T19:48:52.7248812Z 2 result(s) for [1mhttp://127.0.0.1:4173/shops/shop-1769811882795-7ws25h[0m :
+2026-03-07T19:48:52.7249812Z 
+2026-03-07T19:48:52.7250402Z   ⚠️  [1mcategories[0m.performance warning for [1mminScore[0m assertion
+2026-03-07T19:48:52.7251234Z         expected: >=[32m0.8[0m
+2026-03-07T19:48:52.7251802Z            found: [31m0.77[0m
+2026-03-07T19:48:52.7252368Z       [2mall values: 0.75, 0.77[0m
+2026-03-07T19:48:52.7252666Z 
+2026-03-07T19:48:52.7252675Z 
+2026-03-07T19:48:52.7253249Z   ⚠️  [1mcategories[0m.accessibility warning for [1mminScore[0m assertion
+2026-03-07T19:48:52.7254079Z         expected: >=[32m0.9[0m
+2026-03-07T19:48:52.7254891Z            found: [31m0.89[0m
+2026-03-07T19:48:52.7255397Z       [2mall values: 0.89, 0.89[0m
+2026-03-07T19:48:52.7255704Z 
+2026-03-07T19:48:52.7256211Z 2 result(s) for [1mhttp://127.0.0.1:4173/products[0m :
+2026-03-07T19:48:52.7256625Z 
+2026-03-07T19:48:52.7257196Z   ⚠️  [1mcategories[0m.performance warning for [1mminScore[0m assertion
+2026-03-07T19:48:52.7258285Z         expected: >=[32m0.8[0m
+2026-03-07T19:48:52.7258890Z            found: [31m0.76[0m
+2026-03-07T19:48:52.7259436Z       [2mall values: 0.76, 0.75[0m
+2026-03-07T19:48:52.7259754Z 
+2026-03-07T19:48:52.7259764Z 
+2026-03-07T19:48:52.7260326Z   ⚠️  [1mcategories[0m.accessibility warning for [1mminScore[0m assertion
+2026-03-07T19:48:52.7261139Z         expected: >=[32m0.9[0m
+2026-03-07T19:48:52.7261677Z            found: [31m0.89[0m
+2026-03-07T19:48:52.7262187Z       [2mall values: 0.89, 0.89[0m
+2026-03-07T19:48:52.7262468Z 
+2026-03-07T19:48:52.7263283Z 1 result(s) for [1mhttp://127.0.0.1:4173/products/3acbed20-3250-48fd-ab7b-13129b788ba9a[0m :
+2026-03-07T19:48:52.7263942Z 
+2026-03-07T19:48:52.7264674Z   ⚠️  [1mcategories[0m.accessibility warning for [1mminScore[0m assertion
+2026-03-07T19:48:52.7265458Z         expected: >=[32m0.9[0m
+2026-03-07T19:48:52.7265795Z            found: [31m0.85[0m
+2026-03-07T19:48:52.7266088Z       [2mall values: 0.85, 0.85[0m
+2026-03-07T19:48:52.7266252Z 
+2026-03-07T19:48:52.7266534Z 1 result(s) for [1mhttp://127.0.0.1:4173/cart[0m :
+2026-03-07T19:48:52.7266764Z 
+2026-03-07T19:48:52.7267067Z   ⚠️  [1mcategories[0m.accessibility warning for [1mminScore[0m assertion
+2026-03-07T19:48:52.7267496Z         expected: >=[32m0.9[0m
+2026-03-07T19:48:52.7267775Z            found: [31m0.87[0m
+2026-03-07T19:48:52.7268052Z       [2mall values: 0.87, 0.87[0m
+2026-03-07T19:48:52.7268211Z 
+2026-03-07T19:48:52.7268468Z 1 result(s) for [1mhttp://127.0.0.1:4173/checkout[0m :
+2026-03-07T19:48:52.7268690Z 
+2026-03-07T19:48:52.7268972Z   ⚠️  [1mcategories[0m.accessibility warning for [1mminScore[0m assertion
+2026-03-07T19:48:52.7269376Z         expected: >=[32m0.9[0m
+2026-03-07T19:48:52.7269646Z            found: [31m0.87[0m
+2026-03-07T19:48:52.7269919Z       [2mall values: 0.87, 0.87[0m
+2026-03-07T19:48:52.7270077Z 
+2026-03-07T19:48:52.7270313Z 1 result(s) for [1mhttp://127.0.0.1:4173/account[0m :
+2026-03-07T19:48:52.7270532Z 
+2026-03-07T19:48:52.7270815Z   ⚠️  [1mcategories[0m.accessibility warning for [1mminScore[0m assertion
+2026-03-07T19:48:52.7271417Z         expected: >=[32m0.9[0m
+2026-03-07T19:48:52.7271872Z            found: [31m0.85[0m
+2026-03-07T19:48:52.7272337Z       [2mall values: 0.85, 0.85[0m
+2026-03-07T19:48:52.7272613Z 
+2026-03-07T19:48:52.7272780Z All results processed!
+2026-03-07T19:48:52.7338237Z 
+2026-03-07T19:48:54.4345732Z Uploading median LHR of http://127.0.0.1:4173/...success!
+2026-03-07T19:48:54.4347807Z Open the report at https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1772912933957-17557.report.html
+2026-03-07T19:48:54.8639321Z Uploading median LHR of http://127.0.0.1:4173/shops...success!
+2026-03-07T19:48:54.8641259Z Open the report at https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1772912934607-20545.report.html
+2026-03-07T19:48:55.2489222Z Uploading median LHR of http://127.0.0.1:4173/shops/shop-1769811882795-7ws25h...success!
+2026-03-07T19:48:55.2491938Z Open the report at https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1772912935033-26399.report.html
+2026-03-07T19:48:55.6818106Z Uploading median LHR of http://127.0.0.1:4173/products...success!
+2026-03-07T19:48:55.6820406Z Open the report at https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1772912935408-6269.report.html
+2026-03-07T19:48:56.1271066Z Uploading median LHR of http://127.0.0.1:4173/products/3acbed20-3250-48fd-ab7b-13129b788ba9a...success!
+2026-03-07T19:48:56.1273792Z Open the report at https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1772912935850-25246.report.html
+2026-03-07T19:48:56.4601533Z Uploading median LHR of http://127.0.0.1:4173/cart...success!
+2026-03-07T19:48:56.4603933Z Open the report at https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1772912936300-48663.report.html
+2026-03-07T19:48:56.7935705Z Uploading median LHR of http://127.0.0.1:4173/checkout...success!
+2026-03-07T19:48:56.7938353Z Open the report at https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1772912936632-70916.report.html
+2026-03-07T19:48:57.4192365Z Uploading median LHR of http://127.0.0.1:4173/account...success!
+2026-03-07T19:48:57.4194269Z Open the report at https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1772912936960-68451.report.html
+2026-03-07T19:48:57.4247822Z GitHub token found, attempting to set status...
+2026-03-07T19:48:57.5669714Z GitHub responded with 422
+2026-03-07T19:48:57.5670410Z {"success":false}
+2026-03-07T19:48:57.5670678Z 
+2026-03-07T19:48:57.7379492Z GitHub responded with 422
+2026-03-07T19:48:57.7380151Z {"success":false}
+2026-03-07T19:48:57.7380463Z 
+2026-03-07T19:48:57.8796007Z GitHub responded with 422
+2026-03-07T19:48:57.8796690Z {"success":false}
+2026-03-07T19:48:57.8796972Z 
+2026-03-07T19:48:58.0118266Z GitHub responded with 422
+2026-03-07T19:48:58.0118933Z {"success":false}
+2026-03-07T19:48:58.0119254Z 
+2026-03-07T19:48:58.3885318Z GitHub responded with 422
+2026-03-07T19:48:58.3885748Z {"success":false}
+2026-03-07T19:48:58.3885941Z 
+2026-03-07T19:48:58.5681898Z GitHub responded with 422
+2026-03-07T19:48:58.5682344Z {"success":false}
+2026-03-07T19:48:58.5682548Z 
+2026-03-07T19:48:58.6843789Z GitHub responded with 422
+2026-03-07T19:48:58.6844701Z {"success":false}
+2026-03-07T19:48:58.6844977Z 
+2026-03-07T19:48:58.8237167Z GitHub responded with 422
+2026-03-07T19:48:58.8237547Z {"success":false}
+2026-03-07T19:48:58.8237718Z 
+2026-03-07T19:48:58.8361895Z 
+2026-03-07T19:48:58.8362280Z Done running autorun.
+2026-03-07T19:48:58.8513850Z Post job cleanup.
+2026-03-07T19:48:59.0031982Z Cache hit occurred on the primary key node-cache-Linux-npm-d538ffa73c318fe47e4a8d1257736e1a3cb4d6f7a10328c82951f91003dc907a, not saving cache.
+2026-03-07T19:48:59.0168384Z Post job cleanup.
+2026-03-07T19:48:59.0968231Z [command]/usr/bin/git version
+2026-03-07T19:48:59.1007760Z git version 2.53.0
+2026-03-07T19:48:59.1053387Z Temporarily overriding HOME='/home/runner/work/_temp/2d2af390-9857-4e92-b02c-57772233261c' before making global git config changes
+2026-03-07T19:48:59.1055135Z Adding repository directory to the temporary git global config as a safe directory
+2026-03-07T19:48:59.1057531Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/AboHommos/AboHommos
+2026-03-07T19:48:59.1092397Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-03-07T19:48:59.1124535Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-03-07T19:48:59.1378188Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-03-07T19:48:59.1401626Z http.https://github.com/.extraheader
+2026-03-07T19:48:59.1414945Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-03-07T19:48:59.1447852Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-03-07T19:48:59.1804762Z Cleaning up orphan processes
+2026-03-07T19:48:59.2101615Z Terminate orphan process: pid (2257) (npm run preview --host 127.0.0.1 --port 4173)
+2026-03-07T19:48:59.2126688Z Terminate orphan process: pid (2280) (sh)
+2026-03-07T19:48:59.2149744Z Terminate orphan process: pid (2281) (node)
+2026-03-07T19:48:59.2187761Z Terminate orphan process: pid (2292) (esbuild)

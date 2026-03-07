@@ -15,6 +15,9 @@ export function CourierAccount() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [history, setHistory] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
   const [stats, setStats] = useState<{ monthly_earnings: number; monthly_count: number } | null>(null);
   const [finance, setFinance] = useState<DriverPersonalFinancials | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,6 +48,12 @@ export function CourierAccount() {
   if (loading) {
     return <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin w-8 h-8" /></div>;
   }
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentHistory = history.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(history.length / itemsPerPage);
 
   return (
     <div className="max-w-md mx-auto p-4 space-y-6 pb-20">
@@ -122,26 +131,52 @@ export function CourierAccount() {
                     لا يوجد سجل طلبات سابق
                 </div>
             ) : (
-                history.map((order) => (
-                    <Card key={order.id} className="overflow-hidden">
-                        <div className="flex justify-between items-center p-3 text-sm bg-muted/40">
-                             <span className="font-mono font-bold">#{order.order_number}</span>
-                             <Badge variant={order.status === 'DELIVERED' ? 'default' : 'destructive'}>
-                                {order.status === 'DELIVERED' ? 'تم التسليم' : 'تم الإلغاء'}
-                             </Badge>
+                <div className="space-y-3">
+                    {currentHistory.map((order) => (
+                        <Card key={order.id} className="overflow-hidden">
+                            <div className="flex justify-between items-center p-3 text-sm bg-muted/40">
+                                 <span className="font-mono font-bold">#{order.order_number}</span>
+                                 <Badge variant={order.status === 'DELIVERED' ? 'default' : 'destructive'}>
+                                    {order.status === 'DELIVERED' ? 'تم التسليم' : 'تم الإلغاء'}
+                                 </Badge>
+                            </div>
+                            <div className="p-3 text-sm space-y-1">
+                                 <div className="flex justify-between">
+                                    <span className="text-muted-foreground">التاريخ:</span>
+                                    <span>{new Date(order.created_at).toLocaleDateString('ar-EG')}</span>
+                                 </div>
+                                 <div className="flex justify-between">
+                                    <span className="text-muted-foreground">ربح التوصيل:</span>
+                                    <span className="font-medium text-green-600">+{formatPrice(order.total_delivery_fee)}</span>
+                                 </div>
+                            </div>
+                        </Card>
+                    ))}
+                    
+                    {totalPages > 1 && (
+                        <div className="flex justify-between items-center pt-4 mt-4 border-t border-muted/50">
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                السابق
+                            </Button>
+                            <span className="text-sm font-medium text-muted-foreground">
+                                صفحة {currentPage} من {totalPages}
+                            </span>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                التالي
+                            </Button>
                         </div>
-                        <div className="p-3 text-sm space-y-1">
-                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">التاريخ:</span>
-                                <span>{new Date(order.created_at).toLocaleDateString('ar-EG')}</span>
-                             </div>
-                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">ربح التوصيل:</span>
-                                <span className="font-medium text-green-600">+{formatPrice(order.total_delivery_fee)}</span>
-                             </div>
-                        </div>
-                    </Card>
-                ))
+                    )}
+                </div>
             )}
         </div>
       </div>

@@ -234,11 +234,9 @@ export default function RegisterPage() {
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center">
-              <Store className="w-7 h-7 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-2xl">{AR.app.name}</span>
+          <Link to="/" className="inline-flex flex-col items-center gap-3 mb-6">
+            <img src="/logo.png" alt="Shopydash Logo" className="w-16 h-16 object-contain" />
+            <span className="font-bold text-3xl text-foreground mt-2" style={{ fontFamily: "'Trebuchet MS', 'Segoe UI', sans-serif", letterSpacing: "-1px" }}>Shopydash</span>
           </Link>
         </div>
 

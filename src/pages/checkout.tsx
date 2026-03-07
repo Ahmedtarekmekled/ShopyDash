@@ -524,7 +524,7 @@ export default function CheckoutPage() {
 
                     <Button
                       type="button"
-                      className="w-full"
+                      className="w-full hidden md:flex"
                       size="lg"
                       onClick={() => goToStep("payment")}
                     >
@@ -591,7 +591,7 @@ export default function CheckoutPage() {
                       <Button type="button" variant="outline" onClick={() => setCurrentStep("delivery")} className="gap-2">
                         رجوع
                       </Button>
-                      <Button type="button" className="flex-1 gap-2" size="lg" onClick={() => goToStep("review")}>
+                      <Button type="button" className="flex-1 gap-2 hidden md:flex" size="lg" onClick={() => goToStep("review")}>
                         مراجعة الطلب
                         <ArrowLeft className="w-4 h-4" />
                       </Button>
@@ -708,7 +708,7 @@ export default function CheckoutPage() {
                       <Button type="button" variant="outline" onClick={() => setCurrentStep("payment")}>
                         رجوع
                       </Button>
-                      <Button type="submit" className="flex-1 gap-2" size="lg" loading={isLoading}>
+                      <Button type="submit" className="flex-1 gap-2 hidden md:flex" size="lg" loading={isLoading}>
                         <CheckCircle className="w-5 h-5" />
                         تأكيد الطلب
                       </Button>
