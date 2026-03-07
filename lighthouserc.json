@@ -1,0 +1,33 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "npm run build && npm run preview",
+      "puppeteerScript": "./lighthouse-login.cjs",
+      "url": [
+        "http://localhost:4173/",
+        "http://localhost:4173/shops",
+        "http://localhost:4173/shops/shop-1769811882795-7ws25h",
+        "http://localhost:4173/products",
+        "http://localhost:4173/products/3acbed20-3250-48fd-ab7b-13129b788ba9a",
+        "http://localhost:4173/cart",
+        "http://localhost:4173/checkout",
+        "http://localhost:4173/account"
+      ],
+      "numberOfRuns": 2,
+      "settings": {
+        "preset": "mobile"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": ["warn", {"minScore": 0.8}],
+        "categories:accessibility": ["warn", {"minScore": 0.9}],
+        "categories:best-practices": ["warn", {"minScore": 0.9}],
+        "categories:seo": ["warn", {"minScore": 0.9}]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

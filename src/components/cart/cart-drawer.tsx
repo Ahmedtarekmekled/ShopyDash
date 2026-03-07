@@ -18,6 +18,10 @@ export function CartDropdown({ isOpen, onClose }: CartDropdownProps) {
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Hide on cart, checkout pages, and product details page (where AddToCart is sticky)
+  const hiddenPaths = ["/cart", "/checkout"];
+  const isProductDetailsPage = location.pathname.startsWith("/products/");
+
   // Close on route change
   useEffect(() => {
     return () => onClose();
@@ -43,7 +47,15 @@ export function CartDropdown({ isOpen, onClose }: CartDropdownProps) {
 
   return (
     <>
-      {/* Dropdown Panel - No Backdrop/Overlay */}
+      {/* Backdrop to dim the background and cover sticky elements */}
+      <div 
+         className={cn(
+           "fixed inset-0 bg-black/60 z-[48] top-16 backdrop-blur-sm",
+           "animate-in fade-in duration-200"
+         )}
+         onClick={onClose}
+      />
+      {/* Dropdown Panel */}
       <div
         ref={dropdownRef}
         dir="rtl"

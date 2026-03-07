@@ -11,7 +11,7 @@ export function MobileCartBar() {
 
   // Hide on cart, checkout pages, and product details page (where AddToCart is sticky)
   const hiddenPaths = ["/cart", "/checkout"];
-  const isProductDetailsPage = location.pathname.match(/^\/products\/[a-zA-Z0-9_-]+/);
+  const isProductDetailsPage = location.pathname.startsWith('/products/');
   
   if (cartItemCount === 0 || hiddenPaths.includes(location.pathname) || isProductDetailsPage) {
     return null;
