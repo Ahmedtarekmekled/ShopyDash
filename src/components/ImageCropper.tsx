@@ -59,7 +59,7 @@ export function ImageCropper({ open, onClose, imageSrc, onCropComplete, aspect =
       width: (crop.width / 100) * image.width * scaleX,
       height: (crop.height / 100) * image.height * scaleY,
     };
-
+    
     // Use percentage-based crop
     if (crop.unit === "px") {
       pixelCrop.x = crop.x * scaleX;
@@ -68,11 +68,30 @@ export function ImageCropper({ open, onClose, imageSrc, onCropComplete, aspect =
       pixelCrop.height = crop.height * scaleY;
     }
 
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
+    const MAX_DIMENSION = 1200; // Limit max size to prevent huge files 
+    let finalWidth = pixelCrop.width;
+    let finalHeight = pixelCrop.height;
+    
+    // Scale down if the cropped region is larger than MAX_DIMENSION
+    if (finalWidth > MAX_DIMENSION || finalHeight > MAX_DIMENSION) {
+      if (finalWidth > finalHeight) {
+        finalHeight = Math.round((MAX_DIMENSION / finalWidth) * finalHeight);
+        finalWidth = MAX_DIMENSION;
+      } else {
+        finalWidth = Math.round((MAX_DIMENSION / finalHeight) * finalWidth);
+        finalHeight = MAX_DIMENSION;
+      }
+    }
 
-    const ctx = canvas.getContext("2d");
+    canvas.width = finalWidth;
+    canvas.height = finalHeight;
+
+    const ctx = canvas.getContext("2d", { alpha: false }); // Disable alpha for jpeg
     if (!ctx) return;
+    
+     // Ensure white background for transparent images converted to jpeg
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.drawImage(
       image,
@@ -82,8 +101,8 @@ export function ImageCropper({ open, onClose, imageSrc, onCropComplete, aspect =
       pixelCrop.height,
       0,
       0,
-      pixelCrop.width,
-      pixelCrop.height
+      finalWidth,
+      finalHeight
     );
 
     canvas.toBlob(
@@ -95,7 +114,7 @@ export function ImageCropper({ open, onClose, imageSrc, onCropComplete, aspect =
         }
       },
       "image/jpeg",
-      0.92
+      0.7 // Set compression to 70% instead of 92% to drastically reduce file sizes
     );
   }, [crop, onCropComplete, onClose]);
 

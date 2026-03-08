@@ -226,7 +226,7 @@ export default function HomePage() {
                       <div className="aspect-square relative overflow-hidden bg-muted">
                         {product.image_url ? (
                           <img
-                            src={product.image_url}
+                            src={`${product.image_url}?width=150&quality=80`}
                             alt={product.name}
                             className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                             loading="lazy"
