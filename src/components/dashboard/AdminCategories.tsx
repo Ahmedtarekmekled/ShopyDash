@@ -146,10 +146,25 @@ export function AdminCategories() {
     setIsDialogOpen(true);
   };
 
+  const extractStoragePath = (url: string, bucket: string): string | null => {
+    try {
+      const parts = url.split(`/storage/v1/object/public/${bucket}/`);
+      return parts.length > 1 ? decodeURIComponent(parts[1]) : null;
+    } catch {
+      return null;
+    }
+  };
+
   const handleDelete = async (category: Category) => {
     if (!confirm(`هل أنت متأكد من حذف ${category.name}؟`)) return;
 
     try {
+      // First, delete image from storage if it exists
+      if (category.image_url) {
+         const path = extractStoragePath(category.image_url, 'categories');
+         if (path) await supabase.storage.from('categories').remove([path]);
+      }
+      
       await categoriesService.delete(category.id);
       notify.success("تم الحذف بنجاح");
       
@@ -435,6 +450,12 @@ function CategoryDialog({
             // Handle Image Upload Logic
             if (activeTab === 'image' && mode === 'SHOP') {
                 if (imageFile) {
+                    // Delete old image if we are replacing it
+                    if (category?.image_url) {
+                        const path = category.image_url.split('/storage/v1/object/public/categories/')[1];
+                        if (path) await supabase.storage.from("categories").remove([decodeURIComponent(path)]);
+                    }
+                    
                     const fileExt = imageFile.name.split(".").pop();
                     const fileName = `cat_${Date.now()}.${fileExt}`;
                     const { error: uploadError } = await supabase.storage

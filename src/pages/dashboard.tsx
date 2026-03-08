@@ -1291,10 +1291,20 @@ function DashboardProducts() {
 
     setIsSaving(true);
     try {
-      let imageUrl = editingProduct?.image_url || null;
+      // Base the initial URL on whether the preview still exists (handles deletions)
+      let imageUrl = imagePreview === null && !imageFile ? null : editingProduct?.image_url || null;
 
       // Upload image if a new one is selected
       if (imageFile) {
+        // Delete old image if replacing
+        if (editingProduct?.image_url) {
+           const parts = editingProduct.image_url.split('/storage/v1/object/public/products/');
+           if (parts.length > 1) {
+             const path = decodeURIComponent(parts[1]);
+             await deleteImage('products', path);
+           }
+        }
+        
         setIsUploading(true);
         const fileName = `${shop.id}/${Date.now()}-${imageFile.name}`;
         const { url, error: uploadError } = await uploadImage(
@@ -1355,6 +1365,16 @@ function DashboardProducts() {
     if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
 
     try {
+      // Find product to delete its image
+      const productToDelete = products.find(p => p.id === productId);
+      if (productToDelete?.image_url) {
+         const parts = productToDelete.image_url.split('/storage/v1/object/public/products/');
+         if (parts.length > 1) {
+             const path = decodeURIComponent(parts[1]);
+             await deleteImage('products', path);
+         }
+      }
+
       await productsService.delete(productId);
       notify.success("تم حذف المنتج");
       loadData();
@@ -2282,7 +2302,10 @@ function DashboardSettings() {
           longitude: userShop.longitude || 31.0004, 
       });
       if (userShop.logo_url) setLogoPreview(userShop.logo_url);
+      else setLogoPreview(null);
+      
       if (userShop.cover_url) setCoverPreview(userShop.cover_url);
+      else setCoverPreview(null);
     }
   }, [userShop]);
 
@@ -2373,7 +2396,7 @@ function DashboardSettings() {
       }
 
       // Clear from DB
-      await supabase.from('shops').update({ [dbField]: null }).eq('id', shop.id);
+      await shopsService.update(shop.id, { [dbField]: null });
 
       // Update local state
       if (type === 'logo') {
@@ -2415,8 +2438,9 @@ function DashboardSettings() {
     setIsUploading(true);
 
     try {
-      let logoUrl = shop?.logo_url;
-      let coverUrl = shop?.cover_url;
+      // Base the initial URLs on whether the previews still exist (handles deletions)
+      let logoUrl = logoPreview === null && !logoFile ? null : shop?.logo_url || null;
+      let coverUrl = coverPreview === null && !coverFile ? null : shop?.cover_url || null;
 
       // Upload Images if changed (and clean up old ones from storage)
       if (logoFile) {
@@ -2427,6 +2451,7 @@ function DashboardSettings() {
         }
         logoUrl = await uploadShopImage(logoFile, "shop-logos");
       }
+      
       if (coverFile) {
         // Delete old cover from storage before uploading new one
         if (shop?.cover_url) {

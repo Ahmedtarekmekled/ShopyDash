@@ -1,0 +1,7 @@
+Report from Mar 8, 2026, 4:00:47AM
+Score: 73
+FCP: 3.4 s
+LCP: 5.3 s
+TBT: 10 ms
+CLS: 0.016
+Speed Index: 3.4 s
