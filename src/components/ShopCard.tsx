@@ -59,7 +59,7 @@ export function ShopCard({ shop, className, index = 0 }: ShopCardProps) {
           <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-muted flex-shrink-0 transition-transform duration-300 hover:scale-110 border shadow-sm">
             {shop.logo_url ? (
               <img
-                src={`${shop.logo_url}?width=100&quality=80`}
+                src={shop.logo_url}
                 alt={shop.name}
                 className="w-full h-full object-cover"
                 loading="lazy"
