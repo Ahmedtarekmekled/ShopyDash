@@ -12,7 +12,10 @@ import "./index.css";
 // Initialize Google Analytics (Requires VITE_GA_MEASUREMENT_ID in .env)
 const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
 if (gaMeasurementId) {
-  ReactGA.initialize(gaMeasurementId);
+  // Defer initialization to avoid main-thread blocking during Initial Page Load
+  setTimeout(() => {
+    ReactGA.initialize(gaMeasurementId);
+  }, 2500);
 } else {
   console.warn("Google Analytics Tracking ID missing");
 }

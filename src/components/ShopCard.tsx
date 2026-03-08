@@ -62,6 +62,8 @@ export function ShopCard({ shop, className, index = 0 }: ShopCardProps) {
                 src={shop.logo_url}
                 alt={shop.name}
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">

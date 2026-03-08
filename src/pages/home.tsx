@@ -229,6 +229,8 @@ export default function HomePage() {
                             src={product.image_url}
                             alt={product.name}
                             className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                            loading="lazy"
+                            decoding="async"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
