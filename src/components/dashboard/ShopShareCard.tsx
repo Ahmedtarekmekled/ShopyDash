@@ -9,6 +9,7 @@ import { notify } from "@/lib/notify";
 interface ShopShareCardProps {
   shop: {
     id: string;
+    slug: string;
     name: string;
     logo_url?: string | null;
     is_active?: boolean;
@@ -20,7 +21,7 @@ export function ShopShareCard({ shop }: ShopShareCardProps) {
   const promoRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const shopUrl = `${window.location.origin}/shops/${shop.id}`;
+  const shopUrl = `${window.location.origin}/shops/${shop.slug}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shopUrl);

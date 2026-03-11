@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ShoppingCart, Plus, Minus, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ShoppingCart, Plus, Minus, Loader2, LogIn } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useCart } from "@/store/app-context";
+import { useCart, useAuth } from "@/store/app-context";
 import { Product } from "@/types/database";
 import { formatPrice, cn } from "@/lib/utils";
 import { notify } from "@/lib/notify";
@@ -18,13 +18,22 @@ interface ShopProductCardProps {
 
 export function ShopProductCard({ product, shopId, canOrder, onAddToCart }: ShopProductCardProps) {
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   // Helper to handle add to cart
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation
     e.stopPropagation();
-    
+
     if (!canOrder) return;
+
+    // Block unauthenticated users
+    if (!isAuthenticated) {
+      notify.error("يجب تسجيل الدخول أولاً للإضافة للسلة");
+      navigate("/login");
+      return;
+    }
 
     // Use external handler if provided (for custom warnings etc)
     if (onAddToCart) {
@@ -40,7 +49,7 @@ export function ShopProductCard({ product, shopId, canOrder, onAddToCart }: Shop
         // Silently caught, UI rolls back via dispatch inside addToCart
       });
     } catch (error: any) {
-      notify.error(error.message || "فشل إضافة المنتج: يرجى تسجيل الدخول أولاً");
+      notify.error(error.message || "فشل إضافة المنتج");
     }
   };
 
