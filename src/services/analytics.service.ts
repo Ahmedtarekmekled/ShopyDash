@@ -278,10 +278,12 @@ export const analyticsService = {
   async insertSubscriptionCharge(shopId: string, amount: number, billingMonth: string, notes?: string): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
+    // Postgres DATE column requires full date — convert "2026-03" → "2026-03-01"
+    const billingDate = billingMonth.length === 7 ? `${billingMonth}-01` : billingMonth;
     const { error } = await supabase.from('subscription_payments' as any).insert([{
       shop_id: shopId,
       amount,
-      billing_month: billingMonth, // e.g. "2026-02"
+      billing_month: billingDate,
       status: 'UNPAID',
       notes: notes || `رسوم اشتراك شهري - ${billingMonth}`,
       created_by_admin: user.id,
