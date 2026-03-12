@@ -307,7 +307,13 @@ export function AdminFinancials() {
                           </div>
                         </div>
                         <div className="text-center text-muted-foreground text-xs">{formatPrice(shop.gross_revenue)}</div>
-                        <div className="text-center font-bold">{formatPrice(shop.total_outstanding)}</div>
+                        <div className="text-center font-bold">
+                          {shop.total_outstanding < 0 ? (
+                            <span className="text-green-600" dir="ltr">+ {formatPrice(Math.abs(shop.total_outstanding))}</span>
+                          ) : (
+                            formatPrice(shop.total_outstanding)
+                          )}
+                        </div>
                         <div className="text-center">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${status.className}`}>
                             {status.label}
@@ -366,7 +372,11 @@ export function AdminFinancials() {
                         {formatPrice(driver.platform_fee_owed + driver.customer_fee_owed)}
                       </div>
                       <div className="text-center font-bold">
-                        {formatPrice(driver.total_outstanding)}
+                        {driver.total_outstanding < 0 ? (
+                            <span className="text-green-600" dir="ltr">+ {formatPrice(Math.abs(driver.total_outstanding))}</span>
+                          ) : (
+                            formatPrice(driver.total_outstanding)
+                          )}
                       </div>
                     </div>
                   ))}

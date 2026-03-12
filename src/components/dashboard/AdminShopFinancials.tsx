@@ -193,8 +193,10 @@ export function AdminShopFinancials({ shopId, shopName, isOpen, onClose, isPremi
                 تمييز: {formatPrice(balance.premium_owed - balance.premium_paid)}
               </span>
             )}
-            <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${balance.total_outstanding > 0 ? "bg-red-50 border-red-200 text-red-700" : "bg-green-50 border-green-200 text-green-700"}`}>
-              الإجمالي: {formatPrice(balance.total_outstanding)}
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${balance.total_outstanding > 0 ? "bg-red-50 border-red-200 text-red-700" : (balance.total_outstanding < 0 ? "bg-green-50 border-green-200 text-green-700" : "bg-slate-50 border-slate-200 text-slate-700")}`}>
+              {balance.total_outstanding < 0 
+                ? `رصيد دائن: ${formatPrice(Math.abs(balance.total_outstanding))}` 
+                : `الإجمالي: ${formatPrice(balance.total_outstanding)}`}
             </span>
           </div>
         )}

@@ -64,22 +64,6 @@ export function ShopOwnerFinancials() {
         <p className="text-muted-foreground mt-1 text-sm">ملخص مالي شامل للمبيعات والعمولات والاشتراكات.</p>
       </div>
 
-      {/* Debt Alert */}
-      {hasDebt && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-4">
-          <div className="bg-red-100 rounded-full p-2.5 shrink-0">
-            <AlertTriangle className="w-5 h-5 text-red-600" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-red-800 text-sm">مديونية مستحقة للمنصة</p>
-            <p className="text-red-700 text-xs mt-0.5">
-              يوجد مبلغ مستحق قدره <span className="font-bold">{formatPrice(summary.net_debt)}</span> — يرجى التسوية لتجنب إيقاف الخدمات.
-            </p>
-          </div>
-          <div className="text-2xl font-bold text-red-700 shrink-0">{formatPrice(summary.net_debt)}</div>
-        </div>
-      )}
-
       {/* Stats row: show 3 cards always, المسدد only when there's a current debt */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card className="border shadow-sm">
