@@ -199,103 +199,95 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Shop Categories / Premium Shops Separator */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/10 to-transparent relative z-20" />
+      {/* Premium Shops Section - Only show if there are shops or loading */}
+      {(shopsLoading || (shops && shops.length > 0)) && (
+        <>
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/10 to-transparent relative z-20" />
 
-      {/* Premium Shops Section */}
-      <section className="py-24 bg-gradient-to-br from-primary/5 via-primary/5 to-secondary/5 relative">
-        <div className="absolute inset-0 bg-white/40" />
-        <div className="container-app relative z-10">
-          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-4">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                {AR.shops.featured}
-              </h2>
-              <p className="text-muted-foreground mt-2 text-lg">
-                أفضل المتاجر المحلية وتقييماتها
-              </p>
+          <section className="py-24 bg-gradient-to-br from-primary/5 via-primary/5 to-secondary/5 relative">
+            <div className="absolute inset-0 bg-white/40" />
+            <div className="container-app relative z-10">
+              <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-4">
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+                    {AR.shops.featured}
+                  </h2>
+                  <p className="text-muted-foreground mt-2 text-lg">
+                    أفضل المتاجر المحلية وتقييماتها
+                  </p>
+                </div>
+                <Link to="/shops">
+                  <Button variant="ghost" className="gap-2 rounded-full hover:bg-primary/5 hover:text-primary transition-colors">
+                    {AR.common.viewAll}
+                    <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {shopsLoading
+                  ? Array(3).fill(0).map((_, i) => (
+                      <Card key={i} className="p-8 rounded-3xl border-primary/10">
+                        <div className="flex items-center gap-6">
+                          <Skeleton className="w-20 h-20 rounded-2xl" />
+                          <div className="flex-1 space-y-3">
+                            <Skeleton className="h-5 w-3/4" />
+                            <Skeleton className="h-4 w-1/2" />
+                          </div>
+                        </div>
+                      </Card>
+                    ))
+                  : shops && shops.length > 0 ? (
+                      shops.map((shop: any, i: number) => (
+                        <ShopCard key={shop.id} shop={shop} index={i} />
+                      ))
+                    ) : null}
+              </div>
             </div>
-            <Link to="/shops">
-              <Button variant="ghost" className="gap-2 rounded-full hover:bg-primary/5 hover:text-primary transition-colors">
-                {AR.common.viewAll}
-                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {shopsLoading
-              ? Array(3).fill(0).map((_, i) => (
-                  <Card key={i} className="p-8 rounded-3xl border-primary/10">
-                    <div className="flex items-center gap-6">
-                      <Skeleton className="w-20 h-20 rounded-2xl" />
-                      <div className="flex-1 space-y-3">
-                        <Skeleton className="h-5 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                      </div>
-                    </div>
-                  </Card>
-                ))
-              : shops && shops.length > 0 ? (
-                  shops.map((shop: any, i: number) => (
-                    <ShopCard key={shop.id} shop={shop} index={i} />
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-20 bg-background/50 backdrop-blur-sm rounded-3xl border border-dashed border-primary/20">
-                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
-                      <Star className="w-10 h-10 text-primary/60" />
-                    </div>
-                    <p className="text-xl font-medium text-foreground mb-3">لا توجد متاجر مميزة حالياً</p>
-                    <Link to="/shops">
-                      <Button size="lg" variant="outline" className="rounded-full px-8">عرض جميع المتاجر</Button>
-                    </Link>
-                  </div>
-                )}
-          </div>
-        </div>
-      </section>
-
-      {/* Premium Shops / App Banner Separator */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/10 to-transparent relative z-20" />
+          </section>
+        </>
+      )}
 
       {/* App Coming Soon Banner */}
-      <section className="py-16 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        {/* Decorative blobs */}
-        <div className="absolute top-0 right-0 w-72 h-72 bg-primary/20 blur-[80px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-secondary/20 blur-[80px] rounded-full pointer-events-none" />
+      <section className="py-16 md:py-24 relative overflow-hidden bg-background">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-primary/5 to-transparent opacity-70 pointer-events-none blur-3xl" />
         
-        <div className="container-app relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="text-center md:text-right">
-              <Badge className="mb-4 bg-primary/20 text-primary border-primary/30 backdrop-blur-sm rounded-full px-4 py-1">
-                قريباً
+        <div className="container-app relative z-10 px-4 md:px-0">
+          <div className="bg-gradient-to-br from-primary/5 via-white to-secondary/5 border border-primary/10 rounded-[32px] p-8 md:p-12 shadow-2xl shadow-primary/5 flex flex-col md:flex-row items-center justify-between gap-10 backdrop-blur-sm relative overflow-hidden">
+            {/* Soft decor inside box */}
+            <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/10 rounded-full blur-[60px] pointer-events-none" />
+            <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-secondary/10 rounded-full blur-[60px] pointer-events-none" />
+
+            <div className="text-center md:text-right flex-1 relative z-10">
+              <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors rounded-full px-5 py-1.5 text-sm">
+                قريباً جداً
               </Badge>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3 tracking-tight">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4 tracking-tight leading-tight">
                 تطبيق شوبي داش على هاتفك
               </h2>
-              <p className="text-slate-300 text-lg max-w-md leading-relaxed">
-                قريباً على متجر App Store و Google Play — تسوق، تتبع طلباتك، واكتشف العروض من أي مكان.
+              <p className="text-muted-foreground text-lg md:text-xl max-w-md mx-auto md:mx-0 leading-relaxed">
+                قريباً على متجر App Store و Google Play. اكتشف العروض وتتبع طلبك بسهولة من أي مكان.
               </p>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+            <div className="flex flex-col sm:flex-row gap-4 shrink-0 relative z-10">
               {/* App Store button */}
-              <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-5 py-3 cursor-not-allowed opacity-70">
-                <svg viewBox="0 0 24 24" className="w-8 h-8 text-white fill-current" xmlns="http://www.w3.org/2000/svg">
+              <div className="flex items-center gap-3 bg-white border border-primary/15 rounded-2xl px-6 py-4 cursor-not-allowed shadow-sm opacity-90 transition-transform hover:-translate-y-1">
+                <svg viewBox="0 0 24 24" className="w-9 h-9 text-slate-800 fill-current drop-shadow-sm" xmlns="http://www.w3.org/2000/svg">
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                 </svg>
-                <div className="text-white text-right">
-                  <p className="text-[10px] text-white/70">قريباً على</p>
-                  <p className="font-bold text-sm leading-tight">App Store</p>
+                <div className="text-slate-800 text-right">
+                  <p className="text-[11px] text-slate-500 font-medium">قريباً على</p>
+                  <p className="font-bold text-base leading-tight">App Store</p>
                 </div>
               </div>
               
               {/* Google Play button */}
-              <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-5 py-3 cursor-not-allowed opacity-70">
-                <Smartphone className="w-8 h-8 text-white" />
-                <div className="text-white text-right">
-                  <p className="text-[10px] text-white/70">قريباً على</p>
-                  <p className="font-bold text-sm leading-tight">Google Play</p>
+              <div className="flex items-center gap-3 bg-white border border-primary/15 rounded-2xl px-6 py-4 cursor-not-allowed shadow-sm opacity-90 transition-transform hover:-translate-y-1">
+                <Smartphone className="w-9 h-9 text-primary drop-shadow-sm" />
+                <div className="text-slate-800 text-right">
+                  <p className="text-[11px] text-slate-500 font-medium">قريباً على</p>
+                  <p className="font-bold text-base leading-tight">Google Play</p>
                 </div>
               </div>
             </div>
@@ -308,27 +300,31 @@ export default function HomePage() {
 
       {/* CTA Section - Only visible to unauthenticated users */}
       {!user && (
-        <section className="py-24 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-secondary" />
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/10 blur-[100px] rounded-full mix-blend-overlay" />
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/20 blur-[100px] rounded-full mix-blend-overlay" />
-          
-          <div className="container-app text-center relative z-10">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md mb-8 ring-1 ring-white/20 shadow-2xl">
-              <Store className="w-10 h-10 text-white drop-shadow-md" />
+        <section className="py-12 md:py-20 relative overflow-hidden bg-background">
+          <div className="container-app text-center relative z-10 px-4 md:px-0">
+            <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-secondary/5 rounded-[40px] p-10 md:p-16 border border-primary/20 shadow-2xl shadow-primary/5 relative overflow-hidden">
+               {/* Decorative background vectors inside the box */}
+               <div className="absolute -top-32 -right-32 w-72 h-72 bg-primary/20 rounded-full blur-[80px] pointer-events-none" />
+               <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-secondary/20 rounded-full blur-[80px] pointer-events-none" />
+               
+               <div className="relative z-10 max-w-3xl mx-auto">
+                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-white mb-8 shadow-xl shadow-primary/10 text-primary">
+                   <Store className="w-10 h-10" />
+                 </div>
+                 <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 text-foreground tracking-tight text-balance">
+                   هل أنت صاحب متجر؟
+                 </h2>
+                 <p className="text-xl md:text-2xl text-muted-foreground mb-10 font-medium leading-relaxed">
+                   انضم إلى منصتنا وابدأ في بيع منتجاتك لآلاف العملاء في منطقتك. ضاعف مبيعاتك اليوم!
+                 </p>
+                 <Link to="/register?role=shop_owner">
+                   <Button size="xl" className="gap-3 text-lg h-16 px-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-xl shadow-primary/25 font-bold">
+                     <Store className="w-6 h-6" />
+                     سجل متجرك مجاناً
+                   </Button>
+                 </Link>
+               </div>
             </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 text-white tracking-tight text-balance">
-              هل أنت صاحب متجر؟
-            </h2>
-            <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto font-medium leading-relaxed">
-              انضم إلى منصتنا وابدأ في بيع منتجاتك لآلاف العملاء في منطقتك. ضاعف مبيعاتك اليوم!
-            </p>
-            <Link to="/register?role=shop_owner">
-              <Button size="xl" variant="secondary" className="gap-3 text-lg h-16 px-10 rounded-full bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-2xl shadow-black/20 font-bold">
-                <Store className="w-6 h-6" />
-                سجل متجرك مجاناً
-              </Button>
-            </Link>
           </div>
         </section>
       )}
