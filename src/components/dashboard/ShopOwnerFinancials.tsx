@@ -80,8 +80,8 @@ export function ShopOwnerFinancials() {
         </div>
       )}
 
-      {/* 4-stat summary row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Stats row: show 3 cards always, المسدد only when there's a current debt */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card className="border shadow-sm">
           <CardContent className="pt-4 pb-3 px-4">
             <div className="flex items-center gap-2 mb-1">
@@ -92,25 +92,18 @@ export function ShopOwnerFinancials() {
           </CardContent>
         </Card>
 
-        <Card className="border shadow-sm">
-          <CardContent className="pt-4 pb-3 px-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Receipt className="w-4 h-4 text-orange-500" />
-              <span className="text-xs text-muted-foreground">إجمالي المستحق</span>
-            </div>
-            <div className="text-xl font-bold text-orange-600">{formatPrice(totalCharged)}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border shadow-sm">
-          <CardContent className="pt-4 pb-3 px-4">
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-xs text-muted-foreground">المسدد للمنصة</span>
-            </div>
-            <div className="text-xl font-bold text-green-600">{formatPrice(summary.total_paid)}</div>
-          </CardContent>
-        </Card>
+        {/* Only show المسدد when there is a current outstanding debt */}
+        {hasDebt && (
+          <Card className="border shadow-sm">
+            <CardContent className="pt-4 pb-3 px-4">
+              <div className="flex items-center gap-2 mb-1">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-xs text-muted-foreground">سددته حتى الآن</span>
+              </div>
+              <div className="text-xl font-bold text-green-600">{formatPrice(summary.total_paid)}</div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className={`border shadow-sm ${hasDebt ? "border-red-200" : "border-green-200"}`}>
           <CardContent className="pt-4 pb-3 px-4">
@@ -125,8 +118,8 @@ export function ShopOwnerFinancials() {
         </Card>
       </div>
 
-      {/* Charges breakdown — only if there are actual charges */}
-      {totalCharged > 0 && (
+      {/* Charges breakdown — only when there is an outstanding debt */}
+      {hasDebt && totalCharged > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold">تفصيل المبالغ المستحقة عليك</CardTitle>
@@ -141,13 +134,22 @@ export function ShopOwnerFinancials() {
                     </div>
                     <div>
                       <p className="text-sm font-medium">عمولة الطلبات</p>
-                      <p className="text-xs text-muted-foreground">نسبة مئوية من قيمة كل طلب منفذ</p>
+                      <p className="text-xs text-muted-foreground">
+                        {orders.length > 0 && orders[0].commission_rate > 0
+                          ? `نسبة ${orders[0].commission_rate}% من قيمة كل طلب منفذ`
+                          : "نسبة مئوية من قيمة كل طلب منفذ"}
+                      </p>
                     </div>
                   </div>
-                  <span className="font-bold text-sm">{formatPrice(summary.total_commission_owed)}</span>
+                  <span className="font-bold text-sm">
+                    {orders.length > 0 && orders[0].commission_rate > 0
+                      ? `${orders[0].commission_rate}%`
+                      : formatPrice(summary.total_commission_owed)}
+                  </span>
                 </div>
               )}
-              {(summary.total_subscription_owed || 0) > 0 && (
+              {/* Subscription row — only show when net_debt > 0 AND subscription is part of the debt */}
+              {hasDebt && (summary.total_subscription_owed || 0) > 0 && (
                 <div className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
@@ -161,15 +163,15 @@ export function ShopOwnerFinancials() {
                   <span className="font-bold text-sm">{formatPrice(summary.total_subscription_owed)}</span>
                 </div>
               )}
+              {summary.total_paid > 0 && (
+                <div className="flex items-center justify-between py-3">
+                  <span className="text-sm font-semibold text-muted-foreground">سددته حتى الآن</span>
+                  <span className="font-bold text-sm text-green-600">{formatPrice(summary.total_paid)}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between py-3">
-                <span className="text-sm font-semibold text-muted-foreground">المسدد من إجمالي المستحق</span>
-                <span className="font-bold text-sm text-green-600">{formatPrice(summary.total_paid)}</span>
-              </div>
-              <div className="flex items-center justify-between py-3">
-                <span className="text-sm font-bold">الرصيد المتبقي (المديونية)</span>
-                <span className={`font-bold text-sm ${hasDebt ? "text-red-600" : "text-green-600"}`}>
-                  {hasDebt ? formatPrice(summary.net_debt) : "مسدد بالكامل ✓"}
-                </span>
+                <span className="text-sm font-bold">المتبقي عليك</span>
+                <span className="font-bold text-sm text-red-600">{formatPrice(summary.net_debt)}</span>
               </div>
             </div>
           </CardContent>
