@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, Plus, Minus } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -19,6 +20,7 @@ export function ShopProductCard({ product, shopId, canOrder, onAddToCart }: Shop
   const { cart, addToCart, updateCartItem, removeFromCart } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [isPending, setIsPending] = useState(false);
 
   // Derive quantity directly from cart state (always in sync, no local state needed)
   const cartItem = cart?.items?.find((item: any) => item.product_id === product.id);
@@ -38,16 +40,19 @@ export function ShopProductCard({ product, shopId, canOrder, onAddToCart }: Shop
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!canOrder) return;
+    if (!canOrder || isPending) return;
     if (!requireAuth(e)) return;
 
     if (onAddToCart) { onAddToCart(); return; }
 
-    try {
-      addToCart(shopId, product.id, 1, product).catch(() => {});
-    } catch (err: any) {
-      notify.error(err.message || "فشل إضافة المنتج");
-    }
+    setIsPending(true);
+    addToCart(shopId, product.id, 1, product)
+      .catch((err: any) => {
+        if (err?.message !== 'SILENT_MODAL_LIMIT_EXCEEDED') {
+          notify.error(err.message || "فشل إضافة المنتج");
+        }
+      })
+      .finally(() => setIsPending(false));
   };
 
   const handleIncrease = (e: React.MouseEvent) => {
@@ -127,6 +132,7 @@ export function ShopProductCard({ product, shopId, canOrder, onAddToCart }: Shop
               {/* When quantity > 0 show  ─  qty  + pill */}
               {inCart ? (
                 <div
+                  dir="ltr"
                   className={cn(
                     "flex items-center gap-0 bg-primary rounded-full shadow-lg overflow-hidden",
                     "transition-all duration-300 ease-out",
@@ -136,7 +142,7 @@ export function ShopProductCard({ product, shopId, canOrder, onAddToCart }: Shop
                 >
                   <button
                     onClick={handleDecrease}
-                    className="h-8 w-8 flex items-center justify-center text-white hover:bg-white/20 transition-colors rounded-l-full"
+                    className="h-8 w-8 flex items-center justify-center text-white hover:bg-white/20 active:bg-white/30 transition-colors rounded-l-full"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
@@ -144,14 +150,14 @@ export function ShopProductCard({ product, shopId, canOrder, onAddToCart }: Shop
                   <span
                     className="text-white font-bold text-sm min-w-[1.5rem] text-center select-none"
                     style={{ animation: "bounceNum 0.2s ease both" }}
-                    key={quantity}             /* re-trigger animation on qty change */
+                    key={quantity}
                   >
                     {quantity}
                   </span>
 
                   <button
                     onClick={handleIncrease}
-                    className="h-8 w-8 flex items-center justify-center text-white hover:bg-white/20 transition-colors rounded-r-full"
+                    className="h-8 w-8 flex items-center justify-center text-white hover:bg-white/20 active:bg-white/30 transition-colors rounded-r-full"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>

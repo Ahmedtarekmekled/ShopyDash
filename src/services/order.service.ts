@@ -424,7 +424,8 @@ export const orderService = {
       const { data: suborder, error: suborderError } = await supabase
         .from('orders')
         .insert({
-          parent_order_id: parentOrder.id,
+          // Temporary workaround for RLS policy: insert without parent link first
+          parent_order_id: null,
           order_number: subOrderNumber,
           shop_id: suborderData.shop_id,
           user_id: parent_order_data.user_id,
@@ -470,11 +471,27 @@ export const orderService = {
       }
 
       // Create status history
-      await supabase.from('order_status_history').insert({
+      const { error: historyError } = await supabase.from('order_status_history').insert({
         order_id: suborder.id,
         status: 'PLACED',
         created_by: parent_order_data.user_id,
       });
+
+      if (historyError) {
+        console.error('Failed to create status history:', historyError);
+        // Not throwing here to allow order completion even if history logging fails
+      }
+
+      // Link to parent order now that items and history are created
+      const { error: linkError } = await supabase
+        .from('orders')
+        .update({ parent_order_id: parentOrder.id })
+        .eq('id', suborder.id);
+
+      if (linkError) {
+        console.error('Failed to link suborder to parent:', linkError);
+        throw new Error('فشل ربط الطلبات الفرعية');
+      }
     }
 
     return {
