@@ -287,6 +287,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const previousCart = state.cart;
     let isNewItem = true;
+    let optimisticCart: any = previousCart;
 
     if (state.cart && state.cart.items) {
       const existingItem = state.cart.items.find(
@@ -305,9 +306,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
+        optimisticCart = { ...state.cart, items: updatedItems as any };
         dispatch({
           type: "SET_CART",
-          payload: { ...state.cart, items: updatedItems as any },
+          payload: optimisticCart,
         });
       }
     }
@@ -331,18 +333,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
           
           const newItems = state.cart?.items ? [tempItem, ...state.cart.items] : [tempItem];
           
+          optimisticCart = {
+            ...(state.cart || { 
+              id: tempItem.cart_id, 
+              user_id: user.id, 
+              shop_id: shopId, 
+              created_at: new Date().toISOString(), 
+              updated_at: new Date().toISOString() 
+            }),
+            items: newItems
+          };
+
           dispatch({
             type: "SET_CART",
-            payload: {
-              ...(state.cart || { 
-                id: tempItem.cart_id, 
-                user_id: user.id, 
-                shop_id: shopId, 
-                created_at: new Date().toISOString(), 
-                updated_at: new Date().toISOString() 
-              }),
-              items: newItems
-            } as any
+            payload: optimisticCart as any
           });
        }
     }
@@ -351,12 +355,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const addedItem = await cartService.addItem(user.id, shopId, productId, quantity);
       
       // Immediately update state with the real item from DB (containing real UUID)
-      if (isNewItem && addedItem) {
+      if (isNewItem && addedItem && optimisticCart?.items) {
         dispatch({
           type: "SET_CART",
           payload: {
-            ...state.cart!,
-            items: state.cart!.items.map(item => 
+            ...optimisticCart,
+            items: optimisticCart.items.map((item: any) => 
               item.product_id === productId && item.id.startsWith('temp-')
                 ? { ...item, id: addedItem.id }
                 : item

@@ -98,7 +98,13 @@ serve(async (req) => {
                 return new Response("No drivers to notify", { status: 200 });
             }
 
-            const messageText = `🚗 *طلب جديد متاح للاستلام!*\nرقم الطلب: #${record.order_number || record.id.slice(0, 8)}\n\nافتح التطبيق لقبول الطلب!`;
+            const shortId = record.order_number || (record.id ? record.id.split('-')[0].toUpperCase() : "جديد");
+            
+            const messageText = `🚨 <b>طلب توصيل جديد!</b> 🚨
+
+📦 <b>رقم الطلب:</b> <code>${shortId}</code>
+
+📍 <i>يرجى فتح التطبيق لمعاينة التفاصيل وقبول الطلب.</i>`;
 
             // Broadcast
             const promises = drivers.map(driver => 
@@ -132,7 +138,7 @@ async function sendTelegramMessage(chatId: string | number, text: string) {
       body: JSON.stringify({
         chat_id: chatId,
         text: text,
-        parse_mode: "Markdown"
+        parse_mode: "HTML"
       }),
     });
   } catch (err) {

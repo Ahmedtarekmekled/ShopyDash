@@ -18,11 +18,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Cleanup existing trigger if strictly necessary (usually manual drop is safer, but name collision is fine)
+-- 1. Drop the OLD trigger from the generic "orders" table. 
+-- This stops the duplicate messages (e.g. firing per sub-order).
 DROP TRIGGER IF EXISTS "tr_notify_telegram_on_ready" ON "orders";
 
--- Create the trigger
+-- 2. Drop any existing trigger on parent_orders just in case
+DROP TRIGGER IF EXISTS "tr_notify_telegram_on_ready" ON "parent_orders";
+
+-- 3. Create the trigger on "parent_orders" instead!
+-- Now it will only fire exactly ONE TIME when the unified parent order becomes ready.
 CREATE TRIGGER "tr_notify_telegram_on_ready"
-AFTER UPDATE ON "orders"
+AFTER UPDATE ON "parent_orders"
 FOR EACH ROW
 EXECUTE FUNCTION trigger_telegram_webhook();
