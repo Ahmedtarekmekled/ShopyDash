@@ -343,8 +343,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      await cartService.addItem(user.id, shopId, productId, quantity);
+      const addedItem = await cartService.addItem(user.id, shopId, productId, quantity);
       
+      // Immediately update state with the real item from DB (containing real UUID)
+      if (isNewItem && addedItem) {
+        dispatch({
+          type: "SET_CART",
+          payload: {
+            ...state.cart!,
+            items: state.cart!.items.map(item => 
+              item.product_id === productId && item.id.startsWith('temp-')
+                ? { ...item, id: addedItem.id }
+                : item
+            )
+          } as any
+        });
+      }
+
       if (isNewItem && !productPayload) {
         await refreshCart();
       } else {
@@ -380,7 +395,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     try {
       await cartService.updateItemQuantity(itemId, quantity);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === "ITEM_SYNCING") {
+        // Just refresh cart to get real IDs, the optimistic change is already in state
+        refreshCart();
+        return;
+      }
       console.warn("Optimistic update failed, rolling back", error);
       dispatch({ type: "SET_CART", payload: previousCart });
       throw error;

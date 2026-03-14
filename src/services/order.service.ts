@@ -150,6 +150,11 @@ export const cartService = {
     itemId: string,
     quantity: number
   ): Promise<CartItem> {
+    // Prevent temporary IDs from hitting the database
+    if (itemId.startsWith("temp-")) {
+      throw new Error("ITEM_SYNCING");
+    }
+
     if (quantity <= 0) {
       await this.removeItem(itemId);
       throw new Error("Item removed");
@@ -188,6 +193,11 @@ export const cartService = {
   },
 
   async removeItem(itemId: string): Promise<void> {
+    // Prevent temporary IDs from hitting the database
+    if (itemId.startsWith("temp-")) {
+       return; // Silently ignore as it's not even in the DB yet
+    }
+
     const { error } = await supabase
       .from("cart_items")
       .delete()
