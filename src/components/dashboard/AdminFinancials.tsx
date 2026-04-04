@@ -255,7 +255,7 @@ export function AdminFinancials() {
                     <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-border">
                       <span className="text-xs font-semibold">صافي الدين على المناديب</span>
                       <span className="text-sm font-bold text-amber-600">
-                        {formatPrice((platformMetrics.driver_fees.owed + (platformMetrics.customer_fees?.owed || 0)) - platformMetrics.driver_fees.paid)}
+                        {formatPrice(platformMetrics.driver_fees.outstanding ?? 0)}
                       </span>
                     </div>
                   </CardContent>

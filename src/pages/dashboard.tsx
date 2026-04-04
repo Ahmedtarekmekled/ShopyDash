@@ -152,6 +152,7 @@ import {
 import { AdminFinancials } from "@/components/dashboard/AdminFinancials";
 import { AdminShopFinancials } from "@/components/dashboard/AdminShopFinancials";
 import { LiveOperations } from "@/components/dashboard/LiveOperations";
+import { TopCustomers } from "@/components/dashboard/TopCustomers";
 import type {
   Product,
   Category,
@@ -4103,7 +4104,13 @@ function AdminUsers() {
         </p>
       </div>
 
-      {/* Stats Cards */}
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">جميع المستخدمين</TabsTrigger>
+          <TabsTrigger value="top">العملاء الأكثر طلباً</TabsTrigger>
+        </TabsList>
+        <TabsContent value="all" className="space-y-6">
+          {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -4365,6 +4372,11 @@ function AdminUsers() {
           )}
         </DialogContent>
       </Dialog>
+        </TabsContent>
+        <TabsContent value="top">
+          <TopCustomers />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

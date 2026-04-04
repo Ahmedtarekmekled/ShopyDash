@@ -17,6 +17,7 @@ import {
   Circle,
 } from "lucide-react";
 import { formatPrice, cn } from "@/lib/utils";
+import { CancelledOrdersAnalysis } from "@/components/dashboard/CancelledOrdersAnalysis";
 
 const STATUS_MAP: Record<string, { label: string; color: string; dot: string }> = {
   PLACED:              { label: "جديد",           color: "text-blue-600",      dot: "bg-blue-500" },
@@ -184,6 +185,8 @@ export function LiveOperations() {
           )}
         </CardContent>
       </Card>
+
+      <CancelledOrdersAnalysis />
     </div>
   );
 }

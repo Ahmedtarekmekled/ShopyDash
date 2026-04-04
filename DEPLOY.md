@@ -2,7 +2,7 @@
 
 ## 1. Code Pushed to GitHub
 Your code has been successfully pushed to:
-[https://github.com/Ahmedtarekmekled/AboHommos](https://github.com/Ahmedtarekmekled/AboHommos)
+[https://github.com/Ahmedtarekmekled/shopydash](https://github.com/Ahmedtarekmekled/shopydash)
 
 ## 2. Deploy to Vercel
 To host your application on Vercel:
@@ -10,7 +10,7 @@ To host your application on Vercel:
 1.  **Log in to Vercel**: Go to [vercel.com](https://vercel.com/) and log in (or sign up) using your **GitHub account**.
 2.  **Import Project**:
     - Click on **"Add New..."** -> **"Project"**.
-    - In the "Import Git Repository" section, find **AboHommos** and click **Import**.
+    - In the "Import Git Repository" section, find **shopydash** and click **Import**.
 3.  **Configure Project**:
     - **Framework Preset**: Vercel should automatically detect **Vite**. If not, select **Vite** manually.
     - **Root Directory**: Leave as `./`.
@@ -25,5 +25,5 @@ To host your application on Vercel:
 5.  **Deploy**: Click **Deploy**.
 
 ## 3. Verify Deployment
-Once the deployment is complete, Vercel will give you a live URL (e.g., `https://abohommos.vercel.app`).
+Once the deployment is complete, Vercel will give you a live URL (which you've pointing to `https://www.shopydash.store/`).
 Visit the link to see your live application!

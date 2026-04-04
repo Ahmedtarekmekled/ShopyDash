@@ -10,6 +10,7 @@ export function MainLayout() {
   const isCheckoutPage = location.pathname.startsWith('/checkout');
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password' || location.pathname === '/reset-password';
   const isProductDetailPage = /^\/products\/.+/.test(location.pathname);
+  const isDashboardPage = location.pathname.startsWith('/dashboard');
 
   useEffect(() => {
     // Send a pageview tracking event to Google Analytics every time the route changes
@@ -22,8 +23,8 @@ export function MainLayout() {
       <main className="flex-1">
         <Outlet />
       </main>
-      {!isCheckoutPage && !isAuthPage && !isProductDetailPage && <Footer />}
-      {!isCheckoutPage && !isAuthPage && !isProductDetailPage && <MobileCartBar />}
+      {!isCheckoutPage && !isAuthPage && !isProductDetailPage && !isDashboardPage && <Footer />}
+      {!isCheckoutPage && !isAuthPage && !isProductDetailPage && !isDashboardPage && <MobileCartBar />}
     </div>
   );
 }

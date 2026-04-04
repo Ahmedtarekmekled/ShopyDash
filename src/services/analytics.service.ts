@@ -11,6 +11,35 @@ export interface GlobalMetrics {
   avg_order_value: number;
 }
 
+export interface TopCustomerMetric {
+  user_id: string;
+  customer_name: string;
+  customer_phone: string;
+  total_orders: number;
+  total_spent: number;
+}
+
+export interface CancelledOrdersByShop {
+  shop_id: string;
+  shop_name: string;
+  cancelled_count: number;
+}
+
+export interface CancellationReasonMetric {
+  reason: string;
+  reason_count: number;
+}
+
+export interface CancelledOrderDetails {
+  order_id: string;
+  shop_name: string;
+  cancelled_by_name: string;
+  cancelled_by_role: string;
+  reason: string;
+  cancelled_at: string;
+  status: string;
+}
+
 export interface ShopPerformance {
   shop_id: string;
   shop_name: string;
@@ -143,6 +172,51 @@ export const analyticsService = {
 
     if (error) throw error;
     return data as unknown as ShopPerformance[];
+  },
+
+  async getTopCustomers(startDate?: string, endDate?: string, limit: number = 50): Promise<TopCustomerMetric[]> {
+    const params: Record<string, any> = { p_limit: limit };
+    if (startDate) params.p_start_date = startDate;
+    if (endDate) params.p_end_date = endDate;
+    
+    // Fallback typing for custom RPC until types are refreshed
+    const { data, error } = await (supabase.rpc as any)('get_top_customers_metrics', params);
+
+    if (error) throw error;
+    return data as unknown as TopCustomerMetric[];
+  },
+
+  async getCancelledOrdersByShop(startDate?: string, endDate?: string, limit: number = 20): Promise<CancelledOrdersByShop[]> {
+    const params: Record<string, any> = { 
+      p_limit: limit,
+      p_start_date: startDate || null,
+      p_end_date: endDate || null
+    };
+    const { data, error } = await (supabase.rpc as any)('get_cancelled_orders_by_shop', params);
+    if (error) throw error;
+    return data as unknown as CancelledOrdersByShop[];
+  },
+
+  async getCancellationReasons(startDate?: string, endDate?: string, limit: number = 20): Promise<CancellationReasonMetric[]> {
+    const params: Record<string, any> = { 
+      p_limit: limit,
+      p_start_date: startDate || null,
+      p_end_date: endDate || null
+    };
+    const { data, error } = await (supabase.rpc as any)('get_cancellation_reasons', params);
+    if (error) throw error;
+    return data as unknown as CancellationReasonMetric[];
+  },
+
+  async getCancelledOrdersDetails(startDate?: string, endDate?: string, limit: number = 20): Promise<CancelledOrderDetails[]> {
+    const params: Record<string, any> = { 
+      p_limit: limit,
+      p_start_date: startDate || null,
+      p_end_date: endDate || null
+    };
+    const { data, error } = await (supabase.rpc as any)('get_cancelled_orders_details', params);
+    if (error) throw error;
+    return data as unknown as CancelledOrderDetails[];
   },
 
   async getDriverPerformance(startDate?: string, endDate?: string, limit: number = 50, offset: number = 0): Promise<DriverPerformance[]> {
