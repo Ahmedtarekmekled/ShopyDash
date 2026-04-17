@@ -1,24 +1,25 @@
-# ShopyDash Marketplace
+# ShopyDash Marketplace (شوبي داش)
 
-> ShopyDash - منصة التسوق المحلية الأولى في المنطقة. تسوق من أفضل المتاجر المحلية واحصل على منتجاتك اليومية بسهولة.
+> شوبي داش - منصة التسوق المحلية الأولى في المنطقة. تسوق من أفضل المتاجر المحلية واحصل على منتجاتك اليومية بسهولة وسرعة.
 
-## About
-ShopyDash is a modern web application designed as a local multi-vendor marketplace. It connects local shops, customers, and delivery couriers in a seamless, real-time platform.
+## About ShopyDash
+ShopyDash is a premier, comprehensive local e-commerce marketplace platform designed to bridge the gap between local businesses and community residents. It serves as a unified digital shopping hub where customers can discover, browse, and purchase products from various local shops within their city or region. 
 
-## Features
-- **Local Marketplace**: Browse local shops and discover products.
-- **Unified Checkout**: Multi-store shopping cart and integrated checkout process.
-- **Real-time Tracking**: Order tracking and status updates via Supabase real-time subscriptions.
-- **Role-based Dashboards**: Dedicated interfaces for customers, shop administrators, and delivery couriers.
-- **Localization**: Fully localized in Arabic with right-to-left (RTL) layout support.
+Our mission is to empower local commerce by providing traditional brick-and-mortar stores with a powerful, modern digital storefront, while offering customers the ultimate convenience of fast, localized delivery.
 
-## Tech Stack
-- Frontend: React, Vite, TypeScript
-- Styling: Tailwind CSS, shadcn/ui
-- Backend & Database: Supabase (PostgreSQL, Auth, Storage, Edge Functions)
-- Mapping: Leaflet, Mapbox
+## How It Works
+The platform operates on a robust multi-vendor system connecting three main groups:
+1. **Customers**: Can browse multiple local shops, add items from different stores into a single, unified shopping cart, and place orders with real-time tracking from preparation to doorstep delivery.
+2. **Shop Owners (Vendors)**: Manage their own digital storefronts, upload products, track inventory, and process incoming orders through a dedicated, easy-to-use management dashboard.
+3. **Delivery Couriers (Drivers)**: Utilize a specialized driver interface to receive order dispatch notifications, accept delivery jobs, navigate using integrated maps, and update order statuses in real-time.
+
+## Key Features
+- **Unified Multi-Store Shopping**: Customers are not limited to one store per order. The cart intelligently handles products from multiple different vendors simultaneously.
+- **Real-Time Order Tracking**: Customers receive live, instant updates on their order status (Pending, Preparing, Ready for Delivery, Out for Delivery, Delivered).
+- **Interactive Maps & Geolocation**: Built-in map integration allows customers to pinpoint their exact delivery address accurately, and helps couriers optimize their delivery routes.
+- **Localized Experience**: The entire platform is built with a native Arabic-first, Right-To-Left (RTL) design to perfectly serve the local demographic.
+- **Secure Authentication**: Safe and reliable account management for all user types.
 
 ## Important Links
-- [Home](https://www.shopydash.store/)
-- [About Us](https://www.shopydash.store/about)
-- [Contact / Support](https://www.shopydash.store/contact)
+- [Homepage / Shop Catalog](https://www.shopydash.store/)
+- [About Us & FAQs](https://www.shopydash.store/about)
