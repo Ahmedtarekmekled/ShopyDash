@@ -68,34 +68,50 @@ export function CourierAccount() {
       <TelegramConnect />
 
       {/* Financial Owed Banner */}
-      {finance && finance.net_outstanding > 0 && (
-        <Card className="bg-red-50 border-red-200 shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-              <div className="flex-1 w-full">
-                <h3 className="font-bold text-red-800 text-lg mb-1">المستحق للمنصة</h3>
-                <p className="text-3xl font-black text-red-700 mb-3">{formatPrice(finance.net_outstanding)}</p>
-                
-                <div className="space-y-1 text-sm bg-white/50 p-2 rounded-md">
-                   <div className="flex justify-between text-red-900 border-b border-red-100 pb-1">
-                      <span>إجمالي رسوم التوصيل للمنصة:</span>
-                      <span className="font-semibold">{formatPrice(finance.deliveries_fee_owed)}</span>
-                   </div>
-                   <div className="flex justify-between text-amber-700">
-                      <span>رسوم الخدمة النقدية المحصلة من العملاء:</span>
-                      <span className="font-semibold">{formatPrice(finance.customer_cash_owed)}</span>
-                   </div>
-                   <div className="flex justify-between text-blue-700 pt-1 mt-1 border-t border-red-100">
-                      <span>المسدد مسبقاً:</span>
-                      <span className="font-semibold">{formatPrice(finance.total_paid)}</span>
-                   </div>
+      {finance && finance.net_outstanding > 0 && (() => {
+        // Distribute remaining proportionally based on original owed amounts
+        const totalOwed = finance.deliveries_fee_owed + finance.customer_cash_owed;
+        const remainingRatio = totalOwed > 0 ? finance.net_outstanding / totalOwed : 0;
+        const remainingPlatform  = finance.deliveries_fee_owed * remainingRatio;  // خدمة المنصة
+        const remainingDelivery  = finance.customer_cash_owed  * remainingRatio;  // عمولة التوصيل
+        return (
+          <Card className="bg-red-50 border-red-200 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-bold text-red-800 text-base mb-1">المستحق عليك للمنصة</h3>
+                  <p className="text-4xl font-black text-red-700 mb-3">{formatPrice(finance.net_outstanding)}</p>
+
+                  <div className="space-y-1.5 text-sm bg-white/50 p-2 rounded-md">
+                    {/* عمولة التوصيل */}
+                    <div className="flex justify-between items-center text-red-900 border-b border-red-100 pb-1.5">
+                      <span>عمولة التوصيل:</span>
+                      <span className="font-semibold">{formatPrice(remainingDelivery)}</span>
+                    </div>
+                    {/* خدمة المنصة */}
+                    <div className="flex justify-between items-center text-amber-800">
+                      <span>خدمة المنصة:</span>
+                      <span className="font-semibold">{formatPrice(remainingPlatform)}</span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-red-600 mt-3 font-medium">
+                    الرجاء تسوية هذا المبلغ مع إدارة المنصة لتجنب إيقاف الحساب.
+                  </p>
                 </div>
-                <p className="text-xs text-red-600 mt-3 font-medium">
-                  الرجاء تسوية المبلغ المستحق مع إدارة المنصة لتجنب إيقاف الحساب.
-                </p>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
+      {/* All settled */}
+      {finance && finance.net_outstanding <= 0 && (
+        <Card className="bg-green-50 border-green-200">
+          <CardContent className="p-4 flex items-center gap-3">
+            <span className="text-green-600 text-xl">✓</span>
+            <p className="text-green-800 font-medium text-sm">حسابك مع المنصة مُسوَّى بالكامل</p>
           </CardContent>
         </Card>
       )}

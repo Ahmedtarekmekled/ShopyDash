@@ -134,49 +134,67 @@ export function AdminDriverFinancials({ driverId, driverName, isOpen, onClose }:
              {/* Outstanding breakdown — always visible */}
              <div className="bg-muted/40 rounded-lg border p-3 space-y-3">
                <p className="text-xs font-semibold text-muted-foreground">مستحقات المندوب</p>
-               {balance ? (
-                 <div className="flex flex-wrap gap-2">
-                   {/* عمولة التوصيل — always show */}
-                   <button
-                     type="button"
-                     onClick={() => setPaymentAmount(String((balance.customer_fee_owed ?? 0).toFixed(2)))}
-                     className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-border bg-background text-xs hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
-                   >
-                     عمولة التوصيل <span className="font-bold">{formatPrice(balance.customer_fee_owed ?? 0)}</span>
-                   </button>
+               {balance ? (() => {
+                 // Proportional distribution — same logic as driver view
+                 const totalOwed = balance.customer_fee_owed + balance.platform_fee_owed;
+                 const remainingRatio = totalOwed > 0 ? balance.total_outstanding / totalOwed : 0;
+                 const remainingDelivery = balance.customer_fee_owed * remainingRatio;
+                 const remainingPlatform = balance.platform_fee_owed * remainingRatio;
 
-                   {/* رسوم المنصة — always show */}
-                   <button
-                     type="button"
-                     onClick={() => setPaymentAmount(String((balance.platform_fee_owed ?? 0).toFixed(2)))}
-                     className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-amber-300 bg-amber-50 text-amber-800 text-xs hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all"
-                   >
-                     رسوم المنصة <span className="font-bold">{formatPrice(balance.platform_fee_owed ?? 0)}</span>
-                   </button>
+                 return (
+                   <>
+                     <div className="flex flex-wrap gap-2">
+                       {/* عمولة التوصيل — always show */}
+                       <button
+                         type="button"
+                         onClick={() => remainingDelivery > 0 && setPaymentAmount(String(remainingDelivery.toFixed(2)))}
+                         className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs transition-all ${
+                           remainingDelivery > 0
+                             ? "border-border bg-background hover:bg-primary hover:text-primary-foreground hover:border-primary cursor-pointer"
+                             : "border-border/40 bg-muted/50 text-muted-foreground cursor-default opacity-60"
+                         }`}
+                       >
+                         عمولة التوصيل <span className="font-bold">{formatPrice(remainingDelivery)}</span>
+                       </button>
 
-                   {/* تحصيل الكل */}
-                   {balance.total_outstanding > 0 && (
-                     <button
-                       type="button"
-                       onClick={() => setPaymentAmount(String(balance.total_outstanding.toFixed(2)))}
-                       className="flex items-center gap-1 px-3 py-1.5 rounded-full border bg-primary/10 border-primary/30 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all"
-                     >
-                       تحصيل الكل <span>{formatPrice(balance.total_outstanding)}</span>
-                     </button>
-                   )}
-                 </div>
-               ) : (
+                       {/* رسوم المنصة — always show */}
+                       <button
+                         type="button"
+                         onClick={() => remainingPlatform > 0 && setPaymentAmount(String(remainingPlatform.toFixed(2)))}
+                         className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs transition-all ${
+                           remainingPlatform > 0
+                             ? "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-500 hover:text-white hover:border-amber-500 cursor-pointer"
+                             : "border-border/40 bg-muted/50 text-muted-foreground cursor-default opacity-60"
+                         }`}
+                       >
+                         خدمة المنصة <span className="font-bold">{formatPrice(remainingPlatform)}</span>
+                       </button>
+
+                       {/* تحصيل الكل */}
+                       {balance.total_outstanding > 0 && (
+                         <button
+                           type="button"
+                           onClick={() => setPaymentAmount(String(balance.total_outstanding.toFixed(2)))}
+                           className="flex items-center gap-1 px-3 py-1.5 rounded-full border bg-primary/10 border-primary/30 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all"
+                         >
+                           تحصيل الكل <span>{formatPrice(balance.total_outstanding)}</span>
+                         </button>
+                       )}
+                     </div>
+
+                     {/* Settled amount */}
+                     {balance.platform_fee_paid > 0 && (
+                       <p className="text-xs text-green-700">
+                         ✓ تم تسوية: <span className="font-semibold">{formatPrice(balance.platform_fee_paid)}</span>
+                       </p>
+                     )}
+                     {balance.total_outstanding <= 0 && (
+                       <span className="text-xs text-green-700 font-medium">✓ لا توجد مستحقات معلقة</span>
+                     )}
+                   </>
+                 );
+               })() : (
                  <div className="text-xs text-muted-foreground">جاري تحميل المستحقات...</div>
-               )}
-
-               {/* Paid so far */}
-               {balance && balance.platform_fee_paid > 0 && (
-                 <p className="text-xs text-green-700">
-                   ✓ تم تسوية: <span className="font-semibold">{formatPrice(balance.platform_fee_paid)}</span>
-                 </p>
-               )}
-               {balance && balance.total_outstanding <= 0 && (
-                 <span className="text-xs text-green-700 font-medium">✓ لا توجد مستحقات معلقة</span>
                )}
              </div>
 
@@ -193,9 +211,9 @@ export function AdminDriverFinancials({ driverId, driverName, isOpen, onClose }:
                  value={paymentAmount}
                  min={0}
                  onChange={(e) => setPaymentAmount(e.target.value)}
-                 className={balance && Number(paymentAmount) > balance.total_outstanding ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                 className={balance && balance.total_outstanding > 0 && Number(paymentAmount) > balance.total_outstanding ? 'border-red-500 focus-visible:ring-red-500' : ''}
                />
-               {balance && Number(paymentAmount) > balance.total_outstanding && balance.total_outstanding > 0 && (
+               {balance && balance.total_outstanding > 0 && Number(paymentAmount) > balance.total_outstanding && (
                  <p className="text-xs text-red-600 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> المبلغ يتجاوز إجمالي المستحقات</p>
                )}
              </div>
@@ -261,3 +279,4 @@ export function AdminDriverFinancials({ driverId, driverName, isOpen, onClose }:
     </Dialog>
   );
 }
+
