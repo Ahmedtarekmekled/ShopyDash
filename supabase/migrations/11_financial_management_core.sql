@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS public.driver_financial_settings (
 
 -- 3. LEDGER TABLES (Strictly insert-only records for auditing)
 CREATE TABLE IF NOT EXISTS public.commission_payments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     shop_id UUID NOT NULL REFERENCES public.shops(id),
     amount DECIMAL(10,2) NOT NULL,
     paid_at TIMESTAMPTZ DEFAULT NOW(),
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS public.commission_payments (
 );
 
 CREATE TABLE IF NOT EXISTS public.subscription_payments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     shop_id UUID NOT NULL REFERENCES public.shops(id),
     billing_month DATE NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS public.subscription_payments (
 );
 
 CREATE TABLE IF NOT EXISTS public.premium_subscription_payments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     shop_id UUID NOT NULL REFERENCES public.shops(id),
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS public.premium_subscription_payments (
 );
 
 CREATE TABLE IF NOT EXISTS public.driver_payments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     driver_id UUID NOT NULL REFERENCES public.profiles(id),
     amount DECIMAL(10,2) NOT NULL,
     paid_at TIMESTAMPTZ DEFAULT NOW(),
@@ -241,3 +241,4 @@ EXCEPTION
     WHEN OTHERS THEN
         RAISE NOTICE 'Failed to schedule cron job. Ensure pg_cron is enabled.';
 END $$;
+

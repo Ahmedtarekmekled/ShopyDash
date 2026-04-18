@@ -12,7 +12,7 @@ CREATE POLICY "Shop owners can create products"
   ON products FOR INSERT
   WITH CHECK (
     owns_shop(shop_id) AND 
-    EXISTS (SELECT 1 FROM shops WHERE id = shop_id AND approval_status = 'APPROVED')
+    EXISTS (SELECT 1 FROM shops WHERE id = shop_id AND status = 'APPROVED')
   );
 
 -- 2. Update Policy: Must own shop AND shop must be APPROVED securely
@@ -20,9 +20,9 @@ CREATE POLICY "Shop owners can update own products"
   ON products FOR UPDATE
   USING (
     owns_shop(shop_id) AND 
-    EXISTS (SELECT 1 FROM shops WHERE id = shop_id AND approval_status = 'APPROVED')
+    EXISTS (SELECT 1 FROM shops WHERE id = shop_id AND status = 'APPROVED')
   )
   WITH CHECK (
     owns_shop(shop_id) AND 
-    EXISTS (SELECT 1 FROM shops WHERE id = shop_id AND approval_status = 'APPROVED')
+    EXISTS (SELECT 1 FROM shops WHERE id = shop_id AND status = 'APPROVED')
   );

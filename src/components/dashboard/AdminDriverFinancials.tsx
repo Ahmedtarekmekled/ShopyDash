@@ -138,8 +138,8 @@ export function AdminDriverFinancials({ driverId, driverName, isOpen, onClose }:
                  // Proportional distribution — same logic as driver view
                  const totalOwed = balance.customer_fee_owed + balance.platform_fee_owed;
                  const remainingRatio = totalOwed > 0 ? balance.total_outstanding / totalOwed : 0;
-                 const remainingDelivery = balance.customer_fee_owed * remainingRatio;
-                 const remainingPlatform = balance.platform_fee_owed * remainingRatio;
+                 const remainingDelivery = balance.platform_fee_owed * remainingRatio;
+                 const remainingPlatform = balance.customer_fee_owed * remainingRatio;
 
                  return (
                    <>

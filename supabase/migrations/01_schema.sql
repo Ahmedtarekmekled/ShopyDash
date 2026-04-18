@@ -35,7 +35,7 @@ CREATE TABLE profiles (
 -- =====================================================
 
 CREATE TABLE regions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   name_en TEXT,
   slug TEXT UNIQUE NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE regions (
 );
 
 CREATE TABLE districts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   region_id UUID NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   name_en TEXT,
@@ -61,7 +61,7 @@ CREATE TABLE districts (
 -- =====================================================
 
 CREATE TABLE categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   name_en TEXT,
   slug TEXT UNIQUE NOT NULL,
@@ -80,7 +80,7 @@ CREATE TABLE categories (
 -- =====================================================
 
 CREATE TABLE shops (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   region_id UUID NOT NULL REFERENCES regions(id) ON DELETE RESTRICT,
   district_id UUID REFERENCES districts(id) ON DELETE SET NULL,
@@ -118,7 +118,7 @@ CREATE TABLE shops (
 -- =====================================================
 
 CREATE TABLE products (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
   category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
   
@@ -160,7 +160,7 @@ CREATE TABLE products (
 -- =====================================================
 
 CREATE TABLE carts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   shop_id UUID REFERENCES shops(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
@@ -170,7 +170,7 @@ CREATE TABLE carts (
 );
 
 CREATE TABLE cart_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   quantity INTEGER NOT NULL CHECK (quantity > 0),
@@ -185,7 +185,7 @@ CREATE TABLE cart_items (
 -- =====================================================
 
 CREATE TABLE orders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_number TEXT UNIQUE NOT NULL,
   
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE RESTRICT,
@@ -216,7 +216,7 @@ CREATE TABLE orders (
 );
 
 CREATE TABLE order_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
   
@@ -231,7 +231,7 @@ CREATE TABLE order_items (
 );
 
 CREATE TABLE order_status_history (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   status order_status NOT NULL,
   notes TEXT,
@@ -244,7 +244,7 @@ CREATE TABLE order_status_history (
 -- =====================================================
 
 CREATE TABLE addresses (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   
   label TEXT DEFAULT 'المنزل',
@@ -323,3 +323,4 @@ ALTER TABLE shops ADD COLUMN search_vector tsvector
   ) STORED;
 
 CREATE INDEX idx_shops_search ON shops USING GIN(search_vector);
+

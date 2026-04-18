@@ -72,8 +72,8 @@ export function CourierAccount() {
         // Distribute remaining proportionally based on original owed amounts
         const totalOwed = finance.deliveries_fee_owed + finance.customer_cash_owed;
         const remainingRatio = totalOwed > 0 ? finance.net_outstanding / totalOwed : 0;
-        const remainingPlatform  = finance.deliveries_fee_owed * remainingRatio;  // خدمة المنصة
-        const remainingDelivery  = finance.customer_cash_owed  * remainingRatio;  // عمولة التوصيل
+        const remainingPlatform  = finance.customer_cash_owed  * remainingRatio;  
+        const remainingDelivery  = finance.deliveries_fee_owed * remainingRatio;  
         return (
           <Card className="bg-red-50 border-red-200 shadow-sm">
             <CardContent className="p-4">

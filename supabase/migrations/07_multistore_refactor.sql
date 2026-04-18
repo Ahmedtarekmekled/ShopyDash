@@ -4,7 +4,7 @@
 
 -- 1. Create region_limits table
 CREATE TABLE IF NOT EXISTS region_limits (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     region_id UUID NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
     max_stores_allowed INTEGER DEFAULT 3 NOT NULL,
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
@@ -139,3 +139,4 @@ $$ LANGUAGE plpgsql;
 
 -- Grant access
 GRANT EXECUTE ON FUNCTION cancel_shop_order(UUID, TEXT, UUID, order_status) TO authenticated;
+
