@@ -3712,12 +3712,36 @@ function AdminShops() {
       await shopsService.update(shop.id, { 
         is_premium: isNowPremium,
         is_premium_active: isNowPremium,
+        premium_sort_order: isNowPremium ? 99 : null,
         premium_expires_at: isNowPremium ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null
       } as any);
-      notify.success(isNowPremium ? "تم تمييز المتجر (لمدة 30 يوم)" : "تم إلغاء التميز");
+      notify.success(isNowPremium ? "تم تمييز المتجر" : "تم إلغاء التميز");
       loadShops();
     } catch (error) {
        notify.error("فشل تحديث التميز");
+    }
+  };
+
+  const handleAssignPremiumSlot = async (shop: Shop, slot: number) => {
+    // Check if slot is already taken by another shop
+    const slotTaken = shops.find(
+      (s) => s.id !== shop.id && s.is_premium && s.premium_sort_order === slot
+    );
+    if (slotTaken) {
+      notify.error(`المساحة #${slot} محجوزة بواسطة: ${slotTaken.name}`);
+      return;
+    }
+    try {
+      await shopsService.update(shop.id, {
+        is_premium: true,
+        is_premium_active: true,
+        premium_sort_order: slot,
+        premium_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      } as any);
+      notify.success(`تم تعيين المتجر في المساحة المميزة #${slot}`);
+      loadShops();
+    } catch (error) {
+      notify.error("فشل تحديث التميز");
     }
   };
 
@@ -3873,16 +3897,46 @@ function AdminShops() {
                                         <DropdownMenuSubTrigger>
                                           <Star className="w-4 h-4 ml-2 rtl:mr-0 text-amber-500 fill-amber-500"/> ترتيب التميز
                                         </DropdownMenuSubTrigger>
-                                        <DropdownMenuSubContent>
-                                          <DropdownMenuItem onClick={() => {
-                                             shopsService.update(shop.id, { is_premium: true, premium_sort_order: 1 }).then(() => { notify.success("تم تحديث ترتيب التميز"); loadShops(); });
-                                          }}>مساحة مميزة #1</DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => {
-                                             shopsService.update(shop.id, { is_premium: true, premium_sort_order: 2 }).then(() => { notify.success("تم تحديث ترتيب التميز"); loadShops(); });
-                                          }}>مساحة مميزة #2</DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => {
-                                             shopsService.update(shop.id, { is_premium: true, premium_sort_order: 99 }).then(() => { notify.success("تم تحديث ترتيب التميز"); loadShops(); });
-                                          }}>مميز (عام)</DropdownMenuItem>
+                                        <DropdownMenuSubContent className="w-52">
+                                          <DropdownMenuLabel className="text-xs text-amber-600 flex items-center gap-1">
+                                            🥇 ذهبي — أفضل ظهور
+                                          </DropdownMenuLabel>
+                                          {[1, 2].map((slot) => {
+                                            const takenBy = shops.find((s) => s.id !== shop.id && s.is_premium && s.premium_sort_order === slot);
+                                            return (
+                                              <DropdownMenuItem
+                                                key={slot}
+                                                disabled={!!takenBy}
+                                                onClick={() => handleAssignPremiumSlot(shop, slot)}
+                                                className={shop.premium_sort_order === slot ? "bg-amber-50 font-semibold" : ""}
+                                              >
+                                                <span className="ml-2 text-amber-500">★</span>
+                                                مساحة مميزة #{slot}
+                                                {takenBy && <span className="text-xs text-muted-foreground mr-auto">محجوز</span>}
+                                                {shop.premium_sort_order === slot && <span className="text-xs text-amber-600 mr-auto">✓ الحالي</span>}
+                                              </DropdownMenuItem>
+                                            );
+                                          })}
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuLabel className="text-xs text-slate-500 flex items-center gap-1">
+                                            🥈 فضي — ظهور مميز
+                                          </DropdownMenuLabel>
+                                          {[3, 4, 5, 6].map((slot) => {
+                                            const takenBy = shops.find((s) => s.id !== shop.id && s.is_premium && s.premium_sort_order === slot);
+                                            return (
+                                              <DropdownMenuItem
+                                                key={slot}
+                                                disabled={!!takenBy}
+                                                onClick={() => handleAssignPremiumSlot(shop, slot)}
+                                                className={shop.premium_sort_order === slot ? "bg-slate-50 font-semibold" : ""}
+                                              >
+                                                <span className="ml-2 text-slate-400">★</span>
+                                                مساحة مميزة #{slot}
+                                                {takenBy && <span className="text-xs text-muted-foreground mr-auto">محجوز</span>}
+                                                {shop.premium_sort_order === slot && <span className="text-xs text-slate-500 mr-auto">✓ الحالي</span>}
+                                              </DropdownMenuItem>
+                                            );
+                                          })}
                                           <DropdownMenuSeparator />
                                           <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleTogglePremium(shop)}>
                                             إلغاء التميز
