@@ -24,6 +24,7 @@ const DashboardPage = lazy(() => import("@/pages/dashboard"));
 const AuthCallback = lazy(() => import("@/pages/auth/callback"));
 const KioskPage = lazy(() => import("@/pages/dashboard/kiosk"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
+const CompleteProfilePage = lazy(() => import("@/pages/complete-profile"));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -58,6 +59,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/complete-profile" element={<CompleteProfilePage />} />
 
             {/* Customer (Protected) */}
             <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />

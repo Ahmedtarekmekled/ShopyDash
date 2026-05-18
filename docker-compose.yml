@@ -8,5 +8,5 @@ services:
         - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
         - VITE_MAPBOX_ACCESS_TOKEN=${VITE_MAPBOX_ACCESS_TOKEN}
     ports:
-      - "3000:80"
+      - "3001:80"
     restart: always

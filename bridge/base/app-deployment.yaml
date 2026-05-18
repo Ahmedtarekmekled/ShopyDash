@@ -1,0 +1,33 @@
+#! app-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: app
+    namespace: abo-hommos
+    labels:
+        com.docker.compose.project: abo-hommos
+        com.docker.compose.service: app
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: abo-hommos
+            com.docker.compose.service: app
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: abo-hommos
+                com.docker.compose.service: app
+                com.docker.compose.network.default: "true"
+        spec:
+            restartPolicy: Always
+            containers:
+                - name: app
+                  image: abo-hommos-app
+                  imagePullPolicy: IfNotPresent
+                  ports:
+                    - name: app-80
+                      containerPort: 80

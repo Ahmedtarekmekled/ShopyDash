@@ -35,5 +35,10 @@ export function ProtectedRoute({ children, requiredRoles }: ProtectedRouteProps)
     return <Navigate to="/" replace />;
   }
 
+  // Profile completion check
+  if (!user.phone && location.pathname !== "/complete-profile") {
+    return <Navigate to="/complete-profile" replace />;
+  }
+
   return <>{children}</>;
 }
