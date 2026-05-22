@@ -44,6 +44,8 @@ import {
   Tag,
   Banknote,
   Percent,
+  Mail,
+  MessageCircle,
 } from "lucide-react";
 import { SoundService } from "@/services/sound.service";
 import { useRef } from "react";
@@ -275,6 +277,35 @@ function useShopRealtime(shopId: string | undefined, onNewOrder: () => void, onO
   }, [shopId, onNewOrder, onOrderUpdate]);
 }
 
+
+// Real-time hook for new shops (Admin)
+function useAdminShopsRealtime(isAdmin: boolean, onNewShop: () => void) {
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const channel = supabase
+      .channel('admin-shops')
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "shops",
+          filter: "approval_status=eq.PENDING",
+        },
+        async (payload) => {
+          await SoundService.playNewOrderSound(); // Or a custom sound for new shop
+          notify.info(`متجر جديد بانتظار المراجعة! ${(payload.new as any).name}`);
+          onNewShop();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAdmin, onNewShop]);
+}
 
 
 // Admin Overview Dashboard - Platform-wide statistics
@@ -3608,21 +3639,11 @@ function AdminShops() {
   
   // Status Management
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
+  const [selectedShopDetails, setSelectedShopDetails] = useState<Shop | null>(null);
   const [selectedFinancialShop, setSelectedFinancialShop] = useState<Shop | null>(null);
   const [actionDialog, setActionDialog] = useState<'REJECT' | 'SUSPEND' | null>(null);
   const [reason, setReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-
-  useEffect(() => {
-    if (isAdmin) {
-      loadShops();
-    }
-  }, [isAdmin]);
-
-  // Secondary protection - return access denied if not admin
-  if (!isAdmin) {
-    return <AccessDenied />;
-  }
 
   const loadShops = async () => {
     setIsLoading(true);
@@ -3635,6 +3656,21 @@ function AdminShops() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadShops();
+    }
+  }, [isAdmin]);
+
+  useAdminShopsRealtime(isAdmin, loadShops);
+
+  // Secondary protection - return access denied if not admin
+  if (!isAdmin) {
+    return <AccessDenied />;
+  }
+
+
 
   const handleUpdateStatus = async (shop: Shop, newStatus: ShopStatus) => {
     if (newStatus === "REJECTED") {
@@ -3830,160 +3866,38 @@ function AdminShops() {
             </Card>
           ) : (
             filteredShops.map((shop) => (
-              <Card key={shop.id} className={cn("transition-all", shop.is_premium ? "border-amber-400 shadow-md bg-amber-50/10" : "")}>
-                <CardContent className="p-4">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="w-full md:w-20 h-40 md:h-20 rounded-lg bg-muted flex-shrink-0 relative overflow-hidden">
+              <Card 
+                key={shop.id} 
+                className={cn("transition-all cursor-pointer hover:border-primary/50 hover:shadow-md", shop.is_premium ? "border-amber-400 shadow-sm bg-amber-50/10" : "")}
+                onClick={() => setSelectedShopDetails(shop)}
+              >
+                <CardContent className="p-4 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-lg bg-muted flex-shrink-0 relative overflow-hidden border border-border">
                        {shop.logo_url ? (
                          <img src={shop.logo_url} alt={shop.name} className="w-full h-full object-cover" />
                        ) : (
-                         <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Store className="w-8 h-8" /></div>
+                         <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Store className="w-6 h-6" /></div>
                        )}
-                       {shop.is_premium && <div className="absolute top-0 right-0 bg-amber-500 text-white p-1 rounded-bl-lg shadow-sm"><CheckCircle className="w-3 h-3" /></div>}
+                       {shop.is_premium && <div className="absolute top-0 right-0 bg-amber-500 text-white p-0.5 rounded-bl shadow-sm"><CheckCircle className="w-3 h-3" /></div>}
                     </div>
-                    
-                    <div className="flex-1 space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-bold text-lg">{shop.name}</h3>
-                        {shop.is_premium && <Badge className="bg-amber-500 hover:bg-amber-600">مميز</Badge>}
-                        <Badge variant={shop.approval_status === 'APPROVED' ? 'success' : shop.approval_status === 'REJECTED' ? 'destructive' : 'secondary'}>
-                          {shop.approval_status === 'APPROVED' ? 'مقبول' : shop.approval_status === 'REJECTED' ? 'مرفوض' : 'قيد المراجعة'}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" /> {shop.address}</p>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> {shop.phone}</p>
-                      {shop.rejection_reason && <p className="text-sm text-destructive mt-1">سبب الرفض: {shop.rejection_reason}</p>}
-                      {!shop.is_active && shop.disabled_reason && <p className="text-sm text-destructive mt-1">سبب الإيقاف: {shop.disabled_reason}</p>}
-                    </div>
-
-                    <div className="flex flex-col justify-end w-full md:w-auto mt-4 md:mt-0">
-                      {/* Actions based on Status */}
-                      {shop.approval_status === 'PENDING' ? (
-                        <div className="flex gap-2 w-full md:w-auto">
-                          <Button size="sm" className="flex-1 md:w-24 bg-green-600 hover:bg-green-700 h-9" onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
-                            قبول
-                          </Button>
-                          <Button size="sm" variant="destructive" className="flex-1 md:w-24 h-9" onClick={() => handleUpdateStatus(shop, 'REJECTED')}>
-                            رفض
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-2 items-center justify-end w-full md:w-auto">
-                           {shop.approval_status === 'APPROVED' && (
-                               <Button size="sm" variant="outline" className="flex-1 md:flex-none h-9 border-blue-200 hover:bg-blue-50 text-blue-700" onClick={() => setSelectedFinancialShop(shop)}>
-                                  <DollarSign className="w-4 h-4 ml-2" /> المالية
-                               </Button>
-                           )}
-
-                           <Link to={`/dashboard/shops/analytics/${shop.id}`} className="flex-1 md:flex-none">
-                             <Button variant="secondary" size="sm" className="w-full h-9">
-                               <BarChart2 className="w-4 h-4 ml-2" /> التحليلات
-                             </Button>
-                           </Link>
-
-                           <DropdownMenu>
-                             <DropdownMenuTrigger asChild>
-                               <Button variant="outline" size="sm" className="h-9 w-9 p-0 flex-shrink-0">
-                                 <MoreVertical className="h-4 w-4" />
-                               </Button>
-                             </DropdownMenuTrigger>
-                             <DropdownMenuContent align="end" className="w-48">
-                               {shop.approval_status === 'APPROVED' && (
-                                  <>
-                                    <DropdownMenuLabel>إجراءات المتجر</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    
-                                    {shop.is_premium ? (
-                                      <DropdownMenuSub>
-                                        <DropdownMenuSubTrigger>
-                                          <Star className="w-4 h-4 ml-2 rtl:mr-0 text-amber-500 fill-amber-500"/> ترتيب التميز
-                                        </DropdownMenuSubTrigger>
-                                        <DropdownMenuSubContent className="w-52">
-                                          <DropdownMenuLabel className="text-xs text-amber-600 flex items-center gap-1">
-                                            🥇 ذهبي — أفضل ظهور
-                                          </DropdownMenuLabel>
-                                          {[1, 2].map((slot) => {
-                                            const takenBy = shops.find((s) => s.id !== shop.id && s.is_premium && s.premium_sort_order === slot);
-                                            return (
-                                              <DropdownMenuItem
-                                                key={slot}
-                                                disabled={!!takenBy}
-                                                onClick={() => handleAssignPremiumSlot(shop, slot)}
-                                                className={shop.premium_sort_order === slot ? "bg-amber-50 font-semibold" : ""}
-                                              >
-                                                <span className="ml-2 text-amber-500">★</span>
-                                                مساحة مميزة #{slot}
-                                                {takenBy && <span className="text-xs text-muted-foreground mr-auto">محجوز</span>}
-                                                {shop.premium_sort_order === slot && <span className="text-xs text-amber-600 mr-auto">✓ الحالي</span>}
-                                              </DropdownMenuItem>
-                                            );
-                                          })}
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuLabel className="text-xs text-slate-500 flex items-center gap-1">
-                                            🥈 فضي — ظهور مميز
-                                          </DropdownMenuLabel>
-                                          {[3, 4, 5, 6].map((slot) => {
-                                            const takenBy = shops.find((s) => s.id !== shop.id && s.is_premium && s.premium_sort_order === slot);
-                                            return (
-                                              <DropdownMenuItem
-                                                key={slot}
-                                                disabled={!!takenBy}
-                                                onClick={() => handleAssignPremiumSlot(shop, slot)}
-                                                className={shop.premium_sort_order === slot ? "bg-slate-50 font-semibold" : ""}
-                                              >
-                                                <span className="ml-2 text-slate-400">★</span>
-                                                مساحة مميزة #{slot}
-                                                {takenBy && <span className="text-xs text-muted-foreground mr-auto">محجوز</span>}
-                                                {shop.premium_sort_order === slot && <span className="text-xs text-slate-500 mr-auto">✓ الحالي</span>}
-                                              </DropdownMenuItem>
-                                            );
-                                          })}
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleTogglePremium(shop)}>
-                                            إلغاء التميز
-                                          </DropdownMenuItem>
-                                        </DropdownMenuSubContent>
-                                      </DropdownMenuSub>
-                                    ) : (
-                                      <DropdownMenuItem onClick={() => handleTogglePremium(shop)}>
-                                        <Star className="w-4 h-4 ml-2" /> تمييز المتجر
-                                      </DropdownMenuItem>
-                                    )}
-
-                                    {shop.is_active ? (
-                                      <DropdownMenuItem onClick={() => handleToggleOpen(shop)}>
-                                        {shop.is_open ? <><Store className="w-4 h-4 ml-2"/> إغلاق المتجر</> : <><Store className="w-4 h-4 ml-2"/> فتح المتجر</>}
-                                      </DropdownMenuItem>
-                                    ) : (
-                                      <DropdownMenuItem onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
-                                        <CheckCircle className="w-4 h-4 ml-2 text-green-600" /> تفعيل المتجر الموقوف
-                                      </DropdownMenuItem>
-                                    )}
-
-                                    <DropdownMenuSeparator />
-
-                                    {shop.is_active && (
-                                      <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => handleUpdateStatus(shop, 'SUSPENDED')}>
-                                        <Ban className="w-4 h-4 ml-2" /> إيقاف مؤقت
-                                      </DropdownMenuItem>
-                                    )}
-                                  </>
-                               )}
-                               
-                               {shop.approval_status === 'REJECTED' && (
-                                  <>
-                                    <DropdownMenuLabel>مراجعة الرفض</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => handleUpdateStatus(shop, 'APPROVED')}>
-                                      <CheckCircle className="w-4 h-4 ml-2 text-green-600" /> قبول المتجر (تراجع عن الرفض)
-                                    </DropdownMenuItem>
-                                  </>
-                               )}
-                             </DropdownMenuContent>
-                           </DropdownMenu>
-                        </div>
+                    <div>
+                      <h3 className="font-bold text-base flex items-center gap-2">
+                        {shop.name}
+                        {shop.is_premium && <Badge className="bg-amber-500 hover:bg-amber-600 text-[10px] px-1 py-0 h-4">مميز</Badge>}
+                      </h3>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1 line-clamp-1"><MapPin className="w-3 h-3" /> {shop.address}</p>
+                      {(shop as any).category?.name && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1"><Tag className="w-3 h-3" /> {(shop as any).category.name}</p>
                       )}
                     </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge variant={shop.approval_status === 'APPROVED' ? 'success' : shop.approval_status === 'REJECTED' ? 'destructive' : 'secondary'}>
+                      {shop.approval_status === 'APPROVED' ? 'مقبول' : shop.approval_status === 'REJECTED' ? 'مرفوض' : 'قيد المراجعة'}
+                    </Badge>
+                    <span className="text-xs text-primary font-medium flex items-center gap-1">التفاصيل <ExternalLink className="w-3 h-3" /></span>
                   </div>
                 </CardContent>
               </Card>
@@ -3991,6 +3905,257 @@ function AdminShops() {
           )}
         </div>
       </Tabs>
+
+      <Dialog open={!!selectedShopDetails} onOpenChange={(open) => !open && setSelectedShopDetails(null)}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden bg-background">
+          {selectedShopDetails && (
+            <div className="max-h-[85vh] overflow-y-auto overflow-x-hidden">
+              <DialogHeader className="sr-only">
+                <DialogTitle>تفاصيل المتجر</DialogTitle>
+                <DialogDescription>عرض شامل لتفاصيل المتجر وبيانات المالك</DialogDescription>
+              </DialogHeader>
+              {/* Cover & Logo */}
+              <div className="relative h-32 md:h-40 bg-muted">
+                {selectedShopDetails.cover_url ? (
+                  <img src={selectedShopDetails.cover_url} alt="cover" className="w-full h-full object-cover opacity-80" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-primary/20 to-primary/5" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                <div className="absolute bottom-4 right-4 flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-xl bg-background border-4 border-background overflow-hidden shadow-xl">
+                    {selectedShopDetails.logo_url ? (
+                       <img src={selectedShopDetails.logo_url} alt="logo" className="w-full h-full object-cover" />
+                    ) : (
+                       <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-muted"><Store className="w-8 h-8" /></div>
+                    )}
+                  </div>
+                  <div className="text-white mt-4">
+                    <h2 className="font-bold text-xl md:text-2xl flex items-center gap-2">
+                      {selectedShopDetails.name}
+                      {selectedShopDetails.is_premium && <CheckCircle className="w-5 h-5 text-amber-400" />}
+                    </h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant={selectedShopDetails.approval_status === 'APPROVED' ? 'success' : selectedShopDetails.approval_status === 'REJECTED' ? 'destructive' : 'secondary'} className="border-0">
+                        {selectedShopDetails.approval_status === 'APPROVED' ? 'مقبول' : selectedShopDetails.approval_status === 'REJECTED' ? 'مرفوض' : 'قيد المراجعة'}
+                      </Badge>
+                      {!selectedShopDetails.is_active && <Badge variant="destructive" className="border-0">موقوف</Badge>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Info Grid */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-base border-b pb-2 flex items-center gap-2"><Store className="w-4 h-4 text-primary" /> معلومات المتجر</h3>
+                    <div className="space-y-3">
+                      <p className="text-sm flex items-start gap-2"><MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /> <span><span className="font-medium">العنوان:</span> {selectedShopDetails.address}</span></p>
+                      <p className="text-sm flex items-center gap-2"><Phone className="w-4 h-4 text-muted-foreground shrink-0" /> <span><span className="font-medium">هاتف المتجر:</span> <a href={`tel:${selectedShopDetails.phone}`} className="text-blue-600 hover:underline">{selectedShopDetails.phone}</a></span></p>
+                      {selectedShopDetails.whatsapp && <p className="text-sm flex items-center gap-2"><MessageCircle className="w-4 h-4 text-green-600 shrink-0" /> <span><span className="font-medium">واتساب:</span> <a href={`https://wa.me/${selectedShopDetails.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{selectedShopDetails.whatsapp}</a></span></p>}
+                      {selectedShopDetails.description && (
+                        <div className="text-sm bg-muted/50 p-3 rounded-lg mt-2">
+                          <span className="font-medium block mb-1">الوصف:</span>
+                          <span className="text-muted-foreground">{selectedShopDetails.description}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-base border-b pb-2 flex items-center gap-2"><UserCog className="w-4 h-4 text-primary" /> بيانات المالك</h3>
+                    {(selectedShopDetails as any).owner ? (
+                      <div className="space-y-3">
+                        <p className="text-sm flex items-center gap-2"><UserCog className="w-4 h-4 text-muted-foreground shrink-0" /> <span><span className="font-medium">الاسم:</span> {(selectedShopDetails as any).owner.full_name}</span></p>
+                        <p className="text-sm flex items-center gap-2"><Phone className="w-4 h-4 text-muted-foreground shrink-0" /> <span><span className="font-medium">الهاتف:</span> {(selectedShopDetails as any).owner.phone ? <a href={`tel:${(selectedShopDetails as any).owner.phone}`} className="text-blue-600 hover:underline">{(selectedShopDetails as any).owner.phone}</a> : 'غير متوفر'}</span></p>
+                        <p className="text-sm flex items-center gap-2"><Mail className="w-4 h-4 text-muted-foreground shrink-0" /> <span><span className="font-medium">البريد الإلكتروني:</span> <a href={`mailto:${(selectedShopDetails as any).owner.email}`} className="text-blue-600 hover:underline">{(selectedShopDetails as any).owner.email}</a></span></p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2 bg-muted p-3 rounded-lg">
+                        <AlertTriangle className="w-4 h-4" /> لم يتم العثور على بيانات المالك
+                      </p>
+                    )}
+
+                    <div className="mt-4 pt-4 border-t">
+                      <h3 className="font-bold text-sm mb-3 flex items-center gap-2 text-primary"><Star className="w-4 h-4" /> تفاصيل إضافية</h3>
+                      <div className="space-y-2">
+                        {(selectedShopDetails as any).category?.name && (
+                          <div className="text-sm flex items-center gap-2">
+                            <Badge variant="outline"><Tag className="w-3 h-3 mr-1" /> {(selectedShopDetails as any).category.name}</Badge>
+                          </div>
+                        )}
+                        {selectedShopDetails.approval_status === 'APPROVED' && (
+                          <>
+                            <div className="text-sm flex items-center gap-2">
+                              <Badge variant={selectedShopDetails.is_active ? "success" : "destructive"}>
+                                {selectedShopDetails.is_active ? "حساب نشط" : "حساب موقوف"}
+                              </Badge>
+                            </div>
+                            <div className="text-sm flex items-center gap-2">
+                              <Badge variant={selectedShopDetails.is_open ? "success" : "secondary"}>
+                                {selectedShopDetails.is_open ? "يستقبل طلبات الآن" : "مغلق حالياً"}
+                              </Badge>
+                            </div>
+                            {selectedShopDetails.is_premium && (
+                              <div className="text-sm flex items-center gap-2">
+                                <Badge className="bg-amber-500 text-white border-0">
+                                  <Star className="w-3 h-3 mr-1 fill-white" /> متجر مميز (ترتيب الظهور: {selectedShopDetails.premium_sort_order || 1})
+                                </Badge>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {selectedShopDetails.rejection_reason && (
+                      <div className="mt-4 bg-destructive/10 border border-destructive/20 p-3 rounded-lg text-sm text-destructive">
+                        <span className="font-bold block mb-1 flex items-center gap-1"><Ban className="w-4 h-4" /> سبب الرفض:</span>
+                        {selectedShopDetails.rejection_reason}
+                      </div>
+                    )}
+                    {!selectedShopDetails.is_active && selectedShopDetails.disabled_reason && (
+                      <div className="mt-4 bg-destructive/10 border border-destructive/20 p-3 rounded-lg text-sm text-destructive">
+                        <span className="font-bold block mb-1 flex items-center gap-1"><Ban className="w-4 h-4" /> سبب الإيقاف:</span>
+                        {selectedShopDetails.disabled_reason}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="border-t pt-4 bg-muted/20 -mx-6 -mb-6 p-6 flex flex-wrap gap-2 justify-end">
+                  {selectedShopDetails.approval_status === 'PENDING' ? (
+                    <>
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => { handleUpdateStatus(selectedShopDetails, 'APPROVED'); setSelectedShopDetails(null); }}>
+                        <CheckCircle className="w-4 h-4 ml-2" /> قبول المتجر
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => { handleUpdateStatus(selectedShopDetails, 'REJECTED'); setSelectedShopDetails(null); }}>
+                        <XCircle className="w-4 h-4 ml-2" /> رفض المتجر
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {selectedShopDetails.approval_status === 'APPROVED' && (
+                        <Button size="sm" variant="outline" className="border-blue-200 hover:bg-blue-50 text-blue-700" onClick={() => { setSelectedFinancialShop(selectedShopDetails); setSelectedShopDetails(null); }}>
+                          <DollarSign className="w-4 h-4 ml-2" /> المالية
+                        </Button>
+                      )}
+                      
+                      <Link to={`/dashboard/shops/analytics/${selectedShopDetails.id}`}>
+                        <Button variant="secondary" size="sm">
+                          <BarChart2 className="w-4 h-4 ml-2" /> التحليلات
+                        </Button>
+                      </Link>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Settings className="w-4 h-4 ml-2" /> خيارات إضافية
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          {selectedShopDetails.approval_status === 'APPROVED' && (
+                            <>
+                              <DropdownMenuLabel>إجراءات المتجر</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              {selectedShopDetails.is_premium ? (
+                                <DropdownMenuSub>
+                                  <DropdownMenuSubTrigger>
+                                    <Star className="w-4 h-4 ml-2 rtl:mr-0 text-amber-500 fill-amber-500"/> ترتيب التميز
+                                  </DropdownMenuSubTrigger>
+                                  <DropdownMenuSubContent className="w-52">
+                                    <DropdownMenuLabel className="text-xs text-amber-600 flex items-center gap-1">
+                                      🥇 ذهبي — أفضل ظهور
+                                    </DropdownMenuLabel>
+                                    {[1, 2].map((slot) => {
+                                      const takenBy = shops.find((s) => s.id !== selectedShopDetails.id && s.is_premium && s.premium_sort_order === slot);
+                                      return (
+                                        <DropdownMenuItem
+                                          key={slot}
+                                          disabled={!!takenBy}
+                                          onClick={() => handleAssignPremiumSlot(selectedShopDetails, slot)}
+                                          className={selectedShopDetails.premium_sort_order === slot ? "bg-amber-50 font-semibold" : ""}
+                                        >
+                                          <span className="ml-2 text-amber-500">★</span>
+                                          مساحة مميزة #{slot}
+                                          {takenBy && <span className="text-xs text-muted-foreground mr-auto">محجوز</span>}
+                                          {selectedShopDetails.premium_sort_order === slot && <span className="text-xs text-amber-600 mr-auto">✓ الحالي</span>}
+                                        </DropdownMenuItem>
+                                      );
+                                    })}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuLabel className="text-xs text-slate-500 flex items-center gap-1">
+                                      🥈 فضي — ظهور مميز
+                                    </DropdownMenuLabel>
+                                    {[3, 4, 5, 6].map((slot) => {
+                                      const takenBy = shops.find((s) => s.id !== selectedShopDetails.id && s.is_premium && s.premium_sort_order === slot);
+                                      return (
+                                        <DropdownMenuItem
+                                          key={slot}
+                                          disabled={!!takenBy}
+                                          onClick={() => handleAssignPremiumSlot(selectedShopDetails, slot)}
+                                          className={selectedShopDetails.premium_sort_order === slot ? "bg-slate-50 font-semibold" : ""}
+                                        >
+                                          <span className="ml-2 text-slate-400">★</span>
+                                          مساحة مميزة #{slot}
+                                          {takenBy && <span className="text-xs text-muted-foreground mr-auto">محجوز</span>}
+                                          {selectedShopDetails.premium_sort_order === slot && <span className="text-xs text-slate-500 mr-auto">✓ الحالي</span>}
+                                        </DropdownMenuItem>
+                                      );
+                                    })}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleTogglePremium(selectedShopDetails)}>
+                                      إلغاء التميز
+                                    </DropdownMenuItem>
+                                  </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleTogglePremium(selectedShopDetails)}>
+                                  <Star className="w-4 h-4 ml-2" /> تمييز المتجر
+                                </DropdownMenuItem>
+                              )}
+                              
+                              {selectedShopDetails.is_active ? (
+                                <DropdownMenuItem onClick={() => handleToggleOpen(selectedShopDetails)}>
+                                  {selectedShopDetails.is_open ? <><Store className="w-4 h-4 ml-2"/> إغلاق المتجر</> : <><Store className="w-4 h-4 ml-2"/> فتح المتجر</>}
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleUpdateStatus(selectedShopDetails, 'APPROVED')}>
+                                  <CheckCircle className="w-4 h-4 ml-2 text-green-600" /> تفعيل المتجر الموقوف
+                                </DropdownMenuItem>
+                              )}
+
+                              <DropdownMenuSeparator />
+
+                              {selectedShopDetails.is_active && (
+                                <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={() => { handleUpdateStatus(selectedShopDetails, 'SUSPENDED'); setSelectedShopDetails(null); }}>
+                                  <Ban className="w-4 h-4 ml-2" /> إيقاف مؤقت
+                                </DropdownMenuItem>
+                              )}
+                            </>
+                          )}
+                          
+                          {selectedShopDetails.approval_status === 'REJECTED' && (
+                            <>
+                              <DropdownMenuLabel>مراجعة الرفض</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => { handleUpdateStatus(selectedShopDetails, 'APPROVED'); setSelectedShopDetails(null); }}>
+                                <CheckCircle className="w-4 h-4 ml-2 text-green-600" /> قبول المتجر (تراجع عن الرفض)
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!actionDialog} onOpenChange={(open) => !open && setActionDialog(null)}>
         <DialogContent>

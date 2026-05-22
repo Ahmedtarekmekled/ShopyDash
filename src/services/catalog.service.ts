@@ -271,7 +271,7 @@ export const shopsService = {
     approvedOnly?: boolean;
     limit?: number;
   }): Promise<Shop[]> {
-    let query = supabase.from("shops").select("*, category:categories(id, name, slug, icon)");
+    let query = supabase.from("shops").select("*, category:categories(id, name, slug, icon), owner:profiles!owner_id(full_name, email, phone)");
 
     if (options?.regionId) {
       query = query.eq("region_id", options.regionId);
